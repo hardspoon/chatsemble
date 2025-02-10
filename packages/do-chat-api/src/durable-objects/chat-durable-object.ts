@@ -5,8 +5,8 @@ import {
 } from "drizzle-orm/durable-sqlite";
 import { DurableObject } from "cloudflare:workers";
 import { migrate } from "drizzle-orm/durable-sqlite/migrator";
-import migrations from "./db/migrations/migrations";
-import { chatMessagesTable } from "./db/schema";
+import migrations from "../db/migrations/migrations";
+import { chatMessagesTable } from "../db/schema";
 import { eq } from "drizzle-orm";
 
 export class ChatDurableObject extends DurableObject<Env> {

@@ -1,9 +1,10 @@
-export { ChatDurableObject } from "./chat-durable-object";
+export { ChatDurableObject } from "./durable-objects/chat-durable-object";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import messagesRoute from "./routes/messages";
+import type { HonoVariables } from "./types/hono";
 
-const app = new Hono<{ Bindings: Env }>().use(
+const app = new Hono<HonoVariables>().use(
 	"*",
 	cors({
 		origin: "*",

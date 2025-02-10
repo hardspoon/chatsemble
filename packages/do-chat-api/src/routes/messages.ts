@@ -1,7 +1,8 @@
 import { Hono } from "hono";
 import type { ChatMessage } from "../db/schema";
+import type { HonoVariables } from "../types/hono";
 
-const app = new Hono<{ Bindings: Env }>()
+const app = new Hono<HonoVariables>()
 	.get("/", async (c) => {
 		const { CHAT_DURABLE_OBJECT } = c.env;
 		const id = CHAT_DURABLE_OBJECT.idFromName("main-chat");
