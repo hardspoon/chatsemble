@@ -23,7 +23,6 @@
 		"rules": {
 			"recommended": true,
 			"correctness": {
-				"noUndeclaredVariables": "error",
 				"noUnusedFunctionParameters": "error",
 				"noUnusedImports": "error",
 				"noUnusedVariables": "error",
