@@ -14,7 +14,7 @@ export class ChatDurableObject extends DurableObject<Env> {
 	constructor(ctx: DurableObjectState, env: Env) {
 		super(ctx, env);
 		this.storage = ctx.storage;
-		this.db = drizzle(this.storage, { logger: true });
+		this.db = drizzle(this.storage, { logger: false });
 	}
 
 	async migrate() {
