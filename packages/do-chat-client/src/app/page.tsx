@@ -1,14 +1,18 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { client } from "@/lib/api-client";
 
 export default function Home() {
 	const testDurableObject = async () => {
-		const response = await fetch(
-			`http://${process.env.NEXT_PUBLIC_DO_CHAT_API_HOST}/messages`,
-		);
-		const data = await response.json();
-		console.log(data);
+		try {
+			console.log("Fetching messages...");
+			const response = await client.messages.$get();
+			const data = await response.json();
+			console.log("Messages:", data);
+		} catch (error) {
+			console.error("Error fetching messages:", error);
+		}
 	};
 
 	return (

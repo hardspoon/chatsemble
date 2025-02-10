@@ -7,7 +7,9 @@ export const chatMessagesTable = sqliteTable("chat_messages_table", {
 		.primaryKey()
 		.$defaultFn(() => nanoid(36)),
 	message: text("message").notNull(),
-	createdAt: integer("created_at", { mode: "timestamp" })
+	createdAt: integer("created_at", { mode: "number" })
 		.notNull()
 		.default(sql`(unixepoch())`),
 });
+
+export type ChatMessage = typeof chatMessagesTable.$inferSelect;

@@ -1,11 +1,9 @@
 export { ChatDurableObject } from "./chat-durable-object";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
+import messagesRoute from "./routes/messages";
 
-const app = new Hono<{ Bindings: Env }>();
-
-// Add CORS middleware
-app.use(
+const app = new Hono<{ Bindings: Env }>().use(
 	"*",
 	cors({
 		origin: "*",
@@ -14,30 +12,7 @@ app.use(
 	}),
 );
 
-// Chat routes
-app.get("/messages", async (c) => {
-	const { CHAT_DURABLE_OBJECT } = c.env;
-	const id = CHAT_DURABLE_OBJECT.idFromName("main-chat");
-	const stub = CHAT_DURABLE_OBJECT.get(id);
+const routes = app.route("/messages", messagesRoute);
 
-	await stub.migrate();
-	const messages = await stub.select();
-
-	return c.json({ messages });
-});
-
-app.post("/messages", async (c) => {
-	const { CHAT_DURABLE_OBJECT } = c.env;
-	const id = CHAT_DURABLE_OBJECT.idFromName("main-chat");
-	const stub = CHAT_DURABLE_OBJECT.get(id);
-
-	const body = await c.req.json();
-	await stub.migrate();
-	await stub.insert({
-		message: body.message,
-	});
-
-	return c.json({ success: true });
-});
-
+export type AppType = typeof routes;
 export default app;
