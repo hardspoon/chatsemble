@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 export default function Home() {
 	const testDurableObject = async () => {
 		const response = await fetch(
-			`http://${process.env.NEXT_PUBLIC_DO_CHAT_API_HOST}/`,
+			`http://${process.env.NEXT_PUBLIC_DO_CHAT_API_HOST}/messages`,
 		);
 		const data = await response.json();
 		console.log(data);

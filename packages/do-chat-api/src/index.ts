@@ -1,40 +1,43 @@
 export { ChatDurableObject } from "./chat-durable-object";
+import { Hono } from "hono";
+import { cors } from "hono/cors";
 
-export default {
-	async fetch(request, env) {
-		// Handle CORS preflight requests
-		if (request.method === "OPTIONS") {
-			return new Response(null, {
-				headers: {
-					"Access-Control-Allow-Origin": "*",
-					"Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-					"Access-Control-Allow-Headers": "Content-Type",
-				},
-			});
-		}
+const app = new Hono<{ Bindings: Env }>();
 
-		const id: DurableObjectId = env.CHAT_DURABLE_OBJECT.idFromName("main-chat");
-		const stub = env.CHAT_DURABLE_OBJECT.get(id);
-		await stub.migrate();
-		await stub.insert({
-			message: "Hello, world!",
-		});
-		console.log("New message created!");
+// Add CORS middleware
+app.use(
+	"*",
+	cors({
+		origin: "*",
+		allowMethods: ["GET", "POST", "OPTIONS"],
+		allowHeaders: ["Content-Type"],
+	}),
+);
 
-		const messages = await stub.select();
-		console.log("Getting all messages from the database: ", messages);
-		return new Response(
-			JSON.stringify({
-				messages,
-			}),
-			{
-				headers: {
-					"Content-Type": "application/json",
-					"Access-Control-Allow-Origin": "*",
-					"Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-					"Access-Control-Allow-Headers": "Content-Type",
-				},
-			},
-		);
-	},
-} satisfies ExportedHandler<Env>;
+// Chat routes
+app.get("/messages", async (c) => {
+	const { CHAT_DURABLE_OBJECT } = c.env;
+	const id = CHAT_DURABLE_OBJECT.idFromName("main-chat");
+	const stub = CHAT_DURABLE_OBJECT.get(id);
+
+	await stub.migrate();
+	const messages = await stub.select();
+
+	return c.json({ messages });
+});
+
+app.post("/messages", async (c) => {
+	const { CHAT_DURABLE_OBJECT } = c.env;
+	const id = CHAT_DURABLE_OBJECT.idFromName("main-chat");
+	const stub = CHAT_DURABLE_OBJECT.get(id);
+
+	const body = await c.req.json();
+	await stub.migrate();
+	await stub.insert({
+		message: body.message,
+	});
+
+	return c.json({ success: true });
+});
+
+export default app;
