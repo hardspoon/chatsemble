@@ -1,4 +1,5 @@
 /// <reference types="@cloudflare/workers-types" />
+/// <reference types="../../worker-configuration" />
 import {
 	drizzle,
 	type DrizzleSqliteDODatabase,
