@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import type { ChatMessage } from "../db/schema";
+import type { ChatMessage } from "../types/db";
 import type { HonoVariables } from "../types/hono";
 
 const app = new Hono<HonoVariables>()
@@ -12,7 +12,7 @@ const app = new Hono<HonoVariables>()
 	.get("/:roomId", async (c) => {
 		const { CHAT_DURABLE_OBJECT } = c.env;
 		const roomId = c.req.param("roomId");
-		
+
 		// Get the room's Durable Object
 		const id = CHAT_DURABLE_OBJECT.idFromString(roomId);
 		const stub = CHAT_DURABLE_OBJECT.get(id);
@@ -27,7 +27,7 @@ const app = new Hono<HonoVariables>()
 	.post("/:roomId", async (c) => {
 		const { CHAT_DURABLE_OBJECT } = c.env;
 		const roomId = c.req.param("roomId");
-		
+
 		// Get the room's Durable Object
 		const id = CHAT_DURABLE_OBJECT.idFromString(roomId);
 		const stub = CHAT_DURABLE_OBJECT.get(id);

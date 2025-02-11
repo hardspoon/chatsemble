@@ -11,5 +11,3 @@ export const chatMessagesTable = sqliteTable("chat_messages_table", {
 		.notNull()
 		.default(sql`(unixepoch())`),
 });
-
-export type ChatMessage = typeof chatMessagesTable.$inferSelect;
