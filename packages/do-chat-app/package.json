@@ -3,15 +3,15 @@
 	"version": "0.1.0",
 	"private": true,
 	"scripts": {
-		"dev": "next dev",
+		"dev": "WRANGLER_STATE_PATH=../../.wrangler/state next dev",
 		"build": "next build",
 		"start": "next start",
 		"lint": "biome check --write src",
 		"deploy": "opennextjs-cloudflare && wrangler deploy",
-		"preview": "opennextjs-cloudflare && wrangler dev",
+		"preview": "opennextjs-cloudflare && wrangler dev --port 3000 --persist-to ../../.wrangler/state",
 		"cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts",
 		"db:generate": "drizzle-kit generate",
-		"db:migrate:dev": "wrangler d1 migrations apply do-chat-d1 --local",
+		"db:migrate:dev": "wrangler d1 migrations apply do-chat-d1 --local --persist-to ../../.wrangler/state",
 		"db:studio": "drizzle-kit studio"
 	},
 	"dependencies": {
@@ -22,6 +22,8 @@
 		"@radix-ui/react-toast": "^1.2.6",
 		"@react-email/components": "^0.0.33",
 		"@tanstack/react-query": "^5.66.0",
+
+		"better-sqlite3": "^11.8.1",
 		"class-variance-authority": "^0.7.1",
 		"clsx": "^2.1.1",
 		"dotenv": "^16.4.7",
@@ -40,6 +42,7 @@
 		"zod": "^3.24.1"
 	},
 	"devDependencies": {
+		"@types/better-sqlite3": "^7.6.12",
 		"@biomejs/biome": "1.9.4",
 		"@cloudflare/workers-types": "^4.20250204.0",
 		"@opennextjs/cloudflare": "^0.4.8",
