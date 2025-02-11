@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "1bd68d53-7aa8-41bf-87bb-be1c50e95ba7",
+  "id": "bd2d7319-9e7b-40d7-81db-579301b86398",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "chat_messages_table": {
@@ -16,6 +16,20 @@
         },
         "message": {
           "name": "message",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "user_name": {
+          "name": "user_name",
           "type": "text",
           "primaryKey": false,
           "notNull": true,

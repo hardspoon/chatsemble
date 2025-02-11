@@ -1,5 +1,5 @@
 import journal from './meta/_journal.json';
-import m0000 from './0000_tiny_guardian.sql';
+import m0000 from './0000_handy_gateway.sql';
 
   export default {
     journal,

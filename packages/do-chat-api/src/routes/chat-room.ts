@@ -14,6 +14,8 @@ const app = new Hono<HonoVariables>()
 		const { CHAT_DURABLE_OBJECT } = c.env;
 		// Generate a unique ID for the new chat room
 		const id = CHAT_DURABLE_OBJECT.newUniqueId();
+		const stub = CHAT_DURABLE_OBJECT.get(id);
+		await stub.migrate();
 		return c.json({ roomId: id.toString() as string });
 	})
 	.get("/:roomId", zValidator("param", paramsSchema), async (c) => {
@@ -25,7 +27,7 @@ const app = new Hono<HonoVariables>()
 			const id = CHAT_DURABLE_OBJECT.idFromString(roomId);
 			const stub = CHAT_DURABLE_OBJECT.get(id);
 
-			await stub.migrate();
+			//await stub.migrate();
 			const messages = (await stub.select()) as ChatMessage[];
 
 			return c.json({
