@@ -37,6 +37,10 @@
 		"strict": true,
 
 		/* Skip type checking all .d.ts files. */
-		"skipLibCheck": true
+		"skipLibCheck": true,
+
+		"paths": {
+			"@do-chat/db": ["../do-chat-db/src"]
+		}
 	}
 }

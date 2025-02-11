@@ -10,8 +10,15 @@ import {
 } from "@do-chat/db";
 import { MagicLinkProvider } from "@/lib/auth/magic-link-provider";
 
+declare module "next-auth" {
+	interface Session {
+		sessionToken?: string;
+	}
+}
+
 export type AuthenticatedSession = Session & {
 	user: NonNullable<Session["user"]> & { id: string };
+	sessionToken?: string;
 };
 
 export const getNextAuth = () => {
@@ -25,5 +32,13 @@ export const getNextAuth = () => {
 		}),
 		providers: [MagicLinkProvider()],
 		debug: true,
+		callbacks: {
+			session: async ({ session }) => {
+				return {
+					...session,
+					sessionToken: session.sessionToken,
+				};
+			},
+		},
 	});
 };

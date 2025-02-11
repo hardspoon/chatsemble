@@ -2,6 +2,7 @@
 
 interface Env {
 	CHAT_DURABLE_OBJECT: DurableObjectNamespace<import("./src/index").ChatDurableObject>;
+	DB: D1Database;
 }
 declare module "*.sql" {
 	const value: string;
