@@ -7,7 +7,7 @@ import {
 	sessions,
 	users,
 	verificationTokens,
-} from "@/server/db/schema";
+} from "@do-chat/db";
 import { MagicLinkProvider } from "@/lib/auth/magic-link-provider";
 
 export type AuthenticatedSession = Session & {

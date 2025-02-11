@@ -4,7 +4,7 @@ import path from "node:path";
 
 function getLocalD1DB() {
 	try {
-		const basePath = path.resolve(".wrangler/state/v3/d1");
+		const basePath = path.resolve("../../.wrangler/state/v3/d1");
 		const dbFile = fs
 			.readdirSync(basePath, { encoding: "utf-8", recursive: true })
 			.find((f) => f.endsWith(".sqlite"));
@@ -22,10 +22,9 @@ function getLocalD1DB() {
 	}
 }
 
-// eslint-disable-next-line
 export default defineConfig({
-	out: "./src/server/db/migrations",
-	schema: "./src/server/db/schema",
+	out: "./src/migrations",
+	schema: "./src/schema",
 	dialect: "sqlite",
 	...(process.env.NODE_ENV === "production"
 		? {

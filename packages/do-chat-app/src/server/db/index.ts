@@ -7,7 +7,7 @@ import Database from "better-sqlite3";
 import { resolve } from "node:path";
 import { readdirSync } from "node:fs";
 
-import * as schema from "@/server/db/schema";
+import * as schema from "@do-chat/db";
 
 // eslint-disable-next-line import/no-unused-modules
 export let db:
