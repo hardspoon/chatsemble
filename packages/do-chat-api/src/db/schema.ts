@@ -7,6 +7,8 @@ export const chatMessagesTable = sqliteTable("chat_messages_table", {
 		.primaryKey()
 		.$defaultFn(() => nanoid(36)),
 	message: text("message").notNull(),
+	userId: text("user_id").notNull(),
+	userName: text("user_name").notNull(),
 	createdAt: integer("created_at", { mode: "number" })
 		.notNull()
 		.default(sql`(unixepoch())`),

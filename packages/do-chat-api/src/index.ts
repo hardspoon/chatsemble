@@ -1,7 +1,7 @@
 export { ChatDurableObject } from "./durable-objects/chat-durable-object";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
-import messagesRoute from "./routes/messages";
+import chatRoomRoute from "./routes/chat-room";
 import type { HonoVariables } from "./types/hono";
 
 const app = new Hono<HonoVariables>().use(
@@ -13,7 +13,7 @@ const app = new Hono<HonoVariables>().use(
 	}),
 );
 
-const routes = app.route("/messages", messagesRoute);
+const routes = app.route("/chat-room", chatRoomRoute);
 
 export type AppType = typeof routes;
 export default app;

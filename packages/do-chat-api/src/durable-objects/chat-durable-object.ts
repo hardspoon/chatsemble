@@ -9,12 +9,12 @@ import migrations from "../db/migrations/migrations";
 import { chatMessagesTable } from "../db/schema";
 import { desc } from "drizzle-orm";
 import type { Session, WsMessage } from "../types/session";
+import { nanoid } from "nanoid";
 
 export class ChatDurableObject extends DurableObject<Env> {
 	storage: DurableObjectStorage;
 	db: DrizzleSqliteDODatabase;
 	sessions: Map<WebSocket, Session>;
-	lastTimestamp: number;
 	state: DurableObjectState;
 
 	constructor(ctx: DurableObjectState, env: Env) {
@@ -22,16 +22,18 @@ export class ChatDurableObject extends DurableObject<Env> {
 		this.storage = ctx.storage;
 		this.db = drizzle(this.storage, { logger: false });
 		this.sessions = new Map();
-		this.lastTimestamp = 0;
 		this.state = ctx;
 
 		// Restore any existing WebSocket sessions
 		for (const webSocket of ctx.getWebSockets()) {
 			const meta = webSocket.deserializeAttachment() || {};
-			this.sessions.set(webSocket, {
-				webSocket,
-				name: meta.name,
-			});
+			if (meta.userId && meta.userName) {
+				this.sessions.set(webSocket, {
+					webSocket,
+					userId: meta.userId,
+					userName: meta.userName,
+				});
+			}
 		}
 	}
 
@@ -55,21 +57,35 @@ export class ChatDurableObject extends DurableObject<Env> {
 	}
 
 	async fetch(request: Request) {
-		// Handle WebSocket connections
 		if (request.headers.get("Upgrade") === "websocket") {
 			const webSocketPair = new WebSocketPair();
 			const [client, server] = Object.values(webSocketPair);
 
-			// Use acceptWebSocket for hibernation support
+			// Create session with generated userId and userName
+			const userId = nanoid();
+			const userName = `User-${userId.slice(0, 6)}`;
+			
+			// Serialize the session data for hibernation
+			server.serializeAttachment({
+				userId,
+				userName,
+			});
+
 			this.state.acceptWebSocket(server);
 
-			// Create session
 			const session: Session = {
 				webSocket: server,
+				userId,
+				userName,
 			};
 			this.sessions.set(server, session);
 
-			this.broadcast({ type: "join", id: "1" });
+			// Broadcast join event
+			this.broadcast({ 
+				type: "join", 
+				userId: session.userId, 
+				userName: session.userName 
+			});
 
 			return new Response(null, { status: 101, webSocket: client });
 		}
@@ -82,44 +98,70 @@ export class ChatDurableObject extends DurableObject<Env> {
 			return;
 		}
 
-		const parsedMsg: WsMessage = JSON.parse(message);
+		const session = this.sessions.get(webSocket);
+		if (!session) {
+			return;
+		}
 
 		try {
-			switch (parsedMsg.type) {
-				case "message":
-					this.broadcast({ type: "message", data: parsedMsg.data });
-					break;
+			const parsedMsg: WsMessage = JSON.parse(message);
+			
+			if (parsedMsg.type === "message") {
+				// Store message in database
+				await this.insert({
+					message: parsedMsg.data,
+					userId: session.userId,
+					userName: session.userName,
+				});
+
+				// Broadcast message to all except sender
+				this.broadcast(
+					{ 
+						type: "message", 
+						userId: session.userId, 
+						userName: session.userName, 
+						data: parsedMsg.data 
+					},
+					session.userId
+				);
 			}
 		} catch (err) {
 			if (err instanceof Error) {
-				webSocket.send(JSON.stringify({ error: err.stack }));
+				webSocket.send(JSON.stringify({ error: err.message }));
 			}
 		}
 	}
 
 	async webSocketClose(ws: WebSocket) {
-		const id = this.sessions.get(ws)?.name;
-		id && this.broadcast({ type: "quit", id });
-		this.sessions.delete(ws);
+		const session = this.sessions.get(ws);
+		if (session) {
+			// Broadcast quit message
+			this.broadcast({ 
+				type: "quit", 
+				userId: session.userId, 
+				userName: session.userName 
+			});
+			this.sessions.delete(ws);
+		}
 		ws.close();
 	}
 
 	async webSocketError(webSocket: WebSocket) {
-		// Handle the error by closing the connection
 		const session = this.sessions.get(webSocket);
 		if (session) {
-			session.quit = true;
+			this.broadcast({ 
+				type: "quit", 
+				userId: session.userId, 
+				userName: session.userName 
+			});
 			this.sessions.delete(webSocket);
-			if (session.name) {
-				this.broadcast({ quit: session.name });
-			}
 		}
+		webSocket.close();
 	}
 
-	private broadcast(message: WsMessage, self?: string) {
-		for (const ws of this.ctx.getWebSockets()) {
-			const { id } = ws.deserializeAttachment();
-			if (id !== self) {
+	private broadcast(message: WsMessage, excludeUserId?: string) {
+		for (const [ws, session] of this.sessions.entries()) {
+			if (!excludeUserId || session.userId !== excludeUserId) {
 				ws.send(JSON.stringify(message));
 			}
 		}
