@@ -2,5 +2,6 @@
 
 interface CloudflareEnv {
 	NEXTJS_ENV: string;
+	DB: D1Database;
 	ASSETS: Fetcher;
 }
