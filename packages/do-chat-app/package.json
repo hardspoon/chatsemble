@@ -16,7 +16,6 @@
 	},
 	"dependencies": {
 		"@auth/drizzle-adapter": "^1.7.4",
-		"@hono/zod-validator": "^0.4.2",
 		"@hookform/resolvers": "^4.0.0",
 		"@radix-ui/react-label": "^2.1.2",
 		"@radix-ui/react-slot": "^1.1.2",

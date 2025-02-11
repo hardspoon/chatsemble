@@ -14,7 +14,7 @@ const app = new Hono<HonoVariables>()
 		const { CHAT_DURABLE_OBJECT } = c.env;
 		// Generate a unique ID for the new chat room
 		const id = CHAT_DURABLE_OBJECT.newUniqueId();
-		return c.json({ roomId: id.toString() });
+		return c.json({ roomId: id.toString() as string });
 	})
 	.get("/:roomId", zValidator("param", paramsSchema), async (c) => {
 		const { CHAT_DURABLE_OBJECT } = c.env;
