@@ -40,7 +40,7 @@
 		"skipLibCheck": true,
 
 		"paths": {
-			"@do-chat/db": ["../do-chat-db/src"]
+			"@/do-chat-shared": ["../do-chat-shared/src"]
 		}
 	}
 }
