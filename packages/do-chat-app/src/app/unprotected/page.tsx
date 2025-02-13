@@ -2,14 +2,13 @@
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { getAuthenticatedClient } from "@/lib/api-client";
+import { client } from "@/lib/api-client";
 
 export default function Home() {
 	const testDurableObject = async () => {
 		try {
 			console.log("Fetching messages...");
-			const authClient = await getAuthenticatedClient();
-			const response = await authClient["chat-room"].create.$post();
+			const response = await client["chat-room"].create.$post();
 			const data = await response.json();
 			console.log("Messages:", data);
 		} catch (error) {

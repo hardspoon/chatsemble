@@ -1,4 +1,6 @@
-import { getNextAuth } from "@/auth";
+import { getAuth } from "@/auth";
+import { headers } from "next/headers";
+import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
 
 export default async function RootLayout({
@@ -6,11 +8,13 @@ export default async function RootLayout({
 }: Readonly<{
 	children: ReactNode;
 }>) {
-	const { auth, signIn } = getNextAuth();
-	const session = await auth();
+	const auth = getAuth();
+	const session = await auth.api.getSession({
+		headers: await headers(),
+	});
 
 	if (!session) {
-		return signIn(undefined, { redirectTo: "/auth/login" });
+		return redirect("/auth/login");
 	}
 
 	return children;

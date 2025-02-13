@@ -23,23 +23,26 @@ import { authClient } from "@/lib/auth/auth-client";
 const formSchema = z.object({
 	email: z.string().email("Please enter a valid email address"),
 	password: z.string().min(8, "Password must be at least 8 characters"),
+	name: z.string().min(2, "Name must be at least 2 characters"),
 });
 
-export default function LoginForm() {
+export default function SignupForm() {
 	const router = useRouter();
 	const form = useForm<z.infer<typeof formSchema>>({
 		resolver: zodResolver(formSchema),
 		defaultValues: {
 			email: "",
 			password: "",
+			name: "",
 		},
 	});
 
 	const { mutate, isPending, error } = useMutation({
 		mutationFn: async (values: z.infer<typeof formSchema>) => {
-			const { data, error } = await authClient.signIn.email({
+			const { data, error } = await authClient.signUp.email({
 				email: values.email,
 				password: values.password,
+				name: values.name,
 				callbackURL: "/",
 			});
 
@@ -49,7 +52,7 @@ export default function LoginForm() {
 			return data;
 		},
 		onSuccess: () => {
-			router.push("/editor");
+			router.push("/");
 		},
 	});
 
@@ -62,11 +65,29 @@ export default function LoginForm() {
 			<Card className="w-full max-w-[400px]">
 				<CardHeader className="flex flex-col items-center space-y-2">
 					<LogoIcon className="size-28" />
-					<CardTitle className="text-2xl font-bold">Sign in</CardTitle>
+					<CardTitle className="text-2xl font-bold">Sign up</CardTitle>
 				</CardHeader>
 				<CardContent>
 					<Form {...form}>
 						<form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+							<FormField
+								control={form.control}
+								name="name"
+								render={({ field }) => (
+									<FormItem>
+										<FormControl>
+											<Input
+												placeholder="Your Name"
+												type="text"
+												autoComplete="name"
+												{...field}
+											/>
+										</FormControl>
+										<FormMessage />
+									</FormItem>
+								)}
+							/>
+
 							<FormField
 								control={form.control}
 								name="email"
@@ -94,7 +115,7 @@ export default function LoginForm() {
 											<Input
 												placeholder="Password"
 												type="password"
-												autoComplete="current-password"
+												autoComplete="new-password"
 												{...field}
 											/>
 										</FormControl>
@@ -110,13 +131,13 @@ export default function LoginForm() {
 							)}
 
 							<Button type="submit" className="w-full" disabled={isPending}>
-								{isPending ? "Signing in..." : "Sign in"}
+								{isPending ? "Creating account..." : "Sign up"}
 							</Button>
 
 							<div className="text-center text-sm text-muted-foreground">
-								Don&apos;t have an account?{" "}
-								<Button variant="link" className="p-0 text-primary" onClick={() => router.push("/auth/signup")}>
-									Sign up
+								Already have an account?{" "}
+								<Button variant="link" className="p-0 text-primary" onClick={() => router.push("/auth/login")}>
+									Sign in
 								</Button>
 							</div>
 						</form>
