@@ -1,4 +1,4 @@
-import { getAuth } from "@/auth";
+import { getAuth } from "@/lib/auth/auth-server";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
