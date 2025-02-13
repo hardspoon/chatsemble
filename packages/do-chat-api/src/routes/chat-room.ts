@@ -16,6 +16,11 @@ const app = new Hono<HonoVariables>()
 		const id = CHAT_DURABLE_OBJECT.newUniqueId();
 		const stub = CHAT_DURABLE_OBJECT.get(id);
 		await stub.migrate();
+
+		const user = c.get("user");
+
+		console.log("user", user);
+
 		return c.json({ roomId: id.toString() as string });
 	})
 	.get("/:roomId", zValidator("param", paramsSchema), async (c) => {

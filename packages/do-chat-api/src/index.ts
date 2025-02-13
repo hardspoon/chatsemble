@@ -21,7 +21,7 @@ const app = new Hono<HonoVariables>()
 		}),
 	)
 	.use("*", async (c, next) => {
-		const db = drizzle(c.env.DB);
+		const db = drizzle(c.env.DB, { schema });
 		c.set("db", db);
 		await next();
 	})
@@ -35,22 +35,23 @@ const app = new Hono<HonoVariables>()
 
 		const db = c.get("db");
 
-		const [validSession] = await db
-			.select()
-			.from(schema.session)
-			.where(
-				and(
-					eq(schema.session.token, searchToken),
-					gt(schema.session.expiresAt, new Date()),
-				),
-			)
-			.limit(1);
+		const validSession = await db.query.session.findFirst({
+			where: and(
+				eq(schema.session.token, searchToken),
+				gt(schema.session.expiresAt, new Date()),
+			),
+			with: {
+				user: true,
+			},
+		});
+
+		console.log("validSession", validSession);
 
 		if (!validSession) {
 			return c.json({ error: "Invalid or expired session" }, 401);
 		}
 
-		c.set("userId", validSession.userId);
+		c.set("user", validSession.user);
 		await next();
 	});
 
