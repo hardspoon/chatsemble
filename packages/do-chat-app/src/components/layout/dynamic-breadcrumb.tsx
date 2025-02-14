@@ -13,34 +13,23 @@ export function DynamicBreadcrumb() {
 	const pathname = usePathname();
 
 	const getBreadcrumbItems = () => {
-		if (pathname === "/") {
-			return [
-				<BreadcrumbItem key="chats">
-					<BreadcrumbPage>Chats</BreadcrumbPage>
-				</BreadcrumbItem>,
-			];
-		}
-		if (pathname.startsWith("/settings")) {
-			const section = pathname.split("/")[2];
-			const items = [
-				<BreadcrumbItem key="settings">
-					<BreadcrumbPage>Settings</BreadcrumbPage>
-				</BreadcrumbItem>,
-			];
-
-			if (section) {
-				items.push(
-					<BreadcrumbSeparator key="separator" />,
+		const sections = pathname.split("/").slice(1);
+		const items = [];
+		for (let i = 0; i < sections.length; i++) {
+			const section = sections[i];
+			items.push(
+				<>
+					{i > 0 && <BreadcrumbSeparator key={`separator-${section}`} />}
 					<BreadcrumbItem key={section}>
 						<BreadcrumbPage>
 							{section.charAt(0).toUpperCase() + section.slice(1)}
 						</BreadcrumbPage>
-					</BreadcrumbItem>,
-				);
-			}
-			return items;
+					</BreadcrumbItem>
+				</>,
+			);
 		}
-		return [];
+
+		return items;
 	};
 
 	return (

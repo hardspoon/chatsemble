@@ -22,7 +22,7 @@ export function LoggedInCard({ email }: LoggedInCardProps) {
 						<AlertDescription>You are logged in as {email}</AlertDescription>
 					</Alert>
 					<Button className="w-full mt-4" asChild>
-						<Link href="/">Go home</Link>
+						<Link href="/chat">Go to chat</Link>
 					</Button>
 				</CardContent>
 			</Card>

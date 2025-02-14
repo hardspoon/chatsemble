@@ -33,9 +33,9 @@ const data = {
 	navMain: [
 		{
 			title: "Chats",
-			url: "/", // Redirect URL
+			url: "/chat", // Redirect URL
 			icon: MessageSquare,
-			activeMatch: /^\/$/, // Exact match for home
+			activeMatch: /^\/chat/, // Exact match for home
 		},
 		{
 			title: "Settings",
@@ -82,7 +82,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 					<SidebarMenu>
 						<SidebarMenuItem>
 							<SidebarMenuButton size="lg" asChild className="md:h-8 md:p-0">
-								<a href="/">
+								<a href="/chat">
 									<div className="flex aspect-square size-8 items-center justify-center">
 										<LogoIcon className="size-8" />
 									</div>
@@ -133,7 +133,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
 			{/* Second sidebar - content */}
 			<Sidebar collapsible="none" className="hidden flex-1 md:flex">
-				{pathname === "/" ? (
+				{pathname === "/chat" ? (
 					<ChatsSidebar chats={data.chats} />
 				) : (
 					<SettingsSidebar />

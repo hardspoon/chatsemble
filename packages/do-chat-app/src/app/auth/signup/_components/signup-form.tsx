@@ -2,7 +2,6 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
-import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 
@@ -33,7 +32,6 @@ export const signupFormSchema = z.object({
 });
 
 export default function SignupForm() {
-	const router = useRouter();
 	const form = useForm<z.infer<typeof signupFormSchema>>({
 		resolver: zodResolver(signupFormSchema),
 		defaultValues: {
@@ -61,16 +59,13 @@ export default function SignupForm() {
 						image: values.image,
 					},
 				},
-				callbackURL: "/",
+				callbackURL: "/chat",
 			});
 
 			if (error) {
 				throw error;
 			}
 			return data;
-		},
-		onSuccess: () => {
-			router.push("/");
 		},
 	});
 
