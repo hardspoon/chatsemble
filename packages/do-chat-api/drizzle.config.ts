@@ -1,10 +1,13 @@
 import "dotenv/config";
 import { defineConfig } from "drizzle-kit";
 
+const drizzleOut = process.env.DRIZZLE_OUT;
+const drizzleSchema = process.env.DRIZZLE_SCHEMA;
+
 // For Durable Objects
 export default defineConfig({
-	out: "./src/db/migrations",
-	schema: "./src/db/schema.ts",
+	out: drizzleOut,
+	schema: drizzleSchema,
 	dialect: "sqlite",
 	driver: "durable-sqlite",
 });

@@ -1,4 +1,4 @@
-export { ChatDurableObject } from "./durable-objects/chat-durable-object";
+export { ChatDurableObject } from "./durable-objects/chat-room/chat-durable-object";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { getCookie } from "hono/cookie";

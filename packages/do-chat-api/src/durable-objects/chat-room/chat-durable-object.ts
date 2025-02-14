@@ -1,15 +1,15 @@
 /// <reference types="@cloudflare/workers-types" />
-/// <reference types="../../worker-configuration" />
+/// <reference types="../../../worker-configuration" />
 import {
 	drizzle,
 	type DrizzleSqliteDODatabase,
 } from "drizzle-orm/durable-sqlite";
 import { DurableObject } from "cloudflare:workers";
 import { migrate } from "drizzle-orm/durable-sqlite/migrator";
-import migrations from "../db/migrations/migrations";
-import { chatMessagesTable, chatRoomMembersTable } from "../db/schema";
+import migrations from "./db/migrations/migrations";
+import { chatMessagesTable, chatRoomMembersTable } from "./db/schema";
 import { desc, eq } from "drizzle-orm";
-import type { Session, WsMessage } from "../types/session";
+import type { Session, WsMessage } from "../../types/session";
 import { nanoid } from "nanoid";
 
 export class ChatDurableObject extends DurableObject<Env> {

@@ -1,4 +1,4 @@
-import type { chatMessagesTable } from "../db/schema";
+import type { chatMessagesTable } from "../durable-objects/chat-room/db/schema";
 import { z } from "zod";
 export type ChatMessage = typeof chatMessagesTable.$inferSelect;
 
