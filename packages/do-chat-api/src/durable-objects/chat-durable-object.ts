@@ -7,8 +7,8 @@ import {
 import { DurableObject } from "cloudflare:workers";
 import { migrate } from "drizzle-orm/durable-sqlite/migrator";
 import migrations from "../db/migrations/migrations";
-import { chatMessagesTable } from "../db/schema";
-import { desc } from "drizzle-orm";
+import { chatMessagesTable, chatRoomMembersTable } from "../db/schema";
+import { desc, eq } from "drizzle-orm";
 import type { Session, WsMessage } from "../types/session";
 import { nanoid } from "nanoid";
 
@@ -28,11 +28,10 @@ export class ChatDurableObject extends DurableObject<Env> {
 		// Restore any existing WebSocket sessions
 		for (const webSocket of ctx.getWebSockets()) {
 			const meta = webSocket.deserializeAttachment() || {};
-			if (meta.userId && meta.userName) {
+			if (meta.userId) {
 				this.sessions.set(webSocket, {
 					webSocket,
 					userId: meta.userId,
-					userName: meta.userName,
 				});
 			}
 		}
@@ -64,12 +63,10 @@ export class ChatDurableObject extends DurableObject<Env> {
 
 			// Create session with generated userId and userName
 			const userId = nanoid();
-			const userName = `User-${userId.slice(0, 6)}`;
-			
+
 			// Serialize the session data for hibernation
 			server.serializeAttachment({
 				userId,
-				userName,
 			});
 
 			this.state.acceptWebSocket(server);
@@ -77,16 +74,17 @@ export class ChatDurableObject extends DurableObject<Env> {
 			const session: Session = {
 				webSocket: server,
 				userId,
-				userName,
 			};
 			this.sessions.set(server, session);
 
 			// Broadcast join event
-			this.broadcast({ 
-				type: "join", 
-				userId: session.userId, 
-				userName: session.userName 
+			this.broadcast({
+				type: "join",
+				userId: session.userId,
 			});
+
+			// Add/update member when connection is established
+			await this.addMember(userId);
 
 			return new Response(null, { status: 101, webSocket: client });
 		}
@@ -95,10 +93,6 @@ export class ChatDurableObject extends DurableObject<Env> {
 	}
 
 	async webSocketMessage(webSocket: WebSocket, message: string) {
-		if (typeof message !== "string") {
-			return;
-		}
-
 		const session = this.sessions.get(webSocket);
 		if (!session) {
 			return;
@@ -106,24 +100,28 @@ export class ChatDurableObject extends DurableObject<Env> {
 
 		try {
 			const parsedMsg: WsMessage = JSON.parse(message);
-			
+
 			if (parsedMsg.type === "message") {
+				// Check room status and user permissions
+				/* const isAllowed = await this.isUserAllowed(session.userId);
+				if (!isAllowed) {
+					throw new Error("Room is archived or user not allowed");
+				} */
+
 				// Store message in database
 				await this.insert({
 					message: parsedMsg.data,
 					userId: session.userId,
-					userName: session.userName,
 				});
 
 				// Broadcast message to all except sender
 				this.broadcast(
-					{ 
-						type: "message", 
-						userId: session.userId, 
-						userName: session.userName, 
-						data: parsedMsg.data 
+					{
+						type: "message",
+						userId: session.userId,
+						data: parsedMsg.data,
 					},
-					session.userId
+					session.userId,
 				);
 			}
 		} catch (err) {
@@ -136,11 +134,16 @@ export class ChatDurableObject extends DurableObject<Env> {
 	async webSocketClose(ws: WebSocket) {
 		const session = this.sessions.get(ws);
 		if (session) {
+			// Update last active time but keep member record
+			await this.db
+				.update(chatRoomMembersTable)
+				.set({ lastActive: Math.floor(Date.now() / 1000) })
+				.where(eq(chatRoomMembersTable.id, session.userId));
+
 			// Broadcast quit message
-			this.broadcast({ 
-				type: "quit", 
-				userId: session.userId, 
-				userName: session.userName 
+			this.broadcast({
+				type: "quit",
+				userId: session.userId,
 			});
 			this.sessions.delete(ws);
 		}
@@ -150,10 +153,9 @@ export class ChatDurableObject extends DurableObject<Env> {
 	async webSocketError(webSocket: WebSocket) {
 		const session = this.sessions.get(webSocket);
 		if (session) {
-			this.broadcast({ 
-				type: "quit", 
-				userId: session.userId, 
-				userName: session.userName 
+			this.broadcast({
+				type: "quit",
+				userId: session.userId,
 			});
 			this.sessions.delete(webSocket);
 		}
@@ -166,5 +168,48 @@ export class ChatDurableObject extends DurableObject<Env> {
 				ws.send(JSON.stringify(message));
 			}
 		}
+	}
+
+	/* async getRoomSettings() {
+		return this.db.select().from(chatRoomSettingsTable).get();
+	}
+
+	async updateRoomSettings(
+		settings: Partial<typeof chatRoomSettingsTable.$inferInsert>,
+	) {
+		await this.db
+			.update(chatRoomSettingsTable)
+			.set(settings)
+			.where(eq(chatRoomSettingsTable.roomId, this.id.toString()));
+	} */
+
+	async addMember(userId: string, role = "member") {
+		await this.db
+			.insert(chatRoomMembersTable)
+			.values({
+				id: userId,
+				role,
+				joinedAt: Math.floor(Date.now() / 1000),
+				lastActive: Math.floor(Date.now() / 1000),
+			})
+			.onConflictDoUpdate({
+				target: chatRoomMembersTable.id,
+				set: {
+					role,
+					lastActive: Math.floor(Date.now() / 1000),
+				},
+			});
+	}
+
+	async getMember(userId: string) {
+		return this.db
+			.select()
+			.from(chatRoomMembersTable)
+			.where(eq(chatRoomMembersTable.id, userId))
+			.get();
+	}
+
+	async getMembers() {
+		return this.db.select().from(chatRoomMembersTable).all();
 	}
 }

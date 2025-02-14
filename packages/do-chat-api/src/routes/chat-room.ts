@@ -1,29 +1,82 @@
 import { Hono } from "hono";
 import { z } from "zod";
-import { zValidator } from "@hono/zod-validator";
-import { insertChatMessageSchema, type ChatMessage } from "../types/db";
+
 import type { HonoVariables } from "../types/hono";
+import { schema as d1Schema } from "@/do-chat-shared";
+import { zValidator } from "@hono/zod-validator";
 
 // Validation schemas
-const paramsSchema = z.object({
+/* const paramsSchema = z.object({
 	roomId: z.string().min(1),
-});
+}); */
 
 const app = new Hono<HonoVariables>()
-	.post("/create", async (c) => {
-		const { CHAT_DURABLE_OBJECT } = c.env;
-		// Generate a unique ID for the new chat room
-		const id = CHAT_DURABLE_OBJECT.newUniqueId();
-		const stub = CHAT_DURABLE_OBJECT.get(id);
-		await stub.migrate();
+	.post(
+		"/create",
+		zValidator(
+			"json",
+			z.object({
+				name: z.string().min(1),
+				isPrivate: z.boolean().optional(),
+			}),
+		),
+		async (c) => {
+			const { CHAT_DURABLE_OBJECT } = c.env;
+			const db = c.get("db");
+			const user = c.get("user");
+			const session = c.get("session");
+			const { activeOrganizationId } = session;
+			const { name, isPrivate } = c.req.valid("json");
 
-		const user = c.get("user");
+			if (!activeOrganizationId) {
+				return c.json({ error: "Organization not set" }, 403);
+			}
 
-		console.log("user", user);
+			// Create durable object
+			const id = CHAT_DURABLE_OBJECT.newUniqueId();
+			const chatRoom = CHAT_DURABLE_OBJECT.get(id);
 
-		return c.json({ roomId: id.toString() as string });
-	})
-	.get("/:roomId", zValidator("param", paramsSchema), async (c) => {
+			await chatRoom.migrate();
+			await chatRoom.addMember(user.id, "admin");
+
+			// Create room record in D1
+			await db.insert(d1Schema.chatRoom).values({
+				id: id.toString(),
+				name,
+				organizationId: activeOrganizationId,
+				isPrivate: isPrivate ?? false,
+			});
+			await db.insert(d1Schema.chatRoomMember).values({
+				roomId: id.toString(),
+				userId: user.id,
+			});
+
+			return c.json({ roomId: id.toString() });
+		},
+	)
+	.get("/", async (c) => {
+		const db = c.get("db");
+		const session = c.get("session");
+		const { activeOrganizationId } = session;
+
+		if (!activeOrganizationId) {
+			return c.json({ error: "Organization not set" }, 403);
+		}
+
+		const rooms = await db.query.chatRoom.findMany({
+			where: (rooms, { eq }) => eq(rooms.organizationId, activeOrganizationId),
+			with: {
+				members: {
+					with: {
+						user: true,
+					},
+				},
+			},
+		});
+
+		return c.json({ rooms });
+	});
+/* .get("/:roomId", zValidator("param", paramsSchema), async (c) => {
 		const { CHAT_DURABLE_OBJECT } = c.env;
 		const { roomId } = c.req.valid("param");
 
@@ -73,25 +126,32 @@ const app = new Hono<HonoVariables>()
 		},
 	)
 	.get("/:roomId/websocket", zValidator("param", paramsSchema), async (c) => {
-		const { CHAT_DURABLE_OBJECT } = c.env;
+		const user = c.get("user");
 		const { roomId } = c.req.valid("param");
+		const db = c.get("db");
 
-		try {
-			// Verify this is a websocket request
-			if (c.req.header("Upgrade") !== "websocket") {
-				return c.json({ error: "Expected websocket" }, 400);
+		// Verify organization membership through D1
+		const room = await db.query.chatRoom.findFirst({
+			where: (rooms, { eq }) => eq(rooms.id, roomId),
+			with: {
+				organization: {
+					with: {
+						members: {
+							where: (members, { eq }) => eq(members.userId, user.id)
+						}
+					}
+				}
 			}
+		});
 
-			// Get the room's Durable Object
-			const id = CHAT_DURABLE_OBJECT.idFromString(roomId);
-			const stub = CHAT_DURABLE_OBJECT.get(id);
-
-			// Forward the websocket request to the Durable Object
-			return stub.fetch(c.req.url, c.req);
-		} catch (err) {
-			const error = err instanceof Error ? err.message : "Invalid room ID";
-			return c.json({ error }, 400);
+		if (!room?.organization?.members?.length) {
+			return c.json({ error: "Not authorized" }, 403);
 		}
-	});
+
+		// Proceed with WebSocket connection
+		const id = c.env.CHAT_DURABLE_OBJECT.idFromString(room.durableObjectId);
+		const stub = c.env.CHAT_DURABLE_OBJECT.get(id);
+		return stub.fetch(c.req.url, c.req);
+	}); */
 
 export default app;

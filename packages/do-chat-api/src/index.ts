@@ -48,10 +48,13 @@ const app = new Hono<HonoVariables>()
 		console.log("validSession", validSession);
 
 		if (!validSession) {
-			return c.json({ error: "Invalid or expired session" }, 401);
+			return c.json({ error: "Invalid session" }, 401);
 		}
 
-		c.set("user", validSession.user);
+		const { user, ...session } = validSession;
+
+		c.set("user", user);
+		c.set("session", session);
 		await next();
 	});
 
