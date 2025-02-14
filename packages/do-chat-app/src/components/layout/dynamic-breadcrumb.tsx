@@ -8,6 +8,7 @@ import {
 	BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import { usePathname } from "next/navigation";
+import React from "react";
 
 export function DynamicBreadcrumb() {
 	const pathname = usePathname();
@@ -18,14 +19,14 @@ export function DynamicBreadcrumb() {
 		for (let i = 0; i < sections.length; i++) {
 			const section = sections[i];
 			items.push(
-				<>
-					{i > 0 && <BreadcrumbSeparator key={`separator-${section}`} />}
-					<BreadcrumbItem key={section}>
+				<React.Fragment key={`fragment-${section}-${i}`}>
+					{i > 0 && <BreadcrumbSeparator />}
+					<BreadcrumbItem>
 						<BreadcrumbPage>
 							{section.charAt(0).toUpperCase() + section.slice(1)}
 						</BreadcrumbPage>
 					</BreadcrumbItem>
-				</>,
+				</React.Fragment>,
 			);
 		}
 

@@ -45,8 +45,6 @@ const app = new Hono<HonoVariables>()
 			},
 		});
 
-		console.log("validSession", validSession);
-
 		if (!validSession) {
 			return c.json({ error: "Invalid session" }, 401);
 		}

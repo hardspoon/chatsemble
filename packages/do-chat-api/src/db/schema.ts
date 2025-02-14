@@ -14,6 +14,9 @@ export const chatMessagesTable = sqliteTable("chat_messages_table", {
 });
 
 export const chatRoomSettingsTable = sqliteTable("chat_room_settings", {
+	id: text("id")
+		.primaryKey()
+		.$defaultFn(() => nanoid(36)),
 	isArchived: integer("is_archived", { mode: "boolean" })
 		.notNull()
 		.default(false),
@@ -21,7 +24,7 @@ export const chatRoomSettingsTable = sqliteTable("chat_room_settings", {
 });
 
 export const chatRoomMembersTable = sqliteTable("chat_room_members", {
-	id: text("user_id").notNull(),
+	id: text("user_id").primaryKey(),
 	role: text("role").notNull().default("member"),
 	joinedAt: integer("joined_at", { mode: "number" })
 		.notNull()

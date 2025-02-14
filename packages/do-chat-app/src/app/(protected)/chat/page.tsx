@@ -2,11 +2,10 @@
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { client } from "@/lib/api-client";
 import { authClient } from "@/lib/auth/auth-client";
 
 export default function Home() {
-	const testDurableObject = async () => {
+	/* const testDurableObject = async () => {
 		try {
 			console.log("Fetching messages...");
 			const response = await client["chat-room"].create.$post();
@@ -15,7 +14,7 @@ export default function Home() {
 		} catch (error) {
 			console.error("Error fetching messages:", error);
 		}
-	};
+	}; */
 
 	const { data: session } = authClient.useSession();
 
@@ -29,7 +28,7 @@ export default function Home() {
 				</CardHeader>
 				<CardContent>
 					<p>This is a card</p>
-					<Button onClick={testDurableObject}>Click me</Button>
+					<Button>Click me</Button>
 				</CardContent>
 			</Card>
 		</main>

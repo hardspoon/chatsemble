@@ -29,15 +29,21 @@ const app = new Hono<HonoVariables>()
 			const { name, isPrivate } = c.req.valid("json");
 
 			if (!activeOrganizationId) {
-				return c.json({ error: "Organization not set" }, 403);
+				throw new Error("Organization not set");
 			}
+
+			console.log("activeOrganizationId", activeOrganizationId);
 
 			// Create durable object
 			const id = CHAT_DURABLE_OBJECT.newUniqueId();
 			const chatRoom = CHAT_DURABLE_OBJECT.get(id);
 
+			console.log("chatRoom", chatRoom);
+
 			await chatRoom.migrate();
 			await chatRoom.addMember(user.id, "admin");
+
+			console.log("chatRoomMembers");
 
 			// Create room record in D1
 			await db.insert(d1Schema.chatRoom).values({
@@ -46,10 +52,15 @@ const app = new Hono<HonoVariables>()
 				organizationId: activeOrganizationId,
 				isPrivate: isPrivate ?? false,
 			});
+
+			console.log("mid insert");
+
 			await db.insert(d1Schema.chatRoomMember).values({
 				roomId: id.toString(),
 				userId: user.id,
 			});
+
+			console.log("data inserted");
 
 			return c.json({ roomId: id.toString() });
 		},
@@ -60,7 +71,7 @@ const app = new Hono<HonoVariables>()
 		const { activeOrganizationId } = session;
 
 		if (!activeOrganizationId) {
-			return c.json({ error: "Organization not set" }, 403);
+			throw new Error("Organization not set");
 		}
 
 		const rooms = await db.query.chatRoom.findMany({
@@ -74,7 +85,7 @@ const app = new Hono<HonoVariables>()
 			},
 		});
 
-		return c.json({ rooms });
+		return c.json(rooms);
 	});
 /* .get("/:roomId", zValidator("param", paramsSchema), async (c) => {
 		const { CHAT_DURABLE_OBJECT } = c.env;
