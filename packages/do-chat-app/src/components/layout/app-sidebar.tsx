@@ -5,8 +5,6 @@ import { MessageSquare, Settings } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 
 import { NavUser } from "@/components/layout/nav-user";
-import { ChatsSidebar } from "@/components/layout/chats-sidebar";
-import { SettingsSidebar } from "@/components/layout/settings-sidebar";
 import {
 	Sidebar,
 	SidebarContent,
@@ -22,45 +20,23 @@ import {
 import Link from "next/link";
 import { ThemeToggle } from "../theme-toggle";
 import { LogoIcon } from "../icons/logo-icon";
+import { AppInnerSidebar } from "./app-inner-sidebar";
 
 // Updated sample data with activeMatch regex
-const data = {
-	user: {
-		name: "shadcn",
-		email: "m@example.com",
-		avatar: "/avatars/shadcn.jpg",
+const navMain = [
+	{
+		title: "Chats",
+		url: "/chat", // Redirect URL
+		icon: MessageSquare,
+		activeMatch: /^\/chat/, // Exact match for home
 	},
-	navMain: [
-		{
-			title: "Chats",
-			url: "/chat", // Redirect URL
-			icon: MessageSquare,
-			activeMatch: /^\/chat/, // Exact match for home
-		},
-		{
-			title: "Settings",
-			url: "/settings/profile", // Redirect URL
-			icon: Settings,
-			activeMatch: /^\/settings/, // Matches any settings route
-		},
-	],
-	// Sample chats data
-	chats: [
-		{
-			id: "1",
-			name: "Team Discussion",
-			lastMessage: "Let's schedule the meeting for tomorrow",
-			timestamp: "09:34 AM",
-		},
-		{
-			id: "2",
-			name: "Project Alpha",
-			lastMessage: "The new designs look great!",
-			timestamp: "Yesterday",
-		},
-		// ... more chats
-	],
-};
+	{
+		title: "Settings",
+		url: "/settings/profile", // Redirect URL
+		icon: Settings,
+		activeMatch: /^\/settings/, // Matches any settings route
+	},
+];
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 	const pathname = usePathname();
@@ -99,7 +75,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 					<SidebarGroup>
 						<SidebarGroupContent className="px-1.5 md:px-0">
 							<SidebarMenu>
-								{data.navMain.map((item) => (
+								{navMain.map((item) => (
 									<SidebarMenuItem key={item.title}>
 										<SidebarMenuButton
 											tooltip={{
@@ -132,13 +108,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 			</Sidebar>
 
 			{/* Second sidebar - content */}
-			<Sidebar collapsible="none" className="hidden flex-1 md:flex">
-				{pathname === "/chat" ? (
-					<ChatsSidebar chats={data.chats} />
-				) : (
-					<SettingsSidebar />
-				)}
-			</Sidebar>
+			<AppInnerSidebar />
 		</Sidebar>
 	);
 }

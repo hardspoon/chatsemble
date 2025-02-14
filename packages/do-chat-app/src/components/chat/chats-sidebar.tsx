@@ -8,18 +8,22 @@ import {
 	SidebarInput,
 } from "@/components/ui/sidebar";
 
-interface Chat {
-	id: string;
-	name: string;
-	lastMessage: string;
-	timestamp: string;
-}
+const chats = [
+	{
+		id: "1",
+		name: "Team Discussion",
+		lastMessage: "Let's schedule the meeting for tomorrow",
+		timestamp: "09:34 AM",
+	},
+	{
+		id: "2",
+		name: "Project Alpha",
+		lastMessage: "The new designs look great!",
+		timestamp: "Yesterday",
+	},
+];
 
-interface ChatsSidebarProps {
-	chats: Chat[];
-}
-
-export function ChatsSidebar({ chats }: ChatsSidebarProps) {
+export function ChatsSidebar() {
 	return (
 		<>
 			<SidebarHeader className="gap-3.5 border-b p-4">
