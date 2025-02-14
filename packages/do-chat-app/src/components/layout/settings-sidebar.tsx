@@ -38,7 +38,7 @@ export function SettingsSidebar() {
 				<SidebarInput placeholder="Search settings..." />
 			</SidebarHeader>
 			<SidebarContent>
-				<SidebarGroup className="px-0">
+				<SidebarGroup className="px-0 py-0">
 					<SidebarGroupContent>
 						<div className="flex flex-col">
 							{settingsLinks.map((link) => (
@@ -46,7 +46,7 @@ export function SettingsSidebar() {
 									key={link.href}
 									href={link.href}
 									className={cn(
-										"p-4 text-sm hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+										"px-4 py-3 text-sm hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
 										pathname === link.href &&
 											"bg-sidebar-accent text-sidebar-accent-foreground",
 									)}

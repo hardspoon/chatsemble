@@ -33,13 +33,13 @@ export function ChatsSidebar({ chats }: ChatsSidebarProps) {
 				<SidebarInput placeholder="Search chats..." />
 			</SidebarHeader>
 			<SidebarContent>
-				<SidebarGroup className="px-0">
+				<SidebarGroup className="px-0 py-0">
 					<SidebarGroupContent>
 						{chats.map((chat) => (
 							<a
 								href={`/chat/${chat.id}`}
 								key={chat.id}
-								className="flex flex-col gap-1 border-b p-4 text-sm hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+								className="flex flex-col gap-1 border-b px-4 py-3 text-sm hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
 							>
 								<div className="flex items-center justify-between">
 									<span className="font-medium">{chat.name}</span>

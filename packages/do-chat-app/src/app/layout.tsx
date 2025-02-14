@@ -18,8 +18,8 @@ const geistMono = localFont({
 });
 
 export const metadata: Metadata = {
-	title: "DO Chat",
-	description: "DO Chat",
+	title: "Chatsemble",
+	description: "Chatsemble",
 };
 
 export default function RootLayout({
@@ -34,7 +34,7 @@ export default function RootLayout({
 			>
 				<ThemeProvider
 					attribute="class"
-					defaultTheme="light"
+					defaultTheme="system"
 					enableSystem
 					disableTransitionOnChange
 				>

@@ -1,7 +1,7 @@
 "use client";
 
 import type * as React from "react";
-import { MessageSquare, Settings, Command } from "lucide-react";
+import { MessageSquare, Settings } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 
 import { NavUser } from "@/components/layout/nav-user";
@@ -20,6 +20,8 @@ import {
 	useSidebar,
 } from "@/components/ui/sidebar";
 import Link from "next/link";
+import { ThemeToggle } from "../theme-toggle";
+import { LogoIcon } from "../icons/logo-icon";
 
 // Updated sample data with activeMatch regex
 const data = {
@@ -81,12 +83,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 						<SidebarMenuItem>
 							<SidebarMenuButton size="lg" asChild className="md:h-8 md:p-0">
 								<a href="/">
-									<div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-										<Command className="size-4" />
+									<div className="flex aspect-square size-8 items-center justify-center">
+										<LogoIcon className="size-8" />
 									</div>
 									<div className="grid flex-1 text-left text-sm leading-tight">
-										<span className="truncate font-semibold">Acme Inc</span>
-										<span className="truncate text-xs">Enterprise</span>
+										<span className="truncate font-semibold">Chatsemble</span>
+										<span className="truncate text-xs">Chatting with AI</span>
 									</div>
 								</a>
 							</SidebarMenuButton>
@@ -124,7 +126,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 					</SidebarGroup>
 				</SidebarContent>
 				<SidebarFooter>
-					<NavUser user={data.user} />
+					<ThemeToggle />
+					<NavUser />
 				</SidebarFooter>
 			</Sidebar>
 

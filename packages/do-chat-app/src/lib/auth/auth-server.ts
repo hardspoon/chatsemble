@@ -60,9 +60,10 @@ export const getAuth = () =>
 					if (newSession) {
 						console.log("ctx", ctx.body);
 						const authClient = getAuth();
+						const orgName = ctx.body.orgName;
 						const org = await authClient.api.createOrganization({
 							body: {
-								name: `${newSession.user.name} Organization`,
+								name: orgName,
 								slug: newSession.user.email,
 								userId: newSession.user.id,
 							},
@@ -70,17 +71,6 @@ export const getAuth = () =>
 						if (!org) {
 							throw new Error("Failed to create organization");
 						}
-						console.log("org", org);
-						/* try {
-							await authClient.api.setActiveOrganization({
-								body: {
-									organizationId: org.id,
-									userId: newSession.user.id,
-								},
-							});
-						} catch (error) {
-							console.error("Error setting active organization", error);
-						} */
 					}
 				}
 			}),

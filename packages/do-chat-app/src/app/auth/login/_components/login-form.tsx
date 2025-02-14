@@ -2,13 +2,12 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
-import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 
 import { LogoIcon } from "@/components/icons/logo-icon";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
 	Form,
@@ -19,6 +18,8 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { authClient } from "@/lib/auth/auth-client";
+import Link from "next/link";
+import { cn } from "@/lib/utils";
 
 const formSchema = z.object({
 	email: z.string().email("Please enter a valid email address"),
@@ -26,7 +27,6 @@ const formSchema = z.object({
 });
 
 export default function LoginForm() {
-	const router = useRouter();
 	const form = useForm<z.infer<typeof formSchema>>({
 		resolver: zodResolver(formSchema),
 		defaultValues: {
@@ -47,9 +47,6 @@ export default function LoginForm() {
 				throw error;
 			}
 			return data;
-		},
-		onSuccess: () => {
-			router.push("/editor");
 		},
 	});
 
@@ -115,9 +112,15 @@ export default function LoginForm() {
 
 							<div className="text-center text-sm text-muted-foreground">
 								Don&apos;t have an account?{" "}
-								<Button variant="link" className="p-0 text-primary" onClick={() => router.push("/auth/signup")}>
+								<Link
+									href="/auth/signup"
+									className={cn(
+										buttonVariants({ variant: "link" }),
+										"p-0 text-primary",
+									)}
+								>
 									Sign up
-								</Button>
+								</Link>
 							</div>
 						</form>
 					</Form>
