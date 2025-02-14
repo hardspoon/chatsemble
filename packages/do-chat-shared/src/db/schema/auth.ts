@@ -33,6 +33,7 @@ export const session = sqliteTable("session", {
 	expiresAt: integer("expires_at", { mode: "timestamp_ms" }).notNull(),
 	ipAddress: text("ip_address"),
 	userAgent: text("user_agent"),
+	activeOrganizationId: text("active_organization_id"),
 	createdAt: integer("created_at", { mode: "timestamp_ms" })
 		.notNull()
 		.default(sql`(unixepoch() * 1000)`),
@@ -47,6 +48,57 @@ export const sessionRelations = relations(session, ({ one }) => ({
 		references: [user.id],
 	}),
 }));
+
+// Organization table
+export const organization = sqliteTable("organization", {
+	id: text("id")
+		.primaryKey()
+		.$defaultFn(() => nanoid(36)),
+	name: text("name").notNull(),
+	slug: text("slug").notNull().unique(),
+	logo: text("logo"),
+	metadata: text("metadata", { mode: "json" }),
+	createdAt: integer("created_at", { mode: "timestamp_ms" })
+		.notNull()
+		.default(sql`(unixepoch() * 1000)`),
+});
+
+// Member table
+export const member = sqliteTable("member", {
+	id: text("id")
+		.primaryKey()
+		.$defaultFn(() => nanoid(36)),
+	userId: text("user_id")
+		.notNull()
+		.references(() => user.id),
+	organizationId: text("organization_id")
+		.notNull()
+		.references(() => organization.id),
+	role: text("role").notNull(),
+	createdAt: integer("created_at", { mode: "timestamp_ms" })
+		.notNull()
+		.default(sql`(unixepoch() * 1000)`),
+});
+
+// Invitation table
+export const invitation = sqliteTable("invitation", {
+	id: text("id")
+		.primaryKey()
+		.$defaultFn(() => nanoid(36)),
+	email: text("email").notNull(),
+	inviterId: text("inviter_id")
+		.notNull()
+		.references(() => user.id),
+	organizationId: text("organization_id")
+		.notNull()
+		.references(() => organization.id),
+	role: text("role").notNull(),
+	status: text("status").notNull(),
+	expiresAt: integer("expires_at", { mode: "timestamp_ms" }).notNull(),
+	createdAt: integer("created_at", { mode: "timestamp_ms" })
+		.notNull()
+		.default(sql`(unixepoch() * 1000)`),
+});
 
 // Account table
 export const account = sqliteTable("account", {

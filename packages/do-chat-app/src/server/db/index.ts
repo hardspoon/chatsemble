@@ -30,7 +30,7 @@ export const getDB = () => {
 		}
 
 		const sqlite = new Database(dbPath);
-		db = drizzleSqlite(sqlite, { schema, logger: true });
+		db = drizzleSqlite(sqlite, { schema, logger: false });
 		return db;
 	}
 
@@ -40,7 +40,7 @@ export const getDB = () => {
 	// If we have the D1 binding and we're not explicitly using local DB, use D1
 	if (env.DB) {
 		console.log("Using production D1 database");
-		db = drizzle(env.DB, { schema, logger: true });
+		db = drizzle(env.DB, { schema, logger: false });
 		return db;
 	}
 

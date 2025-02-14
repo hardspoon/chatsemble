@@ -43,6 +43,14 @@ export default function SignupForm() {
 				email: values.email,
 				password: values.password,
 				name: values.name,
+				fetchOptions: {
+					body: {
+						orgName: `${values.name} Organization`,
+						email: values.email,
+						password: values.password,
+						name: values.name,
+					},
+				},
 				callbackURL: "/",
 			});
 
@@ -136,7 +144,11 @@ export default function SignupForm() {
 
 							<div className="text-center text-sm text-muted-foreground">
 								Already have an account?{" "}
-								<Button variant="link" className="p-0 text-primary" onClick={() => router.push("/auth/login")}>
+								<Button
+									variant="link"
+									className="p-0 text-primary"
+									onClick={() => router.push("/auth/login")}
+								>
 									Sign in
 								</Button>
 							</div>

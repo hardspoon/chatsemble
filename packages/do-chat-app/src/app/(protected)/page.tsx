@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { client } from "@/lib/api-client";
+import { authClient } from "@/lib/auth/auth-client";
 
 export default function Home() {
 	const testDurableObject = async () => {
@@ -15,6 +16,10 @@ export default function Home() {
 			console.error("Error fetching messages:", error);
 		}
 	};
+
+	const { data: session } = authClient.useSession();
+
+	console.log("session", session);
 
 	return (
 		<Card>
