@@ -22,14 +22,16 @@ export default function Home() {
 	console.log("session", session);
 
 	return (
-		<Card>
-			<CardHeader>
-				<CardTitle>Hello World!</CardTitle>
-			</CardHeader>
-			<CardContent>
-				<p>This is a card</p>
-				<Button onClick={testDurableObject}>Click me</Button>
-			</CardContent>
-		</Card>
+		<main className="flex flex-1 flex-col gap-4 p-4 items-center justify-center">
+			<Card>
+				<CardHeader>
+					<CardTitle>Hello World!</CardTitle>
+				</CardHeader>
+				<CardContent>
+					<p>This is a card</p>
+					<Button onClick={testDurableObject}>Click me</Button>
+				</CardContent>
+			</Card>
+		</main>
 	);
 }

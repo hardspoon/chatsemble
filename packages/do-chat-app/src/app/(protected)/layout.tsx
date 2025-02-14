@@ -1,3 +1,4 @@
+import AppLayout from "@/components/layout/app-layout";
 import { getAuth } from "@/lib/auth/auth-server";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
@@ -17,7 +18,7 @@ export default async function RootLayout({
 		return redirect("/auth/login");
 	}
 
-	return children;
+	return <AppLayout>{children}</AppLayout>;
 }
 
 export const dynamic = "force-dynamic";
