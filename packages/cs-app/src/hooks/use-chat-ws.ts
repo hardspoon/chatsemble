@@ -1,22 +1,21 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useRef, useState, useEffect } from "react";
+import type {
+	ChatRoomMessage,
+	ChatRoomMessagePartial,
+	WsChatRoomMessage,
+} from "@/cs-shared";
+import { nanoid } from "nanoid";
+import type { User } from "better-auth";
 
-interface Message {
-	id: string;
-	content: string;
-	role: "user" | "assistant";
-	username: string;
-}
+const RETRY_DELAYS = [1000, 2000, 5000, 10000]; // Increasing delays between retries in ms
 
-interface WsMessage {
-	type: "message" | "join" | "quit";
-	userId: string;
-	data?: string;
-}
-
-export function useChatWS({ roomId }: { roomId: string }) {
+export function useChatWS({ roomId, user }: { roomId: string; user: User }) {
 	const wsRef = useRef<WebSocket | null>(null);
-	const [messages, setMessages] = useState<Message[]>([]);
-	const [isConnected, setIsConnected] = useState(false);
+	const [messages, setMessages] = useState<ChatRoomMessage[]>([]);
+	const [input, setInput] = useState("");
+	const retryCountRef = useRef(0);
+	const retryTimeoutRef = useRef<NodeJS.Timeout>();
+
 	const [connectionStatus, setConnectionStatus] = useState<
 		"disconnected" | "connecting" | "connected"
 	>("disconnected");
@@ -34,31 +33,27 @@ export function useChatWS({ roomId }: { roomId: string }) {
 			process.env.NEXT_PUBLIC_DO_CHAT_API_HOST?.replace(/^https?:\/\//, "") ??
 			"";
 		const wsProtocol = window.location.protocol === "https:" ? "wss" : "ws";
-		const ws = new WebSocket(`${wsProtocol}://${apiHost}/chat-room/ws/${roomId}`);
+		const ws = new WebSocket(
+			`${wsProtocol}://${apiHost}/chat-room/ws/${roomId}`,
+		);
 		wsRef.current = ws;
 
 		ws.onopen = () => {
 			console.log("WebSocket connected");
-			setIsConnected(true);
 			setConnectionStatus("connected");
+			retryCountRef.current = 0; // Reset retry count on successful connection
 		};
 
 		ws.onmessage = (event) => {
 			try {
-				const wsMessage: WsMessage = JSON.parse(event.data);
+				const wsMessage: WsChatRoomMessage = JSON.parse(event.data);
 
 				switch (wsMessage.type) {
-					case "message":
-						if (wsMessage.data) {
-							const newMessage: Message = {
-								id: crypto.randomUUID(),
-								content: wsMessage.data,
-								role: "user",
-								username: wsMessage.userId,
-							};
-							setMessages((prev) => [...prev, newMessage]);
-						}
+					case "message-broadcast": {
+						const newMessage = wsMessage.message;
+						setMessages((prev) => [...prev, newMessage]);
 						break;
+					}
 					case "join":
 						console.log(`User ${wsMessage.userId} joined`);
 						break;
@@ -80,55 +75,112 @@ export function useChatWS({ roomId }: { roomId: string }) {
 			ws.close();
 		};
 
-		ws.onclose = (event) => {
-			console.log("WebSocket disconnected:", event.code, event.reason);
-			setIsConnected(false);
+		ws.onclose = () => {
 			setConnectionStatus("disconnected");
 			wsRef.current = null;
+
+			// Implement retry logic
+			const retryDelay =
+				RETRY_DELAYS[retryCountRef.current] ??
+				RETRY_DELAYS[RETRY_DELAYS.length - 1];
+
+			if (retryCountRef.current < RETRY_DELAYS.length) {
+				console.log(`Reconnecting in ${retryDelay}ms...`);
+				retryTimeoutRef.current = setTimeout(() => {
+					retryCountRef.current += 1;
+					connect();
+				}, retryDelay);
+			}
 		};
 
 		return ws;
 	}, [roomId]);
 
 	const disconnect = useCallback(() => {
+		if (retryTimeoutRef.current) {
+			clearTimeout(retryTimeoutRef.current);
+			retryTimeoutRef.current = undefined;
+		}
+
 		if (wsRef.current) {
 			wsRef.current.close();
 			wsRef.current = null;
-			setIsConnected(false);
 			setConnectionStatus("disconnected");
 		}
+		retryCountRef.current = 0; // Reset retry count on manual disconnect
 	}, []);
 
-	const sendMessage = useCallback((content: string) => {
-		if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
-			console.error("WebSocket is not connected");
-			return;
-		}
-
-		const message: WsMessage = {
-			type: "message",
-			userId: "current-user", // This should come from auth context
-			data: content,
+	// Auto-connect when the hook is initialized
+	useEffect(() => {
+		connect();
+		return () => {
+			disconnect();
 		};
+	}, [connect, disconnect]);
 
-		wsRef.current.send(JSON.stringify(message));
+	const handleInputChange = useCallback(
+		(e: React.ChangeEvent<HTMLTextAreaElement>) => {
+			setInput(e.target.value);
+		},
+		[],
+	);
 
-		// Add message to local state immediately for optimistic UI update
-		const newMessage: Message = {
-			id: crypto.randomUUID(),
-			content,
-			role: "user",
-			username: "You", // This should come from auth context
-		};
-		setMessages((prev) => [...prev, newMessage]);
+	const handleSubmit = useCallback(
+		async (e?: { preventDefault?: () => void }) => {
+			e?.preventDefault?.();
+
+			if (!input.trim()) {
+				return;
+			}
+
+			if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
+				console.error("WebSocket is not connected");
+				return;
+			}
+
+			const newMessagePartial: ChatRoomMessagePartial = {
+				id: nanoid(),
+				content: input.trim(),
+				createdAt: Date.now(),
+			};
+
+			const wsMessage: WsChatRoomMessage = {
+				type: "message-receive",
+				message: newMessagePartial,
+			};
+
+			const newMessage: ChatRoomMessage = {
+				...newMessagePartial,
+				user: {
+					id: user.id,
+					role: "member",
+					name: user.name,
+					email: user.email,
+					image: user.image ?? null,
+				},
+			};
+
+			wsRef.current.send(JSON.stringify(wsMessage));
+			setMessages((prev) => [...prev, newMessage]);
+			setInput("");
+		},
+		[input, user],
+	);
+
+	const stop = useCallback(() => {
+		// Implementation for stopping message processing if needed
+		console.log("Stop not implemented");
 	}, []);
 
 	return {
 		messages,
-		sendMessage,
-		isConnected,
+		input,
+		setInput,
+		handleInputChange,
+		handleSubmit,
 		connectionStatus,
 		connect,
 		disconnect,
+		stop,
 	};
 }

@@ -1,4 +1,5 @@
 "use client";
+
 import {
 	ChatInput,
 	ChatInputSubmit,
@@ -12,31 +13,43 @@ import {
 	ChatMessageContentArea,
 } from "@/components/ui/chat-message";
 import { ChatMessageArea } from "@/components/ui/chat-message-area";
-import { useChatWS } from "@/hooks/use-chat-ws";
-import { Button } from "@/components/ui/button";
+import { useSearchParams } from "next/navigation";
+import { ChatProvider, useChatContext } from "@/providers/chat-provider";
+import { AppHeader } from "@/components/layout/app-header";
 
-export function Chat({ roomId }: { roomId: string }) {
-	const { messages, sendMessage, isConnected, connectionStatus, connect, disconnect } = useChatWS({ roomId });
+export function ChatWrapper({ userId }: { userId: string }) {
+	const queryParams = useSearchParams();
+	const roomId = queryParams.get("roomId");
+
+	if (!roomId) {
+		return <NoRoomId />;
+	}
+
+	return (
+		<ChatProvider roomId={roomId} userId={userId}>
+			<AppHeader />
+			<Chat />
+		</ChatProvider>
+	);
+}
+
+function NoRoomId() {
+	return (
+		<div className="flex flex-1 flex-col items-center justify-center">
+			<span className="text-lg font-bold">No room selected</span>
+			<p className="text-sm text-muted-foreground">
+				Please select a room from the sidebar
+			</p>
+		</div>
+	);
+}
+
+function Chat() {
+	const { messages, input, handleInputChange, handleSubmit, stop } =
+		useChatContext();
 
 	return (
 		<div className="flex-1 flex flex-col h-full overflow-y-auto">
-			<div className="flex items-center gap-4">
-				<Button 
-					onClick={connect} 
-					disabled={connectionStatus !== 'disconnected'}
-				>
-					Connect
-				</Button>
-				<Button 
-					onClick={disconnect} 
-					disabled={connectionStatus === 'disconnected'}
-				>
-					Disconnect
-				</Button>
-				<span className="text-sm">
-					Status: {connectionStatus}
-				</span>
-			</div>
 			<ChatMessageArea scrollButtonAlignment="center">
 				<div className="max-w-2xl mx-auto w-full px-4 py-8 space-y-4">
 					{messages.length > 0 ? (
@@ -45,7 +58,7 @@ export function Chat({ roomId }: { roomId: string }) {
 								<ChatMessage key={message.id} id={message.id}>
 									<ChatMessageAvatar />
 									<ChatMessageContentArea>
-										<ChatMessageUser username={message.username} />
+										<ChatMessageUser username={message.user.userId} />
 										<ChatMessageContent content={message.content} />
 									</ChatMessageContentArea>
 								</ChatMessage>
@@ -58,18 +71,18 @@ export function Chat({ roomId }: { roomId: string }) {
 					)}
 				</div>
 			</ChatMessageArea>
-				<div className="px-2 py-4 max-w-2xl mx-auto w-full">
+			<div className="px-2 py-4 max-w-2xl mx-auto w-full">
 				<ChatInput
 					value={input}
 					onChange={handleInputChange}
 					onSubmit={handleSubmit}
-					loading={isStreaming}
-					onStop={handleStop}
-					>
+					loading={false}
+					onStop={stop}
+				>
 					<ChatInputTextArea placeholder="Type a message..." />
 					<ChatInputSubmit />
 				</ChatInput>
-				</div>
+			</div>
 		</div>
 	);
 }

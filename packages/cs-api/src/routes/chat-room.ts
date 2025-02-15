@@ -37,7 +37,13 @@ const app = new Hono<HonoVariables>()
 			const chatRoom = CHAT_DURABLE_OBJECT.get(id);
 
 			await chatRoom.migrate();
-			await chatRoom.addMember(user.id, "admin");
+			await chatRoom.addMember({
+				id: user.id,
+				role: "admin",
+				name: user.name,
+				email: user.email,
+				image: user.image,
+			});
 
 			// Create room record in D1
 			await db.insert(d1Schema.chatRoom).values({

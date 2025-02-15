@@ -9,7 +9,8 @@ import { migrate } from "drizzle-orm/durable-sqlite/migrator";
 import migrations from "./db/migrations/migrations";
 import { chatMessagesTable, chatRoomMembersTable } from "./db/schema";
 import { desc, eq } from "drizzle-orm";
-import type { Session, WsMessage } from "../../types/session";
+import type { Session } from "../../types/session";
+import type { ChatRoomMessage, WsChatRoomMessage } from "@/cs-shared";
 
 export class ChatDurableObject extends DurableObject<Env> {
 	storage: DurableObjectStorage;
@@ -45,8 +46,6 @@ export class ChatDurableObject extends DurableObject<Env> {
 		server.serializeAttachment(session);
 		this.sessions.set(server, session);
 
-		console.log("sessions", this.sessions);
-
 		// Broadcast join event
 		this.broadcast(
 			{
@@ -66,21 +65,22 @@ export class ChatDurableObject extends DurableObject<Env> {
 		}
 
 		try {
-			const parsedMsg: WsMessage = JSON.parse(message);
+			const parsedMsg: WsChatRoomMessage = JSON.parse(message);
 
-			if (parsedMsg.type === "message") {
+			if (parsedMsg.type === "message-receive") {
 				// Store message in database
-				await this.insertMessage({
-					message: parsedMsg.data,
+				const message = await this.insertMessage({
 					userId: session.userId,
+					id: parsedMsg.message.id,
+					content: parsedMsg.message.content,
+					//createdAt: parsedMsg.message.createdAt,
 				});
 
 				// Broadcast message to all except sender
 				this.broadcast(
 					{
-						type: "message",
-						userId: session.userId,
-						data: parsedMsg.data,
+						type: "message-broadcast",
+						message,
 					},
 					session.userId,
 				);
@@ -95,12 +95,6 @@ export class ChatDurableObject extends DurableObject<Env> {
 	async webSocketClose(webSocket: WebSocket) {
 		const session = this.sessions.get(webSocket);
 		if (session) {
-			// Update last active time but keep member record
-			await this.db
-				.update(chatRoomMembersTable)
-				.set({ lastActive: Math.floor(Date.now() / 1000) })
-				.where(eq(chatRoomMembersTable.id, session.userId));
-
 			// Broadcast quit message
 			this.broadcast({
 				type: "quit",
@@ -123,7 +117,7 @@ export class ChatDurableObject extends DurableObject<Env> {
 		webSocket.close();
 	}
 
-	private broadcast(message: WsMessage, excludeUserId?: string) {
+	private broadcast(message: WsChatRoomMessage, excludeUserId?: string) {
 		for (const [ws, session] of this.sessions.entries()) {
 			if (!excludeUserId || session.userId !== excludeUserId) {
 				ws.send(JSON.stringify(message));
@@ -131,44 +125,98 @@ export class ChatDurableObject extends DurableObject<Env> {
 		}
 	}
 
-	async insertMessage(message: typeof chatMessagesTable.$inferInsert) {
-		await this.db.insert(chatMessagesTable).values(message);
+	async insertMessage(
+		message: typeof chatMessagesTable.$inferInsert,
+	): Promise<ChatRoomMessage> {
+		// First insert the message
+		const [insertedMessage] = await this.db
+			.insert(chatMessagesTable)
+			.values(message)
+			.returning();
+
+		if (!insertedMessage) {
+			throw new Error("Failed to insert message");
+		}
+
+		// Then fetch the message with user data
+		const messageWithUser = await this.db
+			.select({
+				id: chatMessagesTable.id,
+				content: chatMessagesTable.content,
+				userId: chatMessagesTable.userId,
+				createdAt: chatMessagesTable.createdAt,
+				user: {
+					id: chatRoomMembersTable.id,
+					role: chatRoomMembersTable.role,
+					name: chatRoomMembersTable.name,
+					email: chatRoomMembersTable.email,
+					image: chatRoomMembersTable.image,
+				},
+			})
+			.from(chatMessagesTable)
+			.innerJoin(
+				chatRoomMembersTable,
+				eq(chatMessagesTable.userId, chatRoomMembersTable.id),
+			)
+			.where(eq(chatMessagesTable.id, insertedMessage.id))
+			.get();
+
+		if (!messageWithUser) {
+			throw new Error("Failed to fetch message with user data");
+		}
+
+		return messageWithUser;
 	}
 
-	async selectMessages(limit?: number) {
+	async selectMessages(limit?: number): Promise<ChatRoomMessage[]> {
 		const query = this.db
-			.select()
+			.select({
+				id: chatMessagesTable.id,
+				content: chatMessagesTable.content,
+				userId: chatMessagesTable.userId,
+				createdAt: chatMessagesTable.createdAt,
+				user: {
+					id: chatRoomMembersTable.id,
+					role: chatRoomMembersTable.role,
+					name: chatRoomMembersTable.name,
+					email: chatRoomMembersTable.email,
+					image: chatRoomMembersTable.image,
+				},
+			})
 			.from(chatMessagesTable)
+			.innerJoin(
+				chatRoomMembersTable,
+				eq(chatMessagesTable.userId, chatRoomMembersTable.id),
+			)
 			.orderBy(desc(chatMessagesTable.createdAt));
+
 		if (limit) {
 			query.limit(limit);
 		}
+
 		return await query;
 	}
 
-	async addMember(userId: string, role = "member") {
+	async addMember(member: typeof chatRoomMembersTable.$inferInsert) {
 		await this.db
 			.insert(chatRoomMembersTable)
-			.values({
-				id: userId,
-				role,
-				joinedAt: Math.floor(Date.now() / 1000),
-				lastActive: Math.floor(Date.now() / 1000),
-			})
+			.values(member)
 			.onConflictDoUpdate({
 				target: chatRoomMembersTable.id,
 				set: {
-					role,
-					lastActive: Math.floor(Date.now() / 1000),
+					role: member.role,
+					name: member.name,
+					email: member.email,
+					image: member.image,
 				},
 			});
 	}
 
-	async getMember(userId: string) {
+	async getMember(id: string) {
 		return this.db
 			.select()
 			.from(chatRoomMembersTable)
-			.where(eq(chatRoomMembersTable.id, userId))
+			.where(eq(chatRoomMembersTable.id, id))
 			.get();
 	}
 
