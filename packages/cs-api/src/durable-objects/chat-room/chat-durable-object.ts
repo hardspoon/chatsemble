@@ -41,21 +41,6 @@ export class ChatDurableObject extends DurableObject<Env> {
 		migrate(this.db, migrations);
 	}
 
-	async insert(message: typeof chatMessagesTable.$inferInsert) {
-		await this.db.insert(chatMessagesTable).values(message);
-	}
-
-	async select(limit?: number) {
-		const query = this.db
-			.select()
-			.from(chatMessagesTable)
-			.orderBy(desc(chatMessagesTable.createdAt));
-		if (limit) {
-			query.limit(limit);
-		}
-		return await query;
-	}
-
 	async fetch(request: Request) {
 		if (request.headers.get("Upgrade") === "websocket") {
 			const webSocketPair = new WebSocketPair();
@@ -83,9 +68,6 @@ export class ChatDurableObject extends DurableObject<Env> {
 				userId: session.userId,
 			});
 
-			// Add/update member when connection is established
-			await this.addMember(userId);
-
 			return new Response(null, { status: 101, webSocket: client });
 		}
 
@@ -109,7 +91,7 @@ export class ChatDurableObject extends DurableObject<Env> {
 				} */
 
 				// Store message in database
-				await this.insert({
+				await this.insertMessage({
 					message: parsedMsg.data,
 					userId: session.userId,
 				});
@@ -170,18 +152,20 @@ export class ChatDurableObject extends DurableObject<Env> {
 		}
 	}
 
-	/* async getRoomSettings() {
-		return this.db.select().from(chatRoomSettingsTable).get();
+	async insertMessage(message: typeof chatMessagesTable.$inferInsert) {
+		await this.db.insert(chatMessagesTable).values(message);
 	}
 
-	async updateRoomSettings(
-		settings: Partial<typeof chatRoomSettingsTable.$inferInsert>,
-	) {
-		await this.db
-			.update(chatRoomSettingsTable)
-			.set(settings)
-			.where(eq(chatRoomSettingsTable.roomId, this.id.toString()));
-	} */
+	async selectMessages(limit?: number) {
+		const query = this.db
+			.select()
+			.from(chatMessagesTable)
+			.orderBy(desc(chatMessagesTable.createdAt));
+		if (limit) {
+			query.limit(limit);
+		}
+		return await query;
+	}
 
 	async addMember(userId: string, role = "member") {
 		await this.db

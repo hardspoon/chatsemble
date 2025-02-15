@@ -23,7 +23,7 @@ interface Message {
 
 const initialMessages: Message[] = [];
 
-export function Chat() {
+export function Chat({ roomId }: { roomId: string }) {
 	const [messages, setMessages] = useState<Message[]>(initialMessages);
 	const [input, setInput] = useState("");
 	const [isStreaming, setIsStreaming] = useState(false);
