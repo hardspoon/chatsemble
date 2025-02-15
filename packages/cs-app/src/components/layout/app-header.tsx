@@ -1,6 +1,6 @@
 import { SidebarTrigger } from "@/components/ui/sidebar";
-import { Separator } from "../ui/separator";
-import { DynamicBreadcrumb } from "./dynamic-breadcrumb";
+import { Separator } from "@/components/ui/separator";
+import { DynamicBreadcrumb } from "@/components/layout/dynamic-breadcrumb";
 
 export function AppHeader() {
 	return (

@@ -23,5 +23,4 @@ export interface ChatRoomMember {
 export type WsChatRoomMessage =
 	| { type: "message-receive"; message: ChatRoomMessagePartial }
 	| { type: "message-broadcast"; message: ChatRoomMessage }
-	| { type: "quit"; userId: string }
-	| { type: "join"; userId: string };
+	| { type: "messages-sync"; messages: ChatRoomMessage[] };

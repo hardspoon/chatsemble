@@ -46,13 +46,13 @@ export class ChatDurableObject extends DurableObject<Env> {
 		server.serializeAttachment(session);
 		this.sessions.set(server, session);
 
-		// Broadcast join event
-		this.broadcast(
+		this.sendWebSocketMessageToUser(
 			{
-				type: "join",
-				userId: session.userId,
+				type: "messages-sync",
+				messages: await this.selectChatRoomMessages(),
 			},
 			session.userId,
+			server,
 		);
 
 		return new Response(null, { status: 101, webSocket: client });
@@ -69,7 +69,7 @@ export class ChatDurableObject extends DurableObject<Env> {
 
 			if (parsedMsg.type === "message-receive") {
 				// Store message in database
-				const message = await this.insertMessage({
+				const message = await this.insertChatRoomMessage({
 					userId: session.userId,
 					id: parsedMsg.message.id,
 					content: parsedMsg.message.content,
@@ -77,7 +77,7 @@ export class ChatDurableObject extends DurableObject<Env> {
 				});
 
 				// Broadcast message to all except sender
-				this.broadcast(
+				this.broadcastWebSocketMessage(
 					{
 						type: "message-broadcast",
 						message,
@@ -96,10 +96,10 @@ export class ChatDurableObject extends DurableObject<Env> {
 		const session = this.sessions.get(webSocket);
 		if (session) {
 			// Broadcast quit message
-			this.broadcast({
+			/* this.broadcast({
 				type: "quit",
 				userId: session.userId,
-			});
+			}); */
 			this.sessions.delete(webSocket);
 		}
 		webSocket.close();
@@ -108,16 +108,36 @@ export class ChatDurableObject extends DurableObject<Env> {
 	async webSocketError(webSocket: WebSocket) {
 		const session = this.sessions.get(webSocket);
 		if (session) {
-			this.broadcast({
+			/* this.broadcast({
 				type: "quit",
 				userId: session.userId,
-			});
+			}); */
 			this.sessions.delete(webSocket);
 		}
 		webSocket.close();
 	}
 
-	private broadcast(message: WsChatRoomMessage, excludeUserId?: string) {
+	private sendWebSocketMessageToUser(
+		message: WsChatRoomMessage,
+		userId: string,
+		webSocket?: WebSocket,
+	) {
+		if (webSocket) {
+			webSocket.send(JSON.stringify(message));
+			return;
+		}
+
+		for (const [ws, session] of this.sessions.entries()) {
+			if (session.userId === userId) {
+				ws.send(JSON.stringify(message));
+			}
+		}
+	}
+
+	private broadcastWebSocketMessage(
+		message: WsChatRoomMessage,
+		excludeUserId?: string,
+	) {
 		for (const [ws, session] of this.sessions.entries()) {
 			if (!excludeUserId || session.userId !== excludeUserId) {
 				ws.send(JSON.stringify(message));
@@ -125,7 +145,7 @@ export class ChatDurableObject extends DurableObject<Env> {
 		}
 	}
 
-	async insertMessage(
+	async insertChatRoomMessage(
 		message: typeof chatMessagesTable.$inferInsert,
 	): Promise<ChatRoomMessage> {
 		// First insert the message
@@ -168,7 +188,7 @@ export class ChatDurableObject extends DurableObject<Env> {
 		return messageWithUser;
 	}
 
-	async selectMessages(limit?: number): Promise<ChatRoomMessage[]> {
+	async selectChatRoomMessages(limit?: number): Promise<ChatRoomMessage[]> {
 		const query = this.db
 			.select({
 				id: chatMessagesTable.id,

@@ -9,7 +9,12 @@ import type { User } from "better-auth";
 
 const RETRY_DELAYS = [1000, 2000, 5000, 10000]; // Increasing delays between retries in ms
 
-export function useChatWS({ roomId, user }: { roomId: string; user: User }) {
+export interface UseChatWSProps {
+	roomId: string;
+	user: User;
+}
+
+export function useChatWS({ roomId, user }: UseChatWSProps) {
 	const wsRef = useRef<WebSocket | null>(null);
 	const [messages, setMessages] = useState<ChatRoomMessage[]>([]);
 	const [input, setInput] = useState("");
@@ -54,12 +59,11 @@ export function useChatWS({ roomId, user }: { roomId: string; user: User }) {
 						setMessages((prev) => [...prev, newMessage]);
 						break;
 					}
-					case "join":
-						console.log(`User ${wsMessage.userId} joined`);
+					case "messages-sync": {
+						const newMessages = wsMessage.messages;
+						setMessages((prev) => [...prev, ...newMessages]);
 						break;
-					case "quit":
-						console.log(`User ${wsMessage.userId} left`);
-						break;
+					}
 					default:
 						console.warn("Unknown message type:", wsMessage.type);
 				}
@@ -167,11 +171,6 @@ export function useChatWS({ roomId, user }: { roomId: string; user: User }) {
 		[input, user],
 	);
 
-	const stop = useCallback(() => {
-		// Implementation for stopping message processing if needed
-		console.log("Stop not implemented");
-	}, []);
-
 	return {
 		messages,
 		input,
@@ -181,6 +180,5 @@ export function useChatWS({ roomId, user }: { roomId: string; user: User }) {
 		connectionStatus,
 		connect,
 		disconnect,
-		stop,
 	};
 }
