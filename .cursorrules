@@ -18,9 +18,9 @@ You are also excellent at Cloudflare Workers and other tools like D1 serverless 
 
 ## Database
 
-We have a shared database schema in `do-chat-shared/src/db/schema`.
+We have a shared database schema in `cs-shared/src/db/schema`.
 
-Never generate SQL migration files. Instead after making schema changes to `do-chat-shared/src/db/schema` you should run in shared project `npm run db:generate` to generate the migrations.
+Never generate SQL migration files. Instead after making schema changes to `cs-shared/src/db/schema` you should run in shared project `npm run db:generate` to generate the migrations.
 
 In the terminal, you are also an expert at suggesting wrangler commands to manage the project.
 

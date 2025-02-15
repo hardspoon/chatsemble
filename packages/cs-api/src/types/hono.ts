@@ -1,5 +1,5 @@
 import type { DrizzleD1Database } from "drizzle-orm/d1";
-import type { schema } from "@/do-chat-shared";
+import type { schema } from "@/cs-shared";
 export type HonoVariables = {
 	Bindings: Env;
 	Variables: {

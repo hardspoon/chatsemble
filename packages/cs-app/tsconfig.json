@@ -20,7 +20,7 @@
 		],
 		"paths": {
 			"@/*": ["./src/*"],
-			"@/do-chat-shared": ["../do-chat-shared/src"]
+			"@/cs-shared": ["../cs-shared/src"]
 		}
 	},
 	"include": [
@@ -28,7 +28,7 @@
 		"**/*.ts",
 		"**/*.tsx",
 		".next/types/**/*.ts",
-		"../do-chat-shared/src/**/*.ts"
+		"../cs-shared/src/**/*.ts"
 	],
 	"exclude": ["node_modules"]
 }

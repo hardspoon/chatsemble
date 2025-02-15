@@ -5,7 +5,7 @@ import { getCookie } from "hono/cookie";
 import chatRoomRoute from "./routes/chat-room";
 import type { HonoVariables } from "./types/hono";
 import { drizzle } from "drizzle-orm/d1";
-import { schema } from "@/do-chat-shared";
+import { schema } from "@/cs-shared";
 import { and, eq, gt } from "drizzle-orm";
 
 const app = new Hono<HonoVariables>()

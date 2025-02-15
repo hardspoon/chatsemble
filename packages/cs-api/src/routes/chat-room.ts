@@ -2,7 +2,7 @@ import { Hono } from "hono";
 import { z } from "zod";
 
 import type { HonoVariables } from "../types/hono";
-import { schema as d1Schema } from "@/do-chat-shared";
+import { schema as d1Schema } from "@/cs-shared";
 import { zValidator } from "@hono/zod-validator";
 
 // Validation schemas

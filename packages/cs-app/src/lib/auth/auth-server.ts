@@ -3,7 +3,7 @@ import { createAuthMiddleware, organization } from "better-auth/plugins";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { getDB } from "@/server/db"; // your drizzle instance
 import { eq } from "drizzle-orm";
-import { schema } from "@/do-chat-shared";
+import { schema } from "@/cs-shared";
 
 export const getAuth = () =>
 	betterAuth({

@@ -1,6 +1,6 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "do-chat-api",
+  "name": "cs-api",
   "main": "src/index.ts",
   "compatibility_date": "2025-02-04",
   "migrations": [
@@ -32,7 +32,7 @@
   "d1_databases": [
     {
       "binding": "DB",
-      "database_name": "do-chat-d1",
+      "database_name": "cs-d1",
       "database_id": "90d6b36b-6705-40b3-b51a-7c49896ee6da"
     }
   ]

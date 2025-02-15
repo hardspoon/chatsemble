@@ -53,6 +53,7 @@ interface ChatMessageProps
 		VariantProps<typeof chatMessageVariants> {
 	children?: React.ReactNode;
 	id: string;
+	username?: string;
 }
 
 const ChatMessage = React.forwardRef<HTMLDivElement, ChatMessageProps>(
@@ -62,6 +63,7 @@ const ChatMessage = React.forwardRef<HTMLDivElement, ChatMessageProps>(
 			variant = "default",
 			type = "incoming",
 			id,
+			username,
 			children,
 			...props
 		},
@@ -169,12 +171,13 @@ const chatMessageContentVariants = cva("flex flex-col gap-2", {
 interface ChatMessageContentProps extends React.HTMLAttributes<HTMLDivElement> {
 	id?: string;
 	content: string;
+	username?: string;
 }
 
 const ChatMessageContent = React.forwardRef<
 	HTMLDivElement,
 	ChatMessageContentProps
->(({ className, content, id: idProp, children, ...props }, ref) => {
+>(({ className, content, id: idProp, username, children, ...props }, ref) => {
 	const context = useChatMessage();
 
 	const variant = context?.variant ?? "default";
@@ -187,6 +190,11 @@ const ChatMessageContent = React.forwardRef<
 			className={cn(chatMessageContentVariants({ variant, type, className }))}
 			{...props}
 		>
+			{username && (
+				<div className="text-sm font-medium text-muted-foreground mb-1">
+					{username}
+				</div>
+			)}
 			{content.length > 0 && <MarkdownContent id={id} content={content} />}
 			{children}
 		</div>

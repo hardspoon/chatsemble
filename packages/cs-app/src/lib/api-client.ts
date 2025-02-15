@@ -1,5 +1,5 @@
 import { hc } from "hono/client";
-import type { AppType } from "../../../do-chat-api/src/index";
+import type { AppType } from "../../../cs-api/src/index";
 //import { getSession } from "next-auth/react";
 
 const API_HOST =
