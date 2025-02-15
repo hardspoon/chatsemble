@@ -12,7 +12,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 			}
 		>
 			<AppSidebar />
-			<SidebarInset>
+			<SidebarInset className="flex flex-col h-screen overflow-y-auto">
 				<AppHeader />
 				{children}
 			</SidebarInset>

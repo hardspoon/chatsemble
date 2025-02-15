@@ -1,6 +1,7 @@
 import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
 import { relations, sql } from "drizzle-orm";
 import { nanoid } from "nanoid";
+import { chatRoomMember } from "./chat";
 
 // User table
 export const user = sqliteTable("user", {
@@ -20,6 +21,10 @@ export const user = sqliteTable("user", {
 		.notNull()
 		.default(sql`(unixepoch() * 1000)`),
 });
+
+export const userRelations = relations(user, ({ many }) => ({
+	memberOfChatRooms: many(chatRoomMember),
+}));
 
 // Session table
 export const session = sqliteTable("session", {

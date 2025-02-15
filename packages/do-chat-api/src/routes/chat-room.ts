@@ -32,18 +32,12 @@ const app = new Hono<HonoVariables>()
 				throw new Error("Organization not set");
 			}
 
-			console.log("activeOrganizationId", activeOrganizationId);
-
 			// Create durable object
 			const id = CHAT_DURABLE_OBJECT.newUniqueId();
 			const chatRoom = CHAT_DURABLE_OBJECT.get(id);
 
-			console.log("chatRoom", chatRoom);
-
 			await chatRoom.migrate();
 			await chatRoom.addMember(user.id, "admin");
-
-			console.log("chatRoomMembers");
 
 			// Create room record in D1
 			await db.insert(d1Schema.chatRoom).values({
@@ -53,14 +47,10 @@ const app = new Hono<HonoVariables>()
 				isPrivate: isPrivate ?? false,
 			});
 
-			console.log("mid insert");
-
 			await db.insert(d1Schema.chatRoomMember).values({
 				roomId: id.toString(),
 				userId: user.id,
 			});
-
-			console.log("data inserted");
 
 			return c.json({ roomId: id.toString() });
 		},
@@ -68,22 +58,29 @@ const app = new Hono<HonoVariables>()
 	.get("/", async (c) => {
 		const db = c.get("db");
 		const session = c.get("session");
+		const user = c.get("user");
 		const { activeOrganizationId } = session;
 
 		if (!activeOrganizationId) {
 			throw new Error("Organization not set");
 		}
 
-		const rooms = await db.query.chatRoom.findMany({
-			where: (rooms, { eq }) => eq(rooms.organizationId, activeOrganizationId),
+		const userMemberRooms = await db.query.chatRoomMember.findMany({
+			where: (members, { eq }) => eq(members.userId, user.id),
 			with: {
-				members: {
+				room: {
 					with: {
-						user: true,
+						members: {
+							with: {
+								user: true,
+							},
+						},
 					},
 				},
 			},
 		});
+
+		const rooms = userMemberRooms.map((member) => member.room);
 
 		return c.json(rooms);
 	});

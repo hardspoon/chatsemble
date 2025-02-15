@@ -1,36 +1,26 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { authClient } from "@/lib/auth/auth-client";
+import { Chat } from "@/components/chat/chat";
+import { useSearchParams } from "next/navigation";
 
 export default function Home() {
-	/* const testDurableObject = async () => {
-		try {
-			console.log("Fetching messages...");
-			const response = await client["chat-room"].create.$post();
-			const data = await response.json();
-			console.log("Messages:", data);
-		} catch (error) {
-			console.error("Error fetching messages:", error);
-		}
-	}; */
+	const queryParams = useSearchParams();
+	const roomId = queryParams.get("roomId");
 
-	const { data: session } = authClient.useSession();
+	if (!roomId) {
+		return <NoRoomId />;
+	}
 
-	console.log("session", session);
+	return <Chat />;
+}
 
+function NoRoomId() {
 	return (
-		<main className="flex flex-1 flex-col gap-4 p-4 items-center justify-center">
-			<Card>
-				<CardHeader>
-					<CardTitle>Hello World!</CardTitle>
-				</CardHeader>
-				<CardContent>
-					<p>This is a card</p>
-					<Button>Click me</Button>
-				</CardContent>
-			</Card>
-		</main>
+		<div className="flex flex-1 flex-col items-center justify-center">
+			<span className="text-lg font-bold">No room selected</span>
+			<p className="text-sm text-muted-foreground">
+				Please select a room from the sidebar
+			</p>
+		</div>
 	);
 }
