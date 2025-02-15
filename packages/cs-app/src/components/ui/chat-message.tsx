@@ -141,7 +141,7 @@ ChatMessageAvatar.displayName = "ChatMessageAvatar";
 const chatMessageContentVariants = cva("flex flex-col gap-2", {
 	variants: {
 		variant: {
-			default: "",
+			default: "hover:bg-muted p-2 rounded-md",
 			bubble: "rounded-xl px-3 py-2",
 			full: "",
 		},
@@ -171,13 +171,12 @@ const chatMessageContentVariants = cva("flex flex-col gap-2", {
 interface ChatMessageContentProps extends React.HTMLAttributes<HTMLDivElement> {
 	id?: string;
 	content: string;
-	username?: string;
 }
 
 const ChatMessageContent = React.forwardRef<
 	HTMLDivElement,
 	ChatMessageContentProps
->(({ className, content, id: idProp, username, children, ...props }, ref) => {
+>(({ className, content, id: idProp, children, ...props }, ref) => {
 	const context = useChatMessage();
 
 	const variant = context?.variant ?? "default";
@@ -190,11 +189,6 @@ const ChatMessageContent = React.forwardRef<
 			className={cn(chatMessageContentVariants({ variant, type, className }))}
 			{...props}
 		>
-			{username && (
-				<div className="text-sm font-medium text-muted-foreground mb-1">
-					{username}
-				</div>
-			)}
 			{content.length > 0 && <MarkdownContent id={id} content={content} />}
 			{children}
 		</div>
@@ -202,4 +196,80 @@ const ChatMessageContent = React.forwardRef<
 });
 ChatMessageContent.displayName = "ChatMessageContent";
 
-export { ChatMessage, ChatMessageAvatar, ChatMessageContent };
+// Wrapper component for content and username
+const chatMessageContentAreaVariants = cva("flex flex-col gap-1", {
+	variants: {
+		type: {
+			incoming: "items-start",
+			outgoing: "items-end",
+		},
+	},
+	defaultVariants: {
+		type: "incoming",
+	},
+});
+
+interface ChatMessageContentAreaProps
+	extends React.HTMLAttributes<HTMLDivElement> {}
+
+const ChatMessageContentArea = React.forwardRef<
+	HTMLDivElement,
+	ChatMessageContentAreaProps
+>(({ className, children, ...props }, ref) => {
+	const context = useChatMessage();
+	const type = context?.type ?? "incoming";
+
+	return (
+		<div
+			ref={ref}
+			className={cn(chatMessageContentAreaVariants({ type, className }))}
+			{...props}
+		>
+			{children}
+		</div>
+	);
+});
+ChatMessageContentArea.displayName = "ChatMessageContentArea";
+
+// Username component
+const chatMessageUserVariants = cva("text-sm px-2", {
+	variants: {
+		type: {
+			incoming: "text-muted-foreground",
+			outgoing: "text-muted-foreground",
+		},
+	},
+	defaultVariants: {
+		type: "incoming",
+	},
+});
+
+interface ChatMessageUserProps extends React.HTMLAttributes<HTMLDivElement> {
+	username: string;
+}
+
+const ChatMessageUser = React.forwardRef<HTMLDivElement, ChatMessageUserProps>(
+	({ className, username, ...props }, ref) => {
+		const context = useChatMessage();
+		const type = context?.type ?? "incoming";
+
+		return (
+			<div
+				ref={ref}
+				className={cn(chatMessageUserVariants({ type, className }))}
+				{...props}
+			>
+				{username}
+			</div>
+		);
+	},
+);
+ChatMessageUser.displayName = "ChatMessageUser";
+
+export {
+	ChatMessage,
+	ChatMessageAvatar,
+	ChatMessageContent,
+	ChatMessageContentArea,
+	ChatMessageUser,
+};

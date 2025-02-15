@@ -22,6 +22,7 @@ import { authClient } from "@/lib/auth/auth-client";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { AvatarPicker } from "./avatar-picker";
+import { useRouter } from "next/navigation";
 
 export const signupFormSchema = z.object({
 	email: z.string().email("Please enter a valid email address"),
@@ -32,6 +33,7 @@ export const signupFormSchema = z.object({
 });
 
 export default function SignupForm() {
+	const router = useRouter();
 	const form = useForm<z.infer<typeof signupFormSchema>>({
 		resolver: zodResolver(signupFormSchema),
 		defaultValues: {
@@ -66,6 +68,9 @@ export default function SignupForm() {
 				throw error;
 			}
 			return data;
+		},
+		onSuccess: () => {
+			router.push("/chat");
 		},
 	});
 
