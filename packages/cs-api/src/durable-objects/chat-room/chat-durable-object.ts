@@ -10,30 +10,22 @@ import migrations from "./db/migrations/migrations";
 import { chatMessagesTable, chatRoomMembersTable } from "./db/schema";
 import { desc, eq } from "drizzle-orm";
 import type { Session, WsMessage } from "../../types/session";
-import { nanoid } from "nanoid";
 
 export class ChatDurableObject extends DurableObject<Env> {
 	storage: DurableObjectStorage;
 	db: DrizzleSqliteDODatabase;
 	sessions: Map<WebSocket, Session>;
-	state: DurableObjectState;
 
 	constructor(ctx: DurableObjectState, env: Env) {
 		super(ctx, env);
 		this.storage = ctx.storage;
 		this.db = drizzle(this.storage, { logger: false });
 		this.sessions = new Map();
-		this.state = ctx;
 
 		// Restore any existing WebSocket sessions
 		for (const webSocket of ctx.getWebSockets()) {
 			const meta = webSocket.deserializeAttachment() || {};
-			if (meta.userId) {
-				this.sessions.set(webSocket, {
-					webSocket,
-					userId: meta.userId,
-				});
-			}
+			this.sessions.set(webSocket, meta);
 		}
 	}
 
@@ -41,37 +33,30 @@ export class ChatDurableObject extends DurableObject<Env> {
 		migrate(this.db, migrations);
 	}
 
-	async fetch(request: Request) {
-		if (request.headers.get("Upgrade") === "websocket") {
-			const webSocketPair = new WebSocketPair();
-			const [client, server] = Object.values(webSocketPair);
+	async fetch() {
+		const webSocketPair = new WebSocketPair();
+		const [client, server] = Object.values(webSocketPair);
 
-			// Create session with generated userId and userName
-			const userId = nanoid();
+		this.ctx.acceptWebSocket(server);
 
-			// Serialize the session data for hibernation
-			server.serializeAttachment({
-				userId,
-			});
+		const session: Session = {
+			userId: "123",
+		};
+		server.serializeAttachment(session);
+		this.sessions.set(server, session);
 
-			this.state.acceptWebSocket(server);
+		console.log("sessions", this.sessions);
 
-			const session: Session = {
-				webSocket: server,
-				userId,
-			};
-			this.sessions.set(server, session);
-
-			// Broadcast join event
-			this.broadcast({
+		// Broadcast join event
+		this.broadcast(
+			{
 				type: "join",
 				userId: session.userId,
-			});
+			},
+			session.userId,
+		);
 
-			return new Response(null, { status: 101, webSocket: client });
-		}
-
-		return new Response("Not found", { status: 404 });
+		return new Response(null, { status: 101, webSocket: client });
 	}
 
 	async webSocketMessage(webSocket: WebSocket, message: string) {
@@ -84,12 +69,6 @@ export class ChatDurableObject extends DurableObject<Env> {
 			const parsedMsg: WsMessage = JSON.parse(message);
 
 			if (parsedMsg.type === "message") {
-				// Check room status and user permissions
-				/* const isAllowed = await this.isUserAllowed(session.userId);
-				if (!isAllowed) {
-					throw new Error("Room is archived or user not allowed");
-				} */
-
 				// Store message in database
 				await this.insertMessage({
 					message: parsedMsg.data,
@@ -113,8 +92,8 @@ export class ChatDurableObject extends DurableObject<Env> {
 		}
 	}
 
-	async webSocketClose(ws: WebSocket) {
-		const session = this.sessions.get(ws);
+	async webSocketClose(webSocket: WebSocket) {
+		const session = this.sessions.get(webSocket);
 		if (session) {
 			// Update last active time but keep member record
 			await this.db
@@ -127,9 +106,9 @@ export class ChatDurableObject extends DurableObject<Env> {
 				type: "quit",
 				userId: session.userId,
 			});
-			this.sessions.delete(ws);
+			this.sessions.delete(webSocket);
 		}
-		ws.close();
+		webSocket.close();
 	}
 
 	async webSocketError(webSocket: WebSocket) {

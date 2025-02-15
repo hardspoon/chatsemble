@@ -1,5 +1,4 @@
 export interface Session {
-	webSocket: WebSocket;
 	userId: string;
 }
 

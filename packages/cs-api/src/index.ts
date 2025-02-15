@@ -9,17 +9,6 @@ import { schema } from "@/cs-shared";
 import { and, eq, gt } from "drizzle-orm";
 
 const app = new Hono<HonoVariables>()
-	.use(
-		"*",
-		cors({
-			origin: (_origin, c) => {
-				return c.env.ALLOWED_ORIGINS;
-			},
-			allowMethods: ["GET", "POST", "OPTIONS"],
-			allowHeaders: ["Content-Type"],
-			credentials: true,
-		}),
-	)
 	.use("*", async (c, next) => {
 		const db = drizzle(c.env.DB, { schema });
 		c.set("db", db);
@@ -54,7 +43,47 @@ const app = new Hono<HonoVariables>()
 		c.set("user", user);
 		c.set("session", session);
 		await next();
-	});
+	})
+	.get("/chat-room/ws/:roomId", async (c) => {
+		const upgradeHeader = c.req.header("Upgrade");
+		if (!upgradeHeader || upgradeHeader !== "websocket") {
+			return c.text("Expected Upgrade: websocket", 426);
+		}
+
+		const user = c.get("user");
+
+		const { roomId } = c.req.param();
+		const db = c.get("db");
+
+		// Verify organization membership through D1
+		const roomMember = await db.query.chatRoomMember.findFirst({
+			where: (members, { eq, and }) =>
+				and(eq(members.userId, user.id), eq(members.roomId, roomId)),
+			with: {
+				room: true,
+			},
+		});
+
+		if (!roomMember) {
+			return c.text("Not authorized", 403);
+		}
+
+		// Proceed with WebSocket connection
+		const id = c.env.CHAT_DURABLE_OBJECT.idFromString(roomMember.room.id);
+		const stub = c.env.CHAT_DURABLE_OBJECT.get(id);
+		return await stub.fetch(c.req.raw);
+	})
+	.use(
+		"*",
+		cors({
+			origin: (_origin, c) => {
+				return c.env.ALLOWED_ORIGINS;
+			},
+			allowMethods: ["GET", "POST", "OPTIONS"],
+			allowHeaders: ["Content-Type"],
+			credentials: true,
+		}),
+	);
 
 const routes = app.route("/chat-room", chatRoomRoute);
 

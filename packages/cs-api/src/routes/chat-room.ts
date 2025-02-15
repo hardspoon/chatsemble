@@ -83,38 +83,6 @@ const app = new Hono<HonoVariables>()
 		const rooms = userMemberRooms.map((member) => member.room);
 
 		return c.json(rooms);
-	})
-	.get(
-		"/:roomId/websocket",
-		zValidator(
-			"param",
-			z.object({
-				roomId: z.string().min(1),
-			}),
-		),
-		async (c) => {
-			const user = c.get("user");
-			const { roomId } = c.req.valid("param");
-			const db = c.get("db");
-
-			// Verify organization membership through D1
-			const roomMember = await db.query.chatRoomMember.findFirst({
-				where: (members, { eq, and }) =>
-					and(eq(members.userId, user.id), eq(members.roomId, roomId)),
-				with: {
-					room: true,
-				},
-			});
-
-			if (!roomMember) {
-				throw new Error("Not authorized");
-			}
-
-			// Proceed with WebSocket connection
-			const id = c.env.CHAT_DURABLE_OBJECT.idFromString(roomMember.room.id);
-			const stub = c.env.CHAT_DURABLE_OBJECT.get(id);
-			return stub.fetch(c.req.url, c.req);
-		},
-	);
+	});
 
 export default app;

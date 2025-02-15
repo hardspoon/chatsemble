@@ -12,60 +12,31 @@ import {
 	ChatMessageContentArea,
 } from "@/components/ui/chat-message";
 import { ChatMessageArea } from "@/components/ui/chat-message-area";
-import { useState } from "react";
-
-interface Message {
-	id: string;
-	content: string;
-	role: "user" | "assistant";
-	username: string;
-}
-
-const initialMessages: Message[] = [];
+import { useChatWS } from "@/hooks/use-chat-ws";
+import { Button } from "@/components/ui/button";
 
 export function Chat({ roomId }: { roomId: string }) {
-	const [messages, setMessages] = useState<Message[]>(initialMessages);
-	const [input, setInput] = useState("");
-	const [isStreaming, setIsStreaming] = useState(false);
-
-	const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-		setInput(e.target.value);
-	};
-
-	const handleSubmit = () => {
-		if (!input.trim()) {
-			return;
-		}
-
-		// Add user message
-		const userMessage: Message = {
-			id: String(messages.length + 1),
-			content: input,
-			role: "user",
-			username: "John Doe", // This would come from auth context in a real app
-		};
-
-		setMessages((prev) => [...prev, userMessage]);
-		setInput("");
-
-		// Simulate assistant response
-		setTimeout(() => {
-			const assistantMessage: Message = {
-				id: String(messages.length + 2),
-				content: "This is a placeholder response from the assistant.",
-				role: "assistant",
-				username: "AI Assistant",
-			};
-			setMessages((prev) => [...prev, assistantMessage]);
-		}, 1000);
-	};
-
-	const handleStop = () => {
-		setIsStreaming(false);
-	};
+	const { messages, sendMessage, isConnected, connectionStatus, connect, disconnect } = useChatWS({ roomId });
 
 	return (
 		<div className="flex-1 flex flex-col h-full overflow-y-auto">
+			<div className="flex items-center gap-4">
+				<Button 
+					onClick={connect} 
+					disabled={connectionStatus !== 'disconnected'}
+				>
+					Connect
+				</Button>
+				<Button 
+					onClick={disconnect} 
+					disabled={connectionStatus === 'disconnected'}
+				>
+					Disconnect
+				</Button>
+				<span className="text-sm">
+					Status: {connectionStatus}
+				</span>
+			</div>
 			<ChatMessageArea scrollButtonAlignment="center">
 				<div className="max-w-2xl mx-auto w-full px-4 py-8 space-y-4">
 					{messages.length > 0 ? (
@@ -87,18 +58,18 @@ export function Chat({ roomId }: { roomId: string }) {
 					)}
 				</div>
 			</ChatMessageArea>
-			<div className="px-2 py-4 max-w-2xl mx-auto w-full">
+				<div className="px-2 py-4 max-w-2xl mx-auto w-full">
 				<ChatInput
 					value={input}
 					onChange={handleInputChange}
 					onSubmit={handleSubmit}
 					loading={isStreaming}
 					onStop={handleStop}
-				>
+					>
 					<ChatInputTextArea placeholder="Type a message..." />
 					<ChatInputSubmit />
 				</ChatInput>
-			</div>
+				</div>
 		</div>
 	);
 }
