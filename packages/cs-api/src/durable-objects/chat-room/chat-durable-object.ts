@@ -8,7 +8,7 @@ import { DurableObject } from "cloudflare:workers";
 import { migrate } from "drizzle-orm/durable-sqlite/migrator";
 import migrations from "./db/migrations/migrations";
 import { chatMessagesTable, chatRoomMembersTable } from "./db/schema";
-import { desc, eq } from "drizzle-orm";
+import { eq, asc } from "drizzle-orm";
 import type { Session } from "../../types/session";
 import type { ChatRoomMessage, WsChatRoomMessage } from "@/cs-shared";
 
@@ -34,14 +34,23 @@ export class ChatDurableObject extends DurableObject<Env> {
 		migrate(this.db, migrations);
 	}
 
-	async fetch() {
+	async fetch(request: Request) {
+		const url = new URL(request.url);
+		const userId = url.searchParams.get("userId");
+
+		console.log("fetchUserId", userId);
+
+		if (!userId) {
+			return new Response("Missing user ID", { status: 400 });
+		}
+
 		const webSocketPair = new WebSocketPair();
 		const [client, server] = Object.values(webSocketPair);
 
 		this.ctx.acceptWebSocket(server);
 
 		const session: Session = {
-			userId: "123",
+			userId,
 		};
 		server.serializeAttachment(session);
 		this.sessions.set(server, session);
@@ -102,7 +111,7 @@ export class ChatDurableObject extends DurableObject<Env> {
 			}); */
 			this.sessions.delete(webSocket);
 		}
-		webSocket.close();
+		//webSocket.close();
 	}
 
 	async webSocketError(webSocket: WebSocket) {
@@ -114,7 +123,7 @@ export class ChatDurableObject extends DurableObject<Env> {
 			}); */
 			this.sessions.delete(webSocket);
 		}
-		webSocket.close();
+		//webSocket.close();
 	}
 
 	private sendWebSocketMessageToUser(
@@ -208,13 +217,15 @@ export class ChatDurableObject extends DurableObject<Env> {
 				chatRoomMembersTable,
 				eq(chatMessagesTable.userId, chatRoomMembersTable.id),
 			)
-			.orderBy(desc(chatMessagesTable.createdAt));
+			.orderBy(asc(chatMessagesTable.createdAt));
 
 		if (limit) {
 			query.limit(limit);
 		}
 
-		return await query;
+		const result = await query;
+		console.log("result", result);
+		return result;
 	}
 
 	async addMember(member: typeof chatRoomMembersTable.$inferInsert) {

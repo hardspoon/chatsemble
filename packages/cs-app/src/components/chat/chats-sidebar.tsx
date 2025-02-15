@@ -15,7 +15,7 @@ export function ChatsSidebar() {
 	const { data: chatRoomsData, isLoading } = useQuery({
 		queryKey: ["chatRooms"],
 		queryFn: async () => {
-			const response = await client["chat-room"].$get();
+			const response = await client.protected["chat-room"].$get();
 			const data = await response.json();
 			console.log("chatRoomsData", data);
 			return data;

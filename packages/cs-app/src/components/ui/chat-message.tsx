@@ -3,6 +3,12 @@ import { MarkdownContent } from "@/components/ui/markdown-content";
 import { type VariantProps, cva } from "class-variance-authority";
 import { SparklesIcon, UserIcon } from "lucide-react";
 import React, { type ReactNode } from "react";
+import {
+	Tooltip,
+	TooltipContent,
+	TooltipProvider,
+	TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 const chatMessageVariants = cva("flex gap-4 w-full", {
 	variants: {
@@ -138,7 +144,7 @@ ChatMessageAvatar.displayName = "ChatMessageAvatar";
 
 // Content component
 
-const chatMessageContentVariants = cva("flex flex-col gap-2", {
+const chatMessageContentVariants = cva("flex flex-col gap-2 w-full", {
 	variants: {
 		variant: {
 			default: "hover:bg-muted p-2 rounded-md",
@@ -197,7 +203,7 @@ const ChatMessageContent = React.forwardRef<
 ChatMessageContent.displayName = "ChatMessageContent";
 
 // Wrapper component for content and username
-const chatMessageContentAreaVariants = cva("flex flex-col gap-1", {
+const chatMessageContentAreaVariants = cva("flex flex-col gap-1 w-full", {
 	variants: {
 		type: {
 			incoming: "items-start",
@@ -231,8 +237,8 @@ const ChatMessageContentArea = React.forwardRef<
 });
 ChatMessageContentArea.displayName = "ChatMessageContentArea";
 
-// Username component
-const chatMessageUserVariants = cva("text-sm px-2", {
+// Metadata component
+const chatMessageMetadataVariants = cva("text-sm px-2 flex gap-2", {
 	variants: {
 		type: {
 			incoming: "text-muted-foreground",
@@ -244,32 +250,46 @@ const chatMessageUserVariants = cva("text-sm px-2", {
 	},
 });
 
-interface ChatMessageUserProps extends React.HTMLAttributes<HTMLDivElement> {
+interface ChatMessageMetadataProps extends React.HTMLAttributes<HTMLDivElement> {
 	username: string;
+	createdAt: number;
 }
 
-const ChatMessageUser = React.forwardRef<HTMLDivElement, ChatMessageUserProps>(
-	({ className, username, ...props }, ref) => {
+const ChatMessageMetadata = React.forwardRef<HTMLDivElement, ChatMessageMetadataProps>(
+	({ className, username, createdAt, ...props }, ref) => {
 		const context = useChatMessage();
 		const type = context?.type ?? "incoming";
+		const date = new Date(createdAt);
+
+		console.log("date", date.toLocaleString());
 
 		return (
 			<div
 				ref={ref}
-				className={cn(chatMessageUserVariants({ type, className }))}
+				className={cn(chatMessageMetadataVariants({ type, className }))}
 				{...props}
 			>
-				{username}
+				<span className="font-bold text-foreground">{username}</span>
+				<TooltipProvider>
+					<Tooltip>
+						<TooltipTrigger asChild>
+							<span>{date.toLocaleString('en-US', { hour: 'numeric', minute: 'numeric' })}</span>
+						</TooltipTrigger>
+						<TooltipContent>
+							<p>{date.toLocaleString()}</p>
+						</TooltipContent>
+					</Tooltip>
+				</TooltipProvider>
 			</div>
 		);
 	},
 );
-ChatMessageUser.displayName = "ChatMessageUser";
+ChatMessageMetadata.displayName = "ChatMessageMetadata";
 
 export {
 	ChatMessage,
 	ChatMessageAvatar,
 	ChatMessageContent,
 	ChatMessageContentArea,
-	ChatMessageUser,
+	ChatMessageMetadata,
 };

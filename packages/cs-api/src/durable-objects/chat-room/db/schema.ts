@@ -13,7 +13,7 @@ export const chatMessagesTable = sqliteTable("chat_messages_table", {
 		.references(() => chatRoomMembersTable.id),
 	createdAt: integer("created_at", { mode: "number" })
 		.notNull()
-		.default(sql`(unixepoch())`),
+		.default(sql`(unixepoch() * 1000)`),
 });
 
 export const chatRoomMembersTable = sqliteTable("chat_room_members", {

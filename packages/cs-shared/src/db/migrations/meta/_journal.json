@@ -5,15 +5,8 @@
     {
       "idx": 0,
       "version": "6",
-      "when": 1739487315373,
-      "tag": "0000_worried_black_widow",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "6",
-      "when": 1739573455576,
-      "tag": "0001_curly_strong_guy",
+      "when": 1739654734571,
+      "tag": "0000_giant_wrecker",
       "breakpoints": true
     }
   ]

@@ -1,14 +1,9 @@
 import { Hono } from "hono";
 import { z } from "zod";
 
-import type { HonoVariables } from "../types/hono";
+import type { HonoVariables } from "../../types/hono";
 import { schema as d1Schema } from "@/cs-shared";
 import { zValidator } from "@hono/zod-validator";
-
-// Validation schemas
-/* const paramsSchema = z.object({
-	roomId: z.string().min(1),
-}); */
 
 const app = new Hono<HonoVariables>()
 	.post(
@@ -21,6 +16,7 @@ const app = new Hono<HonoVariables>()
 			}),
 		),
 		async (c) => {
+			console.log("create chat room");
 			const { CHAT_DURABLE_OBJECT } = c.env;
 			const db = c.get("db");
 			const user = c.get("user");

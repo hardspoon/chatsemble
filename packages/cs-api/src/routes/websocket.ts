@@ -1,13 +1,12 @@
-export { ChatDurableObject } from "./durable-objects/chat-room/chat-durable-object";
 import { Hono } from "hono";
-import type { HonoVariables } from "./types/hono";
-import protectedRoutes from "./routes/protected";
-import websocketRoutes from "./routes/websocket";
+import { honoAuthMiddleware } from "../lib/hono/middleware";
+import { honoDbMiddleware } from "../lib/hono/middleware";
+import type { HonoVariables } from "../types/hono";
 
-const app = new Hono<HonoVariables>();
-/* .use("*", honoDbMiddleware)
-	.use("*", honoAuthMiddleware)
-	.get("/ws/:roomId", async (c) => {
+const app = new Hono<HonoVariables>()
+	.use(honoDbMiddleware)
+	.use(honoAuthMiddleware)
+	.get("/chat-room/:roomId", async (c) => {
 		const upgradeHeader = c.req.header("Upgrade");
 		if (!upgradeHeader || upgradeHeader !== "websocket") {
 			return c.text("Expected Upgrade: websocket", 426);
@@ -39,22 +38,6 @@ const app = new Hono<HonoVariables>();
 		url.searchParams.set("userId", user.id);
 
 		return await stub.fetch(new Request(url, c.req.raw));
-	})
-	.use(
-		"*",
-		cors({
-			origin: (_origin, c) => {
-				return c.env.ALLOWED_ORIGINS;
-			},
-			allowMethods: ["GET", "POST", "OPTIONS"],
-			allowHeaders: ["Content-Type"],
-			credentials: true,
-		}),
-	); */
+	});
 
-const routes = app
-	.route("/protected", protectedRoutes)
-	.route("/websocket", websocketRoutes);
-
-export type AppType = typeof routes;
 export default app;

@@ -50,7 +50,7 @@ export function NewChatDialog() {
 
 	const createChatMutation = useMutation({
 		mutationFn: async (values: FormValues) => {
-			const response = await client["chat-room"].create.$post({
+			const response = await client.protected["chat-room"].create.$post({
 				json: values,
 			});
 			const data = await response.json();

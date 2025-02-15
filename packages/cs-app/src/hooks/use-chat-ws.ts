@@ -39,7 +39,7 @@ export function useChatWS({ roomId, user }: UseChatWSProps) {
 			"";
 		const wsProtocol = window.location.protocol === "https:" ? "wss" : "ws";
 		const ws = new WebSocket(
-			`${wsProtocol}://${apiHost}/chat-room/ws/${roomId}`,
+			`${wsProtocol}://${apiHost}/websocket/chat-room/${roomId}`,
 		);
 		wsRef.current = ws;
 
@@ -61,7 +61,7 @@ export function useChatWS({ roomId, user }: UseChatWSProps) {
 					}
 					case "messages-sync": {
 						const newMessages = wsMessage.messages;
-						setMessages((prev) => [...prev, ...newMessages]);
+						setMessages(newMessages);
 						break;
 					}
 					default:

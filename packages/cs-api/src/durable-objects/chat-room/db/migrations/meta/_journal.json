@@ -5,22 +5,8 @@
     {
       "idx": 0,
       "version": "6",
-      "when": 1739284416069,
-      "tag": "0000_handy_gateway",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "6",
-      "when": 1739575247145,
-      "tag": "0001_tired_chronomancer",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "6",
-      "when": 1739576007955,
-      "tag": "0002_awesome_thunderbolts",
+      "when": 1739654719459,
+      "tag": "0000_even_malice",
       "breakpoints": true
     }
   ]

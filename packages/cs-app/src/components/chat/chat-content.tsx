@@ -9,7 +9,7 @@ import {
 	ChatMessage,
 	ChatMessageAvatar,
 	ChatMessageContent,
-	ChatMessageUser,
+	ChatMessageMetadata,
 	ChatMessageContentArea,
 } from "@/components/ui/chat-message";
 import { ChatMessageArea } from "@/components/ui/chat-message-area";
@@ -29,7 +29,10 @@ export function ChatContent() {
 								<ChatMessage key={message.id} id={message.id}>
 									<ChatMessageAvatar />
 									<ChatMessageContentArea>
-										<ChatMessageUser username={message.user.id} />
+										<ChatMessageMetadata 
+											username={message.user.name} 
+											createdAt={message.createdAt} 
+										/>
 										<ChatMessageContent content={message.content} />
 									</ChatMessageContentArea>
 								</ChatMessage>
