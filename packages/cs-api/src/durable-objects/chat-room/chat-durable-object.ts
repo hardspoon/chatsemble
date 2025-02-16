@@ -38,8 +38,6 @@ export class ChatDurableObject extends DurableObject<Env> {
 		const url = new URL(request.url);
 		const userId = url.searchParams.get("userId");
 
-		console.log("fetchUserId", userId);
-
 		if (!userId) {
 			return new Response("Missing user ID", { status: 400 });
 		}
@@ -79,7 +77,7 @@ export class ChatDurableObject extends DurableObject<Env> {
 			if (parsedMsg.type === "message-receive") {
 				// Store message in database
 				const message = await this.insertChatRoomMessage({
-					userId: session.userId,
+					memberId: session.userId,
 					id: parsedMsg.message.id,
 					content: parsedMsg.message.content,
 					//createdAt: parsedMsg.message.createdAt,
@@ -172,11 +170,12 @@ export class ChatDurableObject extends DurableObject<Env> {
 			.select({
 				id: chatMessagesTable.id,
 				content: chatMessagesTable.content,
-				userId: chatMessagesTable.userId,
+				memberId: chatMessagesTable.memberId,
 				createdAt: chatMessagesTable.createdAt,
 				user: {
 					id: chatRoomMembersTable.id,
 					role: chatRoomMembersTable.role,
+					type: chatRoomMembersTable.type,
 					name: chatRoomMembersTable.name,
 					email: chatRoomMembersTable.email,
 					image: chatRoomMembersTable.image,
@@ -185,7 +184,7 @@ export class ChatDurableObject extends DurableObject<Env> {
 			.from(chatMessagesTable)
 			.innerJoin(
 				chatRoomMembersTable,
-				eq(chatMessagesTable.userId, chatRoomMembersTable.id),
+				eq(chatMessagesTable.memberId, chatRoomMembersTable.id),
 			)
 			.where(eq(chatMessagesTable.id, insertedMessage.id))
 			.get();
@@ -202,11 +201,12 @@ export class ChatDurableObject extends DurableObject<Env> {
 			.select({
 				id: chatMessagesTable.id,
 				content: chatMessagesTable.content,
-				userId: chatMessagesTable.userId,
+				memberId: chatMessagesTable.memberId,
 				createdAt: chatMessagesTable.createdAt,
 				user: {
 					id: chatRoomMembersTable.id,
 					role: chatRoomMembersTable.role,
+					type: chatRoomMembersTable.type,
 					name: chatRoomMembersTable.name,
 					email: chatRoomMembersTable.email,
 					image: chatRoomMembersTable.image,
@@ -215,7 +215,7 @@ export class ChatDurableObject extends DurableObject<Env> {
 			.from(chatMessagesTable)
 			.innerJoin(
 				chatRoomMembersTable,
-				eq(chatMessagesTable.userId, chatRoomMembersTable.id),
+				eq(chatMessagesTable.memberId, chatRoomMembersTable.id),
 			)
 			.orderBy(asc(chatMessagesTable.createdAt));
 

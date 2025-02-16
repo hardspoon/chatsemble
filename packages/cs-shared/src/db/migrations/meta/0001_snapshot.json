@@ -1,8 +1,8 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "cda32247-d5da-4734-9928-8ead5bf4a8a5",
-  "prevId": "00000000-0000-0000-0000-000000000000",
+  "id": "8807af4b-294c-405f-af0f-fec7b8c524c1",
+  "prevId": "cda32247-d5da-4734-9928-8ead5bf4a8a5",
   "tables": {
     "agent": {
       "name": "agent",
@@ -23,6 +23,13 @@
         },
         "image": {
           "name": "image",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "system_prompt": {
+          "name": "system_prompt",
           "type": "text",
           "primaryKey": false,
           "notNull": true,

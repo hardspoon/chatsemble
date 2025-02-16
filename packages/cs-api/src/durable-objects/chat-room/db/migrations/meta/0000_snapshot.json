@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "2d4dde5e-68a2-4c6a-a8d0-d3c9a656fd25",
+  "id": "1601be5d-a1d3-4e52-9785-95f9c3cad0c2",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "chat_messages_table": {
@@ -21,8 +21,8 @@
           "notNull": true,
           "autoincrement": false
         },
-        "user_id": {
-          "name": "user_id",
+        "member_id": {
+          "name": "member_id",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
@@ -34,17 +34,17 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
-          "default": "(unixepoch())"
+          "default": "(unixepoch() * 1000)"
         }
       },
       "indexes": {},
       "foreignKeys": {
-        "chat_messages_table_user_id_chat_room_members_id_fk": {
-          "name": "chat_messages_table_user_id_chat_room_members_id_fk",
+        "chat_messages_table_member_id_chat_room_members_id_fk": {
+          "name": "chat_messages_table_member_id_chat_room_members_id_fk",
           "tableFrom": "chat_messages_table",
           "tableTo": "chat_room_members",
           "columnsFrom": [
-            "user_id"
+            "member_id"
           ],
           "columnsTo": [
             "id"
@@ -63,7 +63,7 @@
         "id": {
           "name": "id",
           "type": "text",
-          "primaryKey": true,
+          "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
@@ -72,8 +72,14 @@
           "type": "text",
           "primaryKey": false,
           "notNull": true,
-          "autoincrement": false,
-          "default": "'member'"
+          "autoincrement": false
+        },
+        "type": {
+          "name": "type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
         },
         "name": {
           "name": "name",
@@ -107,7 +113,15 @@
         }
       },
       "foreignKeys": {},
-      "compositePrimaryKeys": {},
+      "compositePrimaryKeys": {
+        "chat_room_members_id_role_pk": {
+          "columns": [
+            "id",
+            "role"
+          ],
+          "name": "chat_room_members_id_role_pk"
+        }
+      },
       "uniqueConstraints": {},
       "checkConstraints": {}
     }

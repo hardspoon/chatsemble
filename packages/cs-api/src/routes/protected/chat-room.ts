@@ -4,6 +4,7 @@ import { z } from "zod";
 import type { HonoVariables } from "../../types/hono";
 import { schema as d1Schema } from "@/cs-shared";
 import { zValidator } from "@hono/zod-validator";
+import { eq } from "drizzle-orm";
 
 const app = new Hono<HonoVariables>()
 	.post(
@@ -36,6 +37,7 @@ const app = new Hono<HonoVariables>()
 			await chatRoom.addMember({
 				id: user.id,
 				role: "admin",
+				type: "user",
 				name: user.name,
 				email: user.email,
 				image: user.image,
@@ -51,7 +53,9 @@ const app = new Hono<HonoVariables>()
 
 			await db.insert(d1Schema.chatRoomMember).values({
 				roomId: id.toString(),
-				userId: user.id,
+				memberId: user.id,
+				role: "admin",
+				type: "user",
 			});
 
 			return c.json({ roomId: id.toString() });
@@ -67,20 +71,16 @@ const app = new Hono<HonoVariables>()
 			throw new Error("Organization not set");
 		}
 
-		const userMemberRooms = await db.query.chatRoomMember.findMany({
-			where: (members, { eq }) => eq(members.userId, user.id),
-			with: {
-				room: {
-					with: {
-						members: {
-							with: {
-								user: true,
-							},
-						},
-					},
-				},
-			},
-		});
+		const userMemberRooms = await db
+			.select({
+				room: d1Schema.chatRoom,
+			})
+			.from(d1Schema.chatRoomMember)
+			.innerJoin(
+				d1Schema.chatRoom,
+				eq(d1Schema.chatRoomMember.roomId, d1Schema.chatRoom.id),
+			)
+			.where(eq(d1Schema.chatRoomMember.memberId, user.id));
 
 		const rooms = userMemberRooms.map((member) => member.room);
 

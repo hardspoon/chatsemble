@@ -7,7 +7,7 @@ import {
 import { sql } from "drizzle-orm";
 import { relations } from "drizzle-orm";
 import { organization, user } from "./auth";
-import type { ChatRoomMemberRole } from "../../types/chat";
+import type { ChatRoomMemberRole, ChatRoomMemberType } from "../../types/chat";
 
 export const chatRoom = sqliteTable("chat_room", {
 	id: text("id").primaryKey(), // Same as the DO ID
@@ -18,7 +18,7 @@ export const chatRoom = sqliteTable("chat_room", {
 	isPrivate: integer("is_private", { mode: "boolean" })
 		.notNull()
 		.default(false),
-	createdAt: integer("created_at", { mode: "timestamp_ms" })
+	createdAt: integer("created_at", { mode: "number" })
 		.notNull()
 		.default(sql`(unixepoch() * 1000)`),
 });
@@ -33,12 +33,11 @@ export const chatRoomMember = sqliteTable(
 		roomId: text("room_id")
 			.notNull()
 			.references(() => chatRoom.id),
-		userId: text("user_id")
-			.notNull()
-			.references(() => user.id),
-		role: text("role").$type<ChatRoomMemberRole>().notNull().default("member"),
+		memberId: text("member_id").notNull(), // User ID or Agent ID
+		type: text("type").$type<ChatRoomMemberType>().notNull(),
+		role: text("role").$type<ChatRoomMemberRole>().notNull(),
 	},
-	(t) => [primaryKey({ columns: [t.roomId, t.userId] })],
+	(t) => [primaryKey({ columns: [t.roomId, t.memberId, t.type] })],
 );
 
 export const chatRoomMemberRelations = relations(chatRoomMember, ({ one }) => ({
@@ -47,7 +46,7 @@ export const chatRoomMemberRelations = relations(chatRoomMember, ({ one }) => ({
 		references: [chatRoom.id],
 	}),
 	user: one(user, {
-		fields: [chatRoomMember.userId],
+		fields: [chatRoomMember.memberId],
 		references: [user.id],
 	}),
 }));

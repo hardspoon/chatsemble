@@ -6,7 +6,8 @@
   "migrations": [
     {
       "new_sqlite_classes": [
-        "ChatDurableObject"
+        "ChatDurableObject",
+        "AgentDurableObject"
       ],
       "tag": "v1"
     }
@@ -16,6 +17,10 @@
       {
         "name": "CHAT_DURABLE_OBJECT",
         "class_name": "ChatDurableObject"
+      },
+      {
+        "name": "AGENT_DURABLE_OBJECT",
+        "class_name": "AgentDurableObject"
       }
     ]
   },

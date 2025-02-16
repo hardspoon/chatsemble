@@ -7,17 +7,17 @@ import {
 	SidebarInput,
 } from "@/components/ui/sidebar";
 import { client } from "@/lib/api-client";
-import { NewChatDialog } from "./new-chat-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useRouter } from "next/navigation";
+import { NewAgentDialog } from "./new-agent-dialog";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
-export function ChatsSidebar() {
-	const { data: chatRoomsData, isLoading } = useQuery({
-		queryKey: ["chatRooms"],
+export function AgentsSidebar() {
+	const { data: agentsData, isLoading } = useQuery({
+		queryKey: ["agents"],
 		queryFn: async () => {
-			const response = await client.protected["chat-room"].$get();
+			const response = await client.protected.agent.$get();
 			const data = await response.json();
-			console.log("chatRoomsData", data);
 			return data;
 		},
 	});
@@ -28,8 +28,8 @@ export function ChatsSidebar() {
 		<>
 			<SidebarHeader className="gap-3.5 border-b p-4">
 				<div className="flex w-full items-center justify-between">
-					<div className="text-base font-medium text-foreground">Chats</div>
-					<NewChatDialog />
+					<div className="text-base font-medium text-foreground">Agents</div>
+					<NewAgentDialog />
 				</div>
 				<SidebarInput placeholder="Search chats..." />
 			</SidebarHeader>
@@ -38,27 +38,26 @@ export function ChatsSidebar() {
 					<SidebarGroupContent>
 						{isLoading ? (
 							<ChatRoomSkeleton />
-						) : chatRoomsData && chatRoomsData.length > 0 ? (
-							chatRoomsData.map((chat) => (
+						) : agentsData && agentsData.length > 0 ? (
+							agentsData.map((agent) => (
 								<button
 									type="button"
 									onClick={() => {
-										router.push(`/chat?roomId=${chat.id}`);
+										router.push(`/agents?agentId=${agent.id}`);
 									}}
-									key={chat.id}
-									className="flex w-full flex-col gap-1 border-b px-4 py-3 text-sm hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+									key={agent.id}
+									className="flex w-full items-center justify-between border-b px-4 py-3 text-sm hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
 								>
-									<div className="w-full flex items-center justify-between">
-										<span className="font-medium">{chat.name}</span>
-										<span className="text-xs text-muted-foreground">
-											{chat.isPrivate ? "Private" : "Public"}
-										</span>
-									</div>
+									<span className="font-medium">{agent.name}</span>
+									<Avatar>
+										<AvatarImage src={agent.image} />
+										<AvatarFallback>{agent.name.charAt(0)}</AvatarFallback>
+									</Avatar>
 								</button>
 							))
 						) : (
 							<div className="flex items-center justify-center py-10 text-sm text-muted-foreground">
-								No chats found
+								No agents found
 							</div>
 						)}
 					</SidebarGroupContent>

@@ -27,11 +27,13 @@ export function ChatContent() {
 						messages.map((message) => {
 							return (
 								<ChatMessage key={message.id} id={message.id}>
-									<ChatMessageAvatar />
+									<ChatMessageAvatar
+										imageSrc={message.user.image ?? undefined}
+									/>
 									<ChatMessageContentArea>
-										<ChatMessageMetadata 
-											username={message.user.name} 
-											createdAt={message.createdAt} 
+										<ChatMessageMetadata
+											username={message.user.name}
+											createdAt={message.createdAt}
 										/>
 										<ChatMessageContent content={message.content} />
 									</ChatMessageContentArea>

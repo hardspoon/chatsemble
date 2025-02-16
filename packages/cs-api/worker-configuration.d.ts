@@ -2,7 +2,10 @@
 
 interface Env {
 	ALLOWED_ORIGINS: string;
+	AI_GATEWAY_OPENAI_URL: string;
+	OPENAI_API_KEY: string;
 	CHAT_DURABLE_OBJECT: DurableObjectNamespace<import("./src/index").ChatDurableObject>;
+	AGENT_DURABLE_OBJECT: DurableObjectNamespace<import("./src/index").AgentDurableObject>;
 	DB: D1Database;
 }
 declare module "*.sql" {

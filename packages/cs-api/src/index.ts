@@ -1,4 +1,6 @@
 export { ChatDurableObject } from "./durable-objects/chat-room/chat-durable-object";
+export { AgentDurableObject } from "./durable-objects/agent/agent-durable-object";
+
 import { Hono } from "hono";
 import type { HonoVariables } from "./types/hono";
 import protectedRoutes from "./routes/protected";

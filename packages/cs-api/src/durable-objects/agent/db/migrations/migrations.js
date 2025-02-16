@@ -1,5 +1,5 @@
 import journal from './meta/_journal.json';
-import m0000 from './0000_chemical_mephisto.sql';
+import m0000 from './0000_open_mister_fear.sql';
 
   export default {
     journal,

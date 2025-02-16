@@ -1,7 +1,7 @@
 "use client";
 
 import type * as React from "react";
-import { MessageSquare, Settings } from "lucide-react";
+import { Bot, MessageSquare, Settings } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 
 import { NavUser } from "@/components/layout/nav-user";
@@ -35,6 +35,12 @@ const navMain = [
 		url: "/settings/profile", // Redirect URL
 		icon: Settings,
 		activeMatch: /^\/settings/, // Matches any settings route
+	},
+	{
+		title: "Agents",
+		url: "/agents", // Redirect URL
+		icon: Bot,
+		activeMatch: /^\/agents/, // Matches any agents route
 	},
 ];
 

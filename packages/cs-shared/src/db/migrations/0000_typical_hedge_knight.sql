@@ -1,3 +1,12 @@
+CREATE TABLE `agent` (
+	`id` text PRIMARY KEY NOT NULL,
+	`name` text NOT NULL,
+	`image` text NOT NULL,
+	`organization_id` text NOT NULL,
+	`created_at` integer DEFAULT (unixepoch() * 1000) NOT NULL,
+	FOREIGN KEY (`organization_id`) REFERENCES `organization`(`id`) ON UPDATE no action ON DELETE no action
+);
+--> statement-breakpoint
 CREATE TABLE `account` (
 	`id` text PRIMARY KEY NOT NULL,
 	`user_id` text NOT NULL,
@@ -93,9 +102,9 @@ CREATE TABLE `chat_room` (
 --> statement-breakpoint
 CREATE TABLE `chat_room_member` (
 	`room_id` text NOT NULL,
-	`user_id` text NOT NULL,
-	`role` text DEFAULT 'member' NOT NULL,
-	PRIMARY KEY(`room_id`, `user_id`),
-	FOREIGN KEY (`room_id`) REFERENCES `chat_room`(`id`) ON UPDATE no action ON DELETE no action,
-	FOREIGN KEY (`user_id`) REFERENCES `user`(`id`) ON UPDATE no action ON DELETE no action
+	`member_id` text NOT NULL,
+	`type` text NOT NULL,
+	`role` text NOT NULL,
+	PRIMARY KEY(`room_id`, `member_id`, `type`),
+	FOREIGN KEY (`room_id`) REFERENCES `chat_room`(`id`) ON UPDATE no action ON DELETE no action
 );
