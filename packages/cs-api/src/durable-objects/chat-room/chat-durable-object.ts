@@ -10,7 +10,11 @@ import migrations from "./db/migrations/migrations";
 import { chatMessagesTable, chatRoomMembersTable } from "./db/schema";
 import { eq, asc } from "drizzle-orm";
 import type { Session } from "../../types/session";
-import type { ChatRoomMessage, WsChatRoomMessage } from "@/cs-shared";
+import type {
+	ChatRoomMember,
+	ChatRoomMessage,
+	WsChatRoomMessage,
+} from "@/cs-shared";
 
 export class ChatDurableObject extends DurableObject<Env> {
 	storage: DurableObjectStorage;
@@ -61,6 +65,11 @@ export class ChatDurableObject extends DurableObject<Env> {
 			session.userId,
 			server,
 		);
+
+		this.broadcastWebSocketMessage({
+			type: "member-sync",
+			members: await this.getMembers(),
+		});
 
 		return new Response(null, { status: 101, webSocket: client });
 	}
@@ -241,9 +250,14 @@ export class ChatDurableObject extends DurableObject<Env> {
 					image: member.image,
 				},
 			});
+
+		this.broadcastWebSocketMessage({
+			type: "member-sync",
+			members: await this.getMembers(),
+		});
 	}
 
-	async getMember(id: string) {
+	async getMember(id: string): Promise<ChatRoomMember | undefined> {
 		return this.db
 			.select()
 			.from(chatRoomMembersTable)
@@ -251,7 +265,7 @@ export class ChatDurableObject extends DurableObject<Env> {
 			.get();
 	}
 
-	async getMembers() {
+	async getMembers(): Promise<ChatRoomMember[]> {
 		return this.db.select().from(chatRoomMembersTable).all();
 	}
 }

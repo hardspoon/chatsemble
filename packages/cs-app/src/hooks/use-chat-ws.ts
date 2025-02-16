@@ -3,6 +3,7 @@ import type {
 	ChatRoomMessage,
 	ChatRoomMessagePartial,
 	WsChatRoomMessage,
+	ChatRoomMember,
 } from "@/cs-shared";
 import { nanoid } from "nanoid";
 import type { User } from "better-auth";
@@ -17,6 +18,7 @@ export interface UseChatWSProps {
 export function useChatWS({ roomId, user }: UseChatWSProps) {
 	const wsRef = useRef<WebSocket | null>(null);
 	const [messages, setMessages] = useState<ChatRoomMessage[]>([]);
+	const [members, setMembers] = useState<ChatRoomMember[]>([]);
 	const [input, setInput] = useState("");
 	const retryCountRef = useRef(0);
 	const retryTimeoutRef = useRef<NodeJS.Timeout>();
@@ -62,6 +64,11 @@ export function useChatWS({ roomId, user }: UseChatWSProps) {
 					case "messages-sync": {
 						const newMessages = wsMessage.messages;
 						setMessages(newMessages);
+						break;
+					}
+					case "member-sync": {
+						const newMembers = wsMessage.members;
+						setMembers(newMembers);
 						break;
 					}
 					default:
@@ -158,6 +165,7 @@ export function useChatWS({ roomId, user }: UseChatWSProps) {
 				user: {
 					id: user.id,
 					role: "member",
+					type: "user",
 					name: user.name,
 					email: user.email,
 					image: user.image ?? null,
@@ -173,6 +181,7 @@ export function useChatWS({ roomId, user }: UseChatWSProps) {
 
 	return {
 		messages,
+		members,
 		input,
 		setInput,
 		handleInputChange,
