@@ -3,7 +3,7 @@
 
 import { DurableObject } from "cloudflare:workers";
 import { createOpenAI } from "@ai-sdk/openai";
-import { generateText } from "ai";
+import { generateText, type CoreMessage } from "ai";
 import type { ChatRoomMessage } from "@/cs-shared";
 import { nanoid } from "nanoid";
 import migrations from "./db/migrations/migrations";
@@ -14,6 +14,8 @@ import {
 import { migrate } from "drizzle-orm/durable-sqlite/migrator";
 import { agentConfig } from "./db/schema";
 import { eq } from "drizzle-orm";
+import { chatRoomMessagesToAiMessages } from "../../lib/ai/ai-utils";
+import { getAgentPrompt } from "../../lib/ai/prompts/agent-prompt";
 
 export class AgentDurableObject extends DurableObject<Env> {
 	storage: DurableObjectStorage;
@@ -63,8 +65,8 @@ export class AgentDurableObject extends DurableObject<Env> {
 		return config;
 	}
 
-	async generateResponse(message: string) {
-		const { systemPrompt } = await this.getAgentConfig();
+	async generateResponse(messages: CoreMessage[]) {
+		const agentConfig = await this.getAgentConfig();
 
 		const openaiClient = createOpenAI({
 			baseURL: this.env.AI_GATEWAY_OPENAI_URL,
@@ -73,15 +75,26 @@ export class AgentDurableObject extends DurableObject<Env> {
 
 		const result = await generateText({
 			model: openaiClient("gpt-4o-mini"),
-			system: systemPrompt,
-			prompt: message,
+			system: getAgentPrompt({
+				agentConfig,
+			}),
+			messages,
 		});
 
 		return result.text;
 	}
 
-	async createChatRoomMessage(message: string): Promise<ChatRoomMessage> {
-		const result = await this.generateResponse(message);
+	async createChatRoomMessage(
+		messages: ChatRoomMessage[],
+	): Promise<ChatRoomMessage> {
+		const aiMessages = chatRoomMessagesToAiMessages(messages);
+		console.log("//////////////////////////////////////////////");
+
+		console.log("aiMessages", aiMessages);
+
+		const result = await this.generateResponse(aiMessages);
+
+		console.log("result", result);
 
 		const agentConfig = await this.getAgentConfig();
 

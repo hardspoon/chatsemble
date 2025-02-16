@@ -68,6 +68,7 @@ const app = new Hono<HonoVariables>()
 			}),
 		),
 		async (c) => {
+			const { AGENT_DURABLE_OBJECT } = c.env;
 			const db = c.get("db");
 			const session = c.get("session");
 			const { activeOrganizationId } = session;
@@ -79,6 +80,18 @@ const app = new Hono<HonoVariables>()
 			}
 
 			console.log("update agent", id, name, image, systemPrompt);
+
+			const agentId = AGENT_DURABLE_OBJECT.idFromString(id);
+			const agent = AGENT_DURABLE_OBJECT.get(agentId);
+
+			console.log("upsert agent config", name, image, systemPrompt);
+
+			await agent.upsertAgentConfig({
+				name,
+				image,
+				systemPrompt,
+				organizationId: activeOrganizationId,
+			});
 
 			// Update agent record in D1
 			await db
