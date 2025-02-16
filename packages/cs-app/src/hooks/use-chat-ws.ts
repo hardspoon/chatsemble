@@ -8,7 +8,7 @@ import type {
 import { nanoid } from "nanoid";
 import type { User } from "better-auth";
 
-const RETRY_DELAYS = [1000, 2000, 5000, 10000]; // Increasing delays between retries in ms
+//const RETRY_DELAYS = [1000, 2000, 5000, 10000]; // Increasing delays between retries in ms
 
 export interface UseChatWSProps {
 	roomId: string;
@@ -20,21 +20,11 @@ export function useChatWS({ roomId, user }: UseChatWSProps) {
 	const [messages, setMessages] = useState<ChatRoomMessage[]>([]);
 	const [members, setMembers] = useState<ChatRoomMember[]>([]);
 	const [input, setInput] = useState("");
-	const retryCountRef = useRef(0);
-	const retryTimeoutRef = useRef<NodeJS.Timeout>();
-
 	const [connectionStatus, setConnectionStatus] = useState<
 		"disconnected" | "connecting" | "connected"
 	>("disconnected");
 
-	const connect = useCallback(() => {
-		if (wsRef.current) {
-			console.log("WebSocket already exists");
-			return;
-		}
-
-		setConnectionStatus("connecting");
-
+	const startWebSocket = useCallback(() => {
 		// Get the host from env and remove http:// or https://
 		const apiHost =
 			process.env.NEXT_PUBLIC_DO_CHAT_API_HOST?.replace(/^https?:\/\//, "") ??
@@ -43,12 +33,10 @@ export function useChatWS({ roomId, user }: UseChatWSProps) {
 		const ws = new WebSocket(
 			`${wsProtocol}://${apiHost}/websocket/chat-room/${roomId}`,
 		);
-		wsRef.current = ws;
 
 		ws.onopen = () => {
 			console.log("WebSocket connected");
 			setConnectionStatus("connected");
-			retryCountRef.current = 0; // Reset retry count on successful connection
 		};
 
 		ws.onmessage = (event) => {
@@ -58,6 +46,7 @@ export function useChatWS({ roomId, user }: UseChatWSProps) {
 				switch (wsMessage.type) {
 					case "message-broadcast": {
 						const newMessage = wsMessage.message;
+						console.log("new message", newMessage);
 						setMessages((prev) => [...prev, newMessage]);
 						break;
 					}
@@ -82,52 +71,20 @@ export function useChatWS({ roomId, user }: UseChatWSProps) {
 		ws.onerror = (error) => {
 			console.error("WebSocket error:", error);
 			setConnectionStatus("disconnected");
-			wsRef.current = null;
-			ws.close();
 		};
 
 		ws.onclose = () => {
 			setConnectionStatus("disconnected");
-			wsRef.current = null;
-
-			// Implement retry logic
-			const retryDelay =
-				RETRY_DELAYS[retryCountRef.current] ??
-				RETRY_DELAYS[RETRY_DELAYS.length - 1];
-
-			if (retryCountRef.current < RETRY_DELAYS.length) {
-				console.log(`Reconnecting in ${retryDelay}ms...`);
-				retryTimeoutRef.current = setTimeout(() => {
-					retryCountRef.current += 1;
-					connect();
-				}, retryDelay);
-			}
 		};
 
 		return ws;
 	}, [roomId]);
 
-	const disconnect = useCallback(() => {
-		if (retryTimeoutRef.current) {
-			clearTimeout(retryTimeoutRef.current);
-			retryTimeoutRef.current = undefined;
-		}
-
-		if (wsRef.current) {
-			wsRef.current.close();
-			wsRef.current = null;
-			setConnectionStatus("disconnected");
-		}
-		retryCountRef.current = 0; // Reset retry count on manual disconnect
-	}, []);
-
-	// Auto-connect when the hook is initialized
+	// Initialize WebSocket connection
 	useEffect(() => {
-		connect();
-		return () => {
-			disconnect();
-		};
-	}, [connect, disconnect]);
+		wsRef.current = startWebSocket();
+		return () => wsRef.current?.close();
+	}, [startWebSocket]);
 
 	const handleInputChange = useCallback(
 		(e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -178,6 +135,20 @@ export function useChatWS({ roomId, user }: UseChatWSProps) {
 		},
 		[input, user],
 	);
+
+	const connect = useCallback(() => {
+		if (wsRef.current?.readyState === WebSocket.OPEN) {
+			return;
+		}
+		wsRef.current?.close();
+		wsRef.current = startWebSocket();
+	}, [startWebSocket]);
+
+	const disconnect = useCallback(() => {
+		wsRef.current?.close();
+		wsRef.current = null;
+		setConnectionStatus("disconnected");
+	}, []);
 
 	return {
 		messages,

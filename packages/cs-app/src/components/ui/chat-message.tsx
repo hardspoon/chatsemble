@@ -250,40 +250,45 @@ const chatMessageMetadataVariants = cva("text-sm px-2 flex gap-2", {
 	},
 });
 
-interface ChatMessageMetadataProps extends React.HTMLAttributes<HTMLDivElement> {
+interface ChatMessageMetadataProps
+	extends React.HTMLAttributes<HTMLDivElement> {
 	username: string;
 	createdAt: number;
 }
 
-const ChatMessageMetadata = React.forwardRef<HTMLDivElement, ChatMessageMetadataProps>(
-	({ className, username, createdAt, ...props }, ref) => {
-		const context = useChatMessage();
-		const type = context?.type ?? "incoming";
-		const date = new Date(createdAt);
+const ChatMessageMetadata = React.forwardRef<
+	HTMLDivElement,
+	ChatMessageMetadataProps
+>(({ className, username, createdAt, ...props }, ref) => {
+	const context = useChatMessage();
+	const type = context?.type ?? "incoming";
+	const date = new Date(createdAt);
 
-		console.log("date", date.toLocaleString());
-
-		return (
-			<div
-				ref={ref}
-				className={cn(chatMessageMetadataVariants({ type, className }))}
-				{...props}
-			>
-				<span className="font-bold text-foreground">{username}</span>
-				<TooltipProvider>
-					<Tooltip>
-						<TooltipTrigger asChild>
-							<span>{date.toLocaleString('en-US', { hour: 'numeric', minute: 'numeric' })}</span>
-						</TooltipTrigger>
-						<TooltipContent>
-							<p>{date.toLocaleString()}</p>
-						</TooltipContent>
-					</Tooltip>
-				</TooltipProvider>
-			</div>
-		);
-	},
-);
+	return (
+		<div
+			ref={ref}
+			className={cn(chatMessageMetadataVariants({ type, className }))}
+			{...props}
+		>
+			<span className="font-bold text-foreground">{username}</span>
+			<TooltipProvider>
+				<Tooltip>
+					<TooltipTrigger asChild>
+						<span>
+							{date.toLocaleString("en-US", {
+								hour: "numeric",
+								minute: "numeric",
+							})}
+						</span>
+					</TooltipTrigger>
+					<TooltipContent>
+						<p>{date.toLocaleString()}</p>
+					</TooltipContent>
+				</Tooltip>
+			</TooltipProvider>
+		</div>
+	);
+});
 ChatMessageMetadata.displayName = "ChatMessageMetadata";
 
 export {

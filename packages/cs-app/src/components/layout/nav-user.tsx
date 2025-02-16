@@ -55,8 +55,6 @@ export function NavUser() {
 
 	const { user } = session;
 
-	console.log("session", session);
-
 	return (
 		<SidebarMenu>
 			<SidebarMenuItem>

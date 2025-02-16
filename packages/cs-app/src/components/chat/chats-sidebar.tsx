@@ -17,7 +17,6 @@ export function ChatsSidebar() {
 		queryFn: async () => {
 			const response = await client.protected["chat-room"].$get();
 			const data = await response.json();
-			console.log("chatRoomsData", data);
 			return data;
 		},
 	});

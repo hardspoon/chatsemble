@@ -39,7 +39,6 @@ export const getDB = () => {
 
 	// If we have the D1 binding and we're not explicitly using local DB, use D1
 	if (env.DB) {
-		console.log("Using production D1 database");
 		db = drizzle(env.DB, { schema, logger: false });
 		return db;
 	}

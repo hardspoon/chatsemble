@@ -109,28 +109,13 @@ export class ChatDurableObject extends DurableObject<Env> {
 	}
 
 	async webSocketClose(webSocket: WebSocket) {
-		const session = this.sessions.get(webSocket);
-		if (session) {
-			// Broadcast quit message
-			/* this.broadcast({
-				type: "quit",
-				userId: session.userId,
-			}); */
-			this.sessions.delete(webSocket);
-		}
-		//webSocket.close();
+		this.sessions.delete(webSocket);
+		webSocket.close();
 	}
 
 	async webSocketError(webSocket: WebSocket) {
-		const session = this.sessions.get(webSocket);
-		if (session) {
-			/* this.broadcast({
-				type: "quit",
-				userId: session.userId,
-			}); */
-			this.sessions.delete(webSocket);
-		}
-		//webSocket.close();
+		this.sessions.delete(webSocket);
+		webSocket.close();
 	}
 
 	private sendWebSocketMessageToUser(
@@ -227,12 +212,10 @@ export class ChatDurableObject extends DurableObject<Env> {
 		}
 
 		const result = await query;
-		console.log("result", result);
 		return result;
 	}
 
 	async addMember(member: typeof chatRoomMember.$inferInsert) {
-		console.log("XXX adding member", member);
 		await this.db
 			.insert(chatRoomMember)
 			.values(member)
@@ -246,7 +229,6 @@ export class ChatDurableObject extends DurableObject<Env> {
 					image: member.image,
 				},
 			});
-		console.log("XXX member added", member);
 
 		this.broadcastWebSocketMessage({
 			type: "member-sync",
