@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "8f8e83c3-a562-4738-ae37-2b6bfec10cfc",
+  "id": "7d5fdbac-a7bc-4fb0-8bf5-1f4f840da94d",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "agent": {
@@ -747,13 +747,12 @@
         }
       },
       "compositePrimaryKeys": {
-        "chat_room_member_room_id_member_id_type_pk": {
+        "chat_room_member_room_id_member_id_pk": {
           "columns": [
             "room_id",
-            "member_id",
-            "type"
+            "member_id"
           ],
-          "name": "chat_room_member_room_id_member_id_type_pk"
+          "name": "chat_room_member_room_id_member_id_pk"
         }
       },
       "uniqueConstraints": {},

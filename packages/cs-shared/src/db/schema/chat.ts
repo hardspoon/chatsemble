@@ -6,7 +6,7 @@ import {
 } from "drizzle-orm/sqlite-core";
 import { sql } from "drizzle-orm";
 import { relations } from "drizzle-orm";
-import { organization, user } from "./auth";
+import { organization } from "./auth";
 import type { ChatRoomMemberRole, ChatRoomMemberType } from "../../types/chat";
 
 export const chatRoom = sqliteTable("chat_room", {
@@ -37,16 +37,12 @@ export const chatRoomMember = sqliteTable(
 		type: text("type").$type<ChatRoomMemberType>().notNull(),
 		role: text("role").$type<ChatRoomMemberRole>().notNull(),
 	},
-	(t) => [primaryKey({ columns: [t.roomId, t.memberId, t.type] })],
+	(t) => [primaryKey({ columns: [t.roomId, t.memberId] })],
 );
 
 export const chatRoomMemberRelations = relations(chatRoomMember, ({ one }) => ({
 	room: one(chatRoom, {
 		fields: [chatRoomMember.roomId],
 		references: [chatRoom.id],
-	}),
-	user: one(user, {
-		fields: [chatRoomMember.memberId],
-		references: [user.id],
 	}),
 }));

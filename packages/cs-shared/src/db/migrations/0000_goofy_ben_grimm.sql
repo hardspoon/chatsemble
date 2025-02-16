@@ -106,6 +106,6 @@ CREATE TABLE `chat_room_member` (
 	`member_id` text NOT NULL,
 	`type` text NOT NULL,
 	`role` text NOT NULL,
-	PRIMARY KEY(`room_id`, `member_id`, `type`),
+	PRIMARY KEY(`room_id`, `member_id`),
 	FOREIGN KEY (`room_id`) REFERENCES `chat_room`(`id`) ON UPDATE no action ON DELETE no action
 );

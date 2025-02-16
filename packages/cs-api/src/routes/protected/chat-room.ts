@@ -128,12 +128,16 @@ const app = new Hono<HonoVariables>()
 				)
 				.get();
 
+			console.log("room", room);
+
 			if (!room) {
 				throw new Error("Room not found");
 			}
 
-			const id = CHAT_DURABLE_OBJECT.newUniqueId();
+			const id = CHAT_DURABLE_OBJECT.idFromString(room.id);
 			const chatRoom = CHAT_DURABLE_OBJECT.get(id);
+
+			console.log("chat room got", id.toString());
 
 			let member: {
 				memberId: string;
@@ -143,25 +147,38 @@ const app = new Hono<HonoVariables>()
 			} | null = null;
 
 			if (type === "user") {
-				const user = await db
-					.select()
-					.from(d1Schema.user)
-					.where(eq(d1Schema.user.id, memberId))
+				console.log("adding user", memberId);
+				const result = await db
+					.select({
+						user: d1Schema.user,
+					})
+					.from(d1Schema.member)
+					.innerJoin(
+						d1Schema.user,
+						eq(d1Schema.member.userId, d1Schema.user.id),
+					)
+					.where(
+						and(
+							eq(d1Schema.member.userId, memberId),
+							eq(d1Schema.member.organizationId, activeOrganizationId),
+						),
+					)
 					.get();
 
-				if (!user) {
+				if (!result?.user) {
 					throw new Error("User not found");
 				}
 
 				member = {
-					memberId: user.id,
-					name: user.name,
-					email: user.email,
-					image: user.image,
+					memberId: result.user.id,
+					name: result.user.name,
+					email: result.user.email,
+					image: result.user.image,
 				};
 			}
 
 			if (type === "agent") {
+				console.log("adding agent", memberId);
 				const agent = await db
 					.select()
 					.from(d1Schema.agent)
@@ -188,6 +205,19 @@ const app = new Hono<HonoVariables>()
 				throw new Error("Member not found");
 			}
 
+			console.log("adding member", member);
+
+			await chatRoom.addMember({
+				id: member.memberId,
+				role,
+				type,
+				name: member.name,
+				email: member.email ?? "agent@chatsemble.com",
+				image: member.image,
+			});
+
+			console.log("chat room member added", id.toString());
+
 			const [newMember] = await db
 				.insert(d1Schema.chatRoomMember)
 				.values({
@@ -198,18 +228,13 @@ const app = new Hono<HonoVariables>()
 				})
 				.returning();
 
+			console.log("new member", newMember);
+
 			if (!newMember) {
 				throw new Error("Failed to add member");
 			}
 
-			await chatRoom.addMember({
-				id: member.memberId,
-				role,
-				type,
-				name: member.name,
-				email: member.email ?? "agent@chatsemble.com",
-				image: member.image,
-			});
+			console.log("member added", member);
 
 			return c.json({ success: true });
 		},

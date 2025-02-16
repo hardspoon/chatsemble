@@ -3,7 +3,7 @@ import { Separator } from "@/components/ui/separator";
 import { DynamicBreadcrumb } from "@/components/layout/dynamic-breadcrumb";
 import { Badge } from "@/components/ui/badge";
 import { useChatWsContext } from "@/components/chat/chat-ws-provider";
-import { ChatMembersDialog } from "./chat-members-dialog";
+import { ChatMembersDialog } from "@/components/chat/chat-members/chat-members-dialog";
 
 export function ChatHeader() {
 	const { connectionStatus, roomId } = useChatWsContext();

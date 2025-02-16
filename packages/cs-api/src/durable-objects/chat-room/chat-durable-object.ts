@@ -7,7 +7,7 @@ import {
 import { DurableObject } from "cloudflare:workers";
 import { migrate } from "drizzle-orm/durable-sqlite/migrator";
 import migrations from "./db/migrations/migrations";
-import { chatMessagesTable, chatRoomMembersTable } from "./db/schema";
+import { chatMessage, chatRoomMember } from "./db/schema";
 import { eq, asc } from "drizzle-orm";
 import type { Session } from "../../types/session";
 import type {
@@ -162,11 +162,11 @@ export class ChatDurableObject extends DurableObject<Env> {
 	}
 
 	async insertChatRoomMessage(
-		message: typeof chatMessagesTable.$inferInsert,
+		message: typeof chatMessage.$inferInsert,
 	): Promise<ChatRoomMessage> {
 		// First insert the message
 		const [insertedMessage] = await this.db
-			.insert(chatMessagesTable)
+			.insert(chatMessage)
 			.values(message)
 			.returning();
 
@@ -177,25 +177,22 @@ export class ChatDurableObject extends DurableObject<Env> {
 		// Then fetch the message with user data
 		const messageWithUser = await this.db
 			.select({
-				id: chatMessagesTable.id,
-				content: chatMessagesTable.content,
-				memberId: chatMessagesTable.memberId,
-				createdAt: chatMessagesTable.createdAt,
+				id: chatMessage.id,
+				content: chatMessage.content,
+				memberId: chatMessage.memberId,
+				createdAt: chatMessage.createdAt,
 				user: {
-					id: chatRoomMembersTable.id,
-					role: chatRoomMembersTable.role,
-					type: chatRoomMembersTable.type,
-					name: chatRoomMembersTable.name,
-					email: chatRoomMembersTable.email,
-					image: chatRoomMembersTable.image,
+					id: chatRoomMember.id,
+					role: chatRoomMember.role,
+					type: chatRoomMember.type,
+					name: chatRoomMember.name,
+					email: chatRoomMember.email,
+					image: chatRoomMember.image,
 				},
 			})
-			.from(chatMessagesTable)
-			.innerJoin(
-				chatRoomMembersTable,
-				eq(chatMessagesTable.memberId, chatRoomMembersTable.id),
-			)
-			.where(eq(chatMessagesTable.id, insertedMessage.id))
+			.from(chatMessage)
+			.innerJoin(chatRoomMember, eq(chatMessage.memberId, chatRoomMember.id))
+			.where(eq(chatMessage.id, insertedMessage.id))
 			.get();
 
 		if (!messageWithUser) {
@@ -208,25 +205,22 @@ export class ChatDurableObject extends DurableObject<Env> {
 	async selectChatRoomMessages(limit?: number): Promise<ChatRoomMessage[]> {
 		const query = this.db
 			.select({
-				id: chatMessagesTable.id,
-				content: chatMessagesTable.content,
-				memberId: chatMessagesTable.memberId,
-				createdAt: chatMessagesTable.createdAt,
+				id: chatMessage.id,
+				content: chatMessage.content,
+				memberId: chatMessage.memberId,
+				createdAt: chatMessage.createdAt,
 				user: {
-					id: chatRoomMembersTable.id,
-					role: chatRoomMembersTable.role,
-					type: chatRoomMembersTable.type,
-					name: chatRoomMembersTable.name,
-					email: chatRoomMembersTable.email,
-					image: chatRoomMembersTable.image,
+					id: chatRoomMember.id,
+					role: chatRoomMember.role,
+					type: chatRoomMember.type,
+					name: chatRoomMember.name,
+					email: chatRoomMember.email,
+					image: chatRoomMember.image,
 				},
 			})
-			.from(chatMessagesTable)
-			.innerJoin(
-				chatRoomMembersTable,
-				eq(chatMessagesTable.memberId, chatRoomMembersTable.id),
-			)
-			.orderBy(asc(chatMessagesTable.createdAt));
+			.from(chatMessage)
+			.innerJoin(chatRoomMember, eq(chatMessage.memberId, chatRoomMember.id))
+			.orderBy(asc(chatMessage.createdAt));
 
 		if (limit) {
 			query.limit(limit);
@@ -237,19 +231,22 @@ export class ChatDurableObject extends DurableObject<Env> {
 		return result;
 	}
 
-	async addMember(member: typeof chatRoomMembersTable.$inferInsert) {
+	async addMember(member: typeof chatRoomMember.$inferInsert) {
+		console.log("XXX adding member", member);
 		await this.db
-			.insert(chatRoomMembersTable)
+			.insert(chatRoomMember)
 			.values(member)
 			.onConflictDoUpdate({
-				target: [chatRoomMembersTable.id, chatRoomMembersTable.role],
+				target: [chatRoomMember.id],
 				set: {
+					role: member.role,
 					type: member.type,
 					name: member.name,
 					email: member.email,
 					image: member.image,
 				},
 			});
+		console.log("XXX member added", member);
 
 		this.broadcastWebSocketMessage({
 			type: "member-sync",
@@ -260,12 +257,12 @@ export class ChatDurableObject extends DurableObject<Env> {
 	async getMember(id: string): Promise<ChatRoomMember | undefined> {
 		return this.db
 			.select()
-			.from(chatRoomMembersTable)
-			.where(eq(chatRoomMembersTable.id, id))
+			.from(chatRoomMember)
+			.where(eq(chatRoomMember.id, id))
 			.get();
 	}
 
 	async getMembers(): Promise<ChatRoomMember[]> {
-		return this.db.select().from(chatRoomMembersTable).all();
+		return this.db.select().from(chatRoomMember).all();
 	}
 }

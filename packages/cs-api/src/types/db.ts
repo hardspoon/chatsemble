@@ -1,6 +1,6 @@
-import type { chatMessagesTable } from "../durable-objects/chat-room/db/schema";
+import type { chatMessage } from "../durable-objects/chat-room/db/schema";
 import { z } from "zod";
-export type ChatMessage = typeof chatMessagesTable.$inferSelect;
+export type ChatMessage = typeof chatMessage.$inferSelect;
 
 export const chatMessageSchema = z.object({
 	id: z.string(),

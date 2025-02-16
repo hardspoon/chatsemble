@@ -14,6 +14,7 @@ import {
 import { migrate } from "drizzle-orm/durable-sqlite/migrator";
 import { agentConfig } from "./db/schema";
 import { eq } from "drizzle-orm";
+
 export class AgentDurableObject extends DurableObject<Env> {
 	storage: DurableObjectStorage;
 	db: DrizzleSqliteDODatabase;

@@ -32,12 +32,17 @@ const app = new Hono<HonoVariables>()
 			const id = AGENT_DURABLE_OBJECT.newUniqueId();
 			const agent = AGENT_DURABLE_OBJECT.get(id);
 
+			console.log("upsert agent config", name, image, systemPrompt);
+
+			await agent.migrate();
 			await agent.upsertAgentConfig({
 				name,
 				image,
 				systemPrompt,
 				organizationId: activeOrganizationId,
 			});
+
+			console.log("insert agent", id.toString(), name, image, systemPrompt);
 
 			await db.insert(d1Schema.agent).values({
 				id: id.toString(),
@@ -46,6 +51,8 @@ const app = new Hono<HonoVariables>()
 				systemPrompt,
 				organizationId: activeOrganizationId,
 			});
+
+			console.log("insert agent", id.toString(), name, image, systemPrompt);
 
 			return c.json({ agentId: id.toString() });
 		},
