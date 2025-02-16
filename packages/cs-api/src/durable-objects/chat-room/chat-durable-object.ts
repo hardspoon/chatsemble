@@ -242,9 +242,9 @@ export class ChatDurableObject extends DurableObject<Env> {
 			.insert(chatRoomMembersTable)
 			.values(member)
 			.onConflictDoUpdate({
-				target: chatRoomMembersTable.id,
+				target: [chatRoomMembersTable.id, chatRoomMembersTable.role],
 				set: {
-					role: member.role,
+					type: member.type,
 					name: member.name,
 					email: member.email,
 					image: member.image,

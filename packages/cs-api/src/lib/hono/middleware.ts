@@ -38,6 +38,5 @@ export const honoAuthMiddleware = async (c: Context, next: Next) => {
 
 	c.set("user", user);
 	c.set("session", session);
-	console.log("session", session);
 	await next();
 };

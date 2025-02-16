@@ -49,14 +49,22 @@ export class AgentDurableObject extends DurableObject<Env> {
 	}
 
 	async getAgentConfig() {
-		return this.db
+		const config = await this.db
 			.select()
 			.from(agentConfig)
 			.where(eq(agentConfig.id, this.ctx.id.toString()))
 			.get();
+
+		if (!config) {
+			throw new Error("Agent config not found");
+		}
+
+		return config;
 	}
 
 	async generateResponse(message: string) {
+		const { systemPrompt } = await this.getAgentConfig();
+
 		const openaiClient = createOpenAI({
 			baseURL: this.env.AI_GATEWAY_OPENAI_URL,
 			apiKey: this.env.OPENAI_API_KEY,
@@ -64,6 +72,7 @@ export class AgentDurableObject extends DurableObject<Env> {
 
 		const result = await generateText({
 			model: openaiClient("gpt-4o-mini"),
+			system: systemPrompt,
 			prompt: message,
 		});
 
