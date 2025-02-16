@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "c6b155fd-fa3b-406a-b7e3-7ab774b1fd37",
+  "id": "55c58d81-e17e-43b8-9d12-46f1af97fe75",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "agent_config": {
@@ -12,8 +12,7 @@
           "type": "text",
           "primaryKey": true,
           "notNull": true,
-          "autoincrement": false,
-          "default": "'OPiXuyA6wFUiw2aPJYty7'"
+          "autoincrement": false
         },
         "name": {
           "name": "name",

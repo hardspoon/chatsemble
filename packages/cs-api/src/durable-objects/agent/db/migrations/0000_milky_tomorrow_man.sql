@@ -1,5 +1,5 @@
 CREATE TABLE `agent_config` (
-	`id` text PRIMARY KEY DEFAULT 'OPiXuyA6wFUiw2aPJYty7' NOT NULL,
+	`id` text PRIMARY KEY NOT NULL,
 	`name` text NOT NULL,
 	`image` text NOT NULL,
 	`system_prompt` text NOT NULL,
