@@ -7,13 +7,14 @@ import {
 import { DurableObject } from "cloudflare:workers";
 import { migrate } from "drizzle-orm/durable-sqlite/migrator";
 import migrations from "./db/migrations/migrations";
-import { chatMessage, chatRoomMember } from "./db/schema";
+import { chatMessage, chatRoomMember, chatRoomConfig } from "./db/schema";
 import { eq, desc } from "drizzle-orm";
 import type { Session } from "../../types/session";
 import type {
 	ChatRoomMember,
 	ChatRoomMemberType,
 	ChatRoomMessage,
+	ChatRoomMessagePartial,
 	WsChatRoomMessage,
 } from "@/cs-shared";
 
@@ -87,52 +88,9 @@ export class ChatDurableObject extends DurableObject<Env> {
 			const parsedMsg: WsChatRoomMessage = JSON.parse(message);
 
 			if (parsedMsg.type === "message-receive") {
-				// Store message in database
-				const message = await this.insertChatRoomMessage({
-					memberId: session.userId,
-					id: parsedMsg.message.id,
-					content: parsedMsg.message.content,
+				await this.receiveChatRoomMessage(session.userId, parsedMsg.message, {
+					notifyAgents: true,
 				});
-
-				// Broadcast message to all except sender
-				this.broadcastWebSocketMessage(
-					{
-						type: "message-broadcast",
-						message,
-					},
-					session.userId,
-				);
-
-				// Get all agent members
-				const agentMembers = await this.getMembers({
-					type: "agent",
-				});
-
-				// Generate and broadcast responses from each agent
-				for (const agent of agentMembers) {
-					const agentDO = this.env.AGENT_DURABLE_OBJECT.get(
-						this.env.AGENT_DURABLE_OBJECT.idFromString(agent.id),
-					);
-
-					// Get last 10 messages including the new one for context
-					const recentMessages = await this.selectChatRoomMessages(10);
-
-					const agentMessage =
-						await agentDO.createChatRoomMessage(recentMessages);
-
-					// Store agent's response in database
-					const storedAgentMessage = await this.insertChatRoomMessage({
-						memberId: agent.id,
-						id: agentMessage.id,
-						content: agentMessage.content,
-					});
-
-					// Broadcast agent's response to all users
-					this.broadcastWebSocketMessage({
-						type: "message-broadcast",
-						message: storedAgentMessage,
-					});
-				}
 			}
 		} catch (err) {
 			if (err instanceof Error) {
@@ -169,6 +127,44 @@ export class ChatDurableObject extends DurableObject<Env> {
 		for (const [ws, session] of this.sessions.entries()) {
 			if (!excludeUserId || session.userId !== excludeUserId) {
 				ws.send(JSON.stringify(message));
+			}
+		}
+	}
+
+	async receiveChatRoomMessage(
+		memberId: string,
+		message: ChatRoomMessagePartial,
+		config: {
+			notifyAgents: boolean;
+		},
+	) {
+		const chatRoomMessage = await this.insertChatRoomMessage({
+			memberId,
+			id: message.id,
+			content: message.content,
+		});
+
+		this.broadcastWebSocketMessage(
+			{
+				type: "message-broadcast",
+				message: chatRoomMessage,
+			},
+			memberId,
+		);
+
+		if (config?.notifyAgents) {
+			const agentMembers = await this.getMembers({
+				type: "agent",
+			});
+
+			for (const agent of agentMembers) {
+				const agentDO = this.env.AGENT_DURABLE_OBJECT.get(
+					this.env.AGENT_DURABLE_OBJECT.idFromString(agent.id),
+				);
+
+				await agentDO.receiveNotification({
+					chatRoomId: this.ctx.id.toString(),
+				});
 			}
 		}
 	}
@@ -286,5 +282,32 @@ export class ChatDurableObject extends DurableObject<Env> {
 		}
 
 		return await query.all();
+	}
+
+	async upsertChatRoomConfig(config: typeof chatRoomConfig.$inferInsert) {
+		await this.db
+			.insert(chatRoomConfig)
+			.values(config)
+			.onConflictDoUpdate({
+				target: [chatRoomConfig.id],
+				set: {
+					name: config.name,
+					organizationId: config.organizationId,
+				},
+			});
+	}
+
+	async getChatRoomConfig() {
+		const config = await this.db
+			.select()
+			.from(chatRoomConfig)
+			.where(eq(chatRoomConfig.id, this.ctx.id.toString()))
+			.get();
+
+		if (!config) {
+			throw new Error("Chat room config not found");
+		}
+
+		return config;
 	}
 }

@@ -39,6 +39,11 @@ const app = new Hono<HonoVariables>()
 			console.log("chat room got", id.toString());
 
 			await chatRoom.migrate();
+			await chatRoom.upsertChatRoomConfig({
+				id: id.toString(),
+				name,
+				organizationId: activeOrganizationId,
+			});
 			console.log("chat room migrated");
 			await chatRoom.addMember({
 				id: user.id,
@@ -106,7 +111,7 @@ const app = new Hono<HonoVariables>()
 			}),
 		),
 		async (c) => {
-			const { CHAT_DURABLE_OBJECT } = c.env;
+			const { CHAT_DURABLE_OBJECT, AGENT_DURABLE_OBJECT } = c.env;
 			const db = c.get("db");
 			const session = c.get("session");
 			const { activeOrganizationId } = session;
@@ -232,6 +237,17 @@ const app = new Hono<HonoVariables>()
 
 			if (!newMember) {
 				throw new Error("Failed to add member");
+			}
+
+			if (type === "agent") {
+				const agentId = AGENT_DURABLE_OBJECT.idFromString(member.memberId);
+				const agent = AGENT_DURABLE_OBJECT.get(agentId);
+
+				await agent.addChatRoom({
+					id: room.id,
+					name: room.name,
+					organizationId: activeOrganizationId,
+				});
 			}
 
 			console.log("member added", member);

@@ -11,3 +11,13 @@ export const agentConfig = sqliteTable("agent_config", {
 		.notNull()
 		.default(sql`(unixepoch() * 1000)`),
 });
+
+export const agentChatRoom = sqliteTable("agent_chat_room", {
+	id: text("id").primaryKey(),
+	name: text("name").notNull(),
+	notifications: integer("notifications").notNull().default(0),
+	organizationId: text("organization_id").notNull(),
+	createdAt: integer("created_at", { mode: "number" })
+		.notNull()
+		.default(sql`(unixepoch() * 1000)`),
+});
