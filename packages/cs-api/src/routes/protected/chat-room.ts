@@ -21,7 +21,6 @@ const app = new Hono<HonoVariables>()
 			}),
 		),
 		async (c) => {
-			console.log("create chat room");
 			const { CHAT_DURABLE_OBJECT } = c.env;
 			const db = c.get("db");
 			const user = c.get("user");
@@ -36,7 +35,6 @@ const app = new Hono<HonoVariables>()
 			// Create durable object
 			const id = CHAT_DURABLE_OBJECT.newUniqueId();
 			const chatRoom = CHAT_DURABLE_OBJECT.get(id);
-			console.log("chat room got", id.toString());
 
 			await chatRoom.migrate();
 			await chatRoom.upsertChatRoomConfig({
@@ -44,7 +42,6 @@ const app = new Hono<HonoVariables>()
 				name,
 				organizationId: activeOrganizationId,
 			});
-			console.log("chat room migrated");
 			await chatRoom.addMember({
 				id: user.id,
 				role: "admin",
@@ -53,8 +50,6 @@ const app = new Hono<HonoVariables>()
 				email: user.email,
 				image: user.image,
 			});
-
-			console.log("chat room member added", id.toString());
 
 			// Create room record in D1
 			await db.insert(d1Schema.chatRoom).values({
@@ -133,16 +128,12 @@ const app = new Hono<HonoVariables>()
 				)
 				.get();
 
-			console.log("room", room);
-
 			if (!room) {
 				throw new Error("Room not found");
 			}
 
 			const id = CHAT_DURABLE_OBJECT.idFromString(room.id);
 			const chatRoom = CHAT_DURABLE_OBJECT.get(id);
-
-			console.log("chat room got", id.toString());
 
 			let member: {
 				memberId: string;
@@ -152,7 +143,6 @@ const app = new Hono<HonoVariables>()
 			} | null = null;
 
 			if (type === "user") {
-				console.log("adding user", memberId);
 				const result = await db
 					.select({
 						user: d1Schema.user,
@@ -183,7 +173,6 @@ const app = new Hono<HonoVariables>()
 			}
 
 			if (type === "agent") {
-				console.log("adding agent", memberId);
 				const agent = await db
 					.select()
 					.from(d1Schema.agent)
@@ -210,8 +199,6 @@ const app = new Hono<HonoVariables>()
 				throw new Error("Member not found");
 			}
 
-			console.log("adding member", member);
-
 			await chatRoom.addMember({
 				id: member.memberId,
 				role,
@@ -220,8 +207,6 @@ const app = new Hono<HonoVariables>()
 				email: member.email ?? "agent@chatsemble.com",
 				image: member.image,
 			});
-
-			console.log("chat room member added", id.toString());
 
 			const [newMember] = await db
 				.insert(d1Schema.chatRoomMember)
@@ -232,8 +217,6 @@ const app = new Hono<HonoVariables>()
 					type,
 				})
 				.returning();
-
-			console.log("new member", newMember);
 
 			if (!newMember) {
 				throw new Error("Failed to add member");
@@ -249,8 +232,6 @@ const app = new Hono<HonoVariables>()
 					organizationId: activeOrganizationId,
 				});
 			}
-
-			console.log("member added", member);
 
 			return c.json({ success: true });
 		},

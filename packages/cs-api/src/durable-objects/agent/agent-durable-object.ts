@@ -2,7 +2,8 @@
 /// <reference types="../../../worker-configuration" />
 
 import { DurableObject } from "cloudflare:workers";
-import { createOpenAI } from "@ai-sdk/openai";
+//import { createOpenAI } from "@ai-sdk/openai";
+import { createGroq } from "@ai-sdk/groq";
 import { generateText, type CoreMessage } from "ai";
 import type { ChatRoomMessage, ChatRoomMessagePartial } from "@/cs-shared";
 import { nanoid } from "nanoid";
@@ -16,6 +17,11 @@ import { agentChatRoom, agentConfig } from "./db/schema";
 import { eq } from "drizzle-orm";
 import { chatRoomMessagesToAiMessages } from "../../lib/ai/ai-utils";
 import { getAgentPrompt } from "../../lib/ai/prompts/agent-prompt";
+
+const ALARM_TIME_IN_MS = 5 * 1000;
+const MAX_NOTIFICATION_TO_WAIT_FOR_CHECK = 3;
+const MAX_CHECK_TIME_IN_MS = 6 * 1000; //  Should be bigger than ALARM_TIME_IN_MS
+const MIN_CHECK_TIME_IN_MS = 1 * 1000;
 
 export class AgentDurableObject extends DurableObject<Env> {
 	storage: DurableObjectStorage;
@@ -34,24 +40,67 @@ export class AgentDurableObject extends DurableObject<Env> {
 	async alarm() {
 		const chatRooms = await this.getChatRooms();
 
-		for (const chatRoom of chatRooms) {
-			if (chatRoom.notifications === 0) {
-				continue;
-			}
+		const processingPromises = chatRooms.map(
+			async ({ id, notifications, lastNotificationAt }) => {
+				if (notifications === 0) {
+					return;
+				}
 
-			const messagesToGet = chatRoom.notifications + 10;
-			const messages = await this.getChatRoomMessages(
-				chatRoom.id,
-				messagesToGet,
-			);
+				let triggerGeneration = false;
 
-			const aiMessage = await this.generateChatRoomMessagePartial(messages);
+				if (notifications > MAX_NOTIFICATION_TO_WAIT_FOR_CHECK) {
+					triggerGeneration = true;
+				} else {
+					const timeStep =
+						(MAX_CHECK_TIME_IN_MS - MIN_CHECK_TIME_IN_MS) /
+						MAX_NOTIFICATION_TO_WAIT_FOR_CHECK;
 
-			await this.sendChatRoomMessage(chatRoom.id, aiMessage);
+					const notificationTimeStep =
+						(MAX_NOTIFICATION_TO_WAIT_FOR_CHECK - notifications + 1) * timeStep;
 
-			await this.updateChatRoom(chatRoom.id, {
-				notifications: 0,
-			});
+					const timeToCheck = MIN_CHECK_TIME_IN_MS + notificationTimeStep;
+
+					const timeAgo = Date.now() - timeToCheck;
+
+					const lastNotificationIsNewerThanTimeToCheck =
+						lastNotificationAt > timeAgo;
+
+					if (lastNotificationIsNewerThanTimeToCheck) {
+						triggerGeneration = false;
+					} else {
+						triggerGeneration = true;
+					}
+				}
+
+				if (triggerGeneration) {
+					const messages = await this.ctx.blockConcurrencyWhile(async () => {
+						const messagesToGet = notifications + 10;
+						const messages = await this.getChatRoomMessages(id, messagesToGet);
+
+						await this.updateChatRoom(id, {
+							notifications: 0,
+						});
+
+						return messages;
+					});
+
+					const aiMessage = await this.generateChatRoomMessagePartial(messages);
+
+					await this.sendChatRoomMessage(id, aiMessage);
+				}
+			},
+		);
+
+		await Promise.all(processingPromises);
+
+		const chatRoomsToVerify = await this.getChatRooms();
+
+		const chatRoomHasNotifications = chatRoomsToVerify.some(
+			({ notifications }) => notifications > 0,
+		);
+
+		if (chatRoomHasNotifications) {
+			this.setChatRoomCheckAlarm();
 		}
 	}
 
@@ -61,16 +110,18 @@ export class AgentDurableObject extends DurableObject<Env> {
 
 		await this.updateChatRoom(chatRoomId, {
 			notifications: newNotifications,
+			lastNotificationAt: Date.now(),
 		});
 
-		const currentAlarm = await this.storage.getAlarm();
-		if (currentAlarm) {
-			await this.storage.deleteAlarm();
-		}
+		this.setChatRoomCheckAlarm();
+	}
 
-		const secondsToWait = 10;
-		const alarmTime = Date.now() + secondsToWait * 1000;
-		this.storage.setAlarm(alarmTime);
+	private async setChatRoomCheckAlarm() {
+		const currentAlarm = await this.storage.getAlarm();
+		if (!currentAlarm) {
+			const alarmTime = Date.now() + ALARM_TIME_IN_MS;
+			this.storage.setAlarm(alarmTime);
+		}
 	}
 
 	private async generateChatRoomMessagePartial(
@@ -96,13 +147,18 @@ export class AgentDurableObject extends DurableObject<Env> {
 	private async generateAiResponse(messages: CoreMessage[]) {
 		const agentConfig = await this.getAgentConfig();
 
-		const openaiClient = createOpenAI({
+		/* const openaiClient = createOpenAI({
 			baseURL: this.env.AI_GATEWAY_OPENAI_URL,
 			apiKey: this.env.OPENAI_API_KEY,
+		}); */
+
+		const groqClient = createGroq({
+			baseURL: this.env.AI_GATEWAY_GROQ_URL,
+			apiKey: this.env.GROQ_API_KEY,
 		});
 
 		const result = await generateText({
-			model: openaiClient("gpt-4o-mini"),
+			model: groqClient("llama-3.1-8b-instant"),
 			system: getAgentPrompt({
 				agentConfig,
 			}),

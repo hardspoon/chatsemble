@@ -32,8 +32,6 @@ const app = new Hono<HonoVariables>()
 			const id = AGENT_DURABLE_OBJECT.newUniqueId();
 			const agent = AGENT_DURABLE_OBJECT.get(id);
 
-			console.log("upsert agent config", name, image, systemPrompt);
-
 			await agent.migrate();
 			await agent.upsertAgentConfig({
 				name,
@@ -42,8 +40,6 @@ const app = new Hono<HonoVariables>()
 				organizationId: activeOrganizationId,
 			});
 
-			console.log("insert agent", id.toString(), name, image, systemPrompt);
-
 			await db.insert(d1Schema.agent).values({
 				id: id.toString(),
 				name,
@@ -51,8 +47,6 @@ const app = new Hono<HonoVariables>()
 				systemPrompt,
 				organizationId: activeOrganizationId,
 			});
-
-			console.log("insert agent", id.toString(), name, image, systemPrompt);
 
 			return c.json({ agentId: id.toString() });
 		},
@@ -79,12 +73,8 @@ const app = new Hono<HonoVariables>()
 				throw new Error("Organization not set");
 			}
 
-			console.log("update agent", id, name, image, systemPrompt);
-
 			const agentId = AGENT_DURABLE_OBJECT.idFromString(id);
 			const agent = AGENT_DURABLE_OBJECT.get(agentId);
-
-			console.log("upsert agent config", name, image, systemPrompt);
 
 			await agent.upsertAgentConfig({
 				name,

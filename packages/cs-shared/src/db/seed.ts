@@ -86,7 +86,7 @@ async function seed() {
 				id: "Fe7gvakGA5tVO5Ulho1BIqVGpMBan8r5",
 				name: "Alejandro Wurts",
 				email: "alejandrowurts@gmail.com",
-				avatar: "/notion-avatars/avatar-01.svg",
+				avatar: "/notion-avatars/avatar-08.svg",
 			}),
 			createUserWithAccount({
 				id: "Ks9mPqR4Nt2Wx5Yz8Abc3Def7Ghi1JkL",

@@ -12,6 +12,7 @@
 		"db:generate:agent": "DRIZZLE_SCHEMA=./src/durable-objects/agent/db/schema.ts DRIZZLE_OUT=./src/durable-objects/agent/db/migrations drizzle-kit generate"
 	},
 	"dependencies": {
+		"@ai-sdk/groq": "^1.1.9",
 		"@hono/zod-validator": "^0.4.2",
 		"dotenv": "^16.4.7",
 		"drizzle-orm": "^0.39.3",
