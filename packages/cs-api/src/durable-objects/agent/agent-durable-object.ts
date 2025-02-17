@@ -16,7 +16,11 @@ import { migrate } from "drizzle-orm/durable-sqlite/migrator";
 import { agentChatRoom, agentConfig } from "./db/schema";
 import { eq } from "drizzle-orm";
 import { chatRoomMessagesToAiMessages } from "../../lib/ai/ai-utils";
-import { getAgentPrompt } from "../../lib/ai/prompts/agent-prompt";
+import {
+	getAgentPrompt,
+	getAiCheckerPrompt,
+	shouldRespondTools,
+} from "../../lib/ai/prompts/agent-prompt";
 
 const ALARM_TIME_IN_MS = 5 * 1000;
 const MAX_NOTIFICATION_TO_WAIT_FOR_CHECK = 3;
@@ -31,6 +35,8 @@ export class AgentDurableObject extends DurableObject<Env> {
 		super(ctx, env);
 		this.storage = ctx.storage;
 		this.db = drizzle(this.storage, { logger: false });
+		console.log("constructor");
+		this.storage.deleteAlarm();
 	}
 
 	async migrate() {
@@ -38,63 +44,29 @@ export class AgentDurableObject extends DurableObject<Env> {
 	}
 
 	async alarm() {
+		console.log("alarm");
 		const chatRooms = await this.getChatRooms();
 
 		const processingPromises = chatRooms.map(
 			async ({ id, notifications, lastNotificationAt }) => {
-				if (notifications === 0) {
-					return;
+				const shouldTriggerGeneration = await this.shouldTriggerGeneration(
+					notifications,
+					lastNotificationAt,
+				);
+
+				console.log("shouldTriggerGeneration", id, shouldTriggerGeneration);
+				if (shouldTriggerGeneration) {
+					await this.triggerGeneration(id, notifications);
 				}
-
-				let triggerGeneration = false;
-
-				if (notifications > MAX_NOTIFICATION_TO_WAIT_FOR_CHECK) {
-					triggerGeneration = true;
-				} else {
-					const timeStep =
-						(MAX_CHECK_TIME_IN_MS - MIN_CHECK_TIME_IN_MS) /
-						MAX_NOTIFICATION_TO_WAIT_FOR_CHECK;
-
-					const notificationTimeStep =
-						(MAX_NOTIFICATION_TO_WAIT_FOR_CHECK - notifications + 1) * timeStep;
-
-					const timeToCheck = MIN_CHECK_TIME_IN_MS + notificationTimeStep;
-
-					const timeAgo = Date.now() - timeToCheck;
-
-					const lastNotificationIsNewerThanTimeToCheck =
-						lastNotificationAt > timeAgo;
-
-					if (lastNotificationIsNewerThanTimeToCheck) {
-						triggerGeneration = false;
-					} else {
-						triggerGeneration = true;
-					}
-				}
-
-				if (triggerGeneration) {
-					const messages = await this.ctx.blockConcurrencyWhile(async () => {
-						const messagesToGet = notifications + 10;
-						const messages = await this.getChatRoomMessages(id, messagesToGet);
-
-						await this.updateChatRoom(id, {
-							notifications: 0,
-						});
-
-						return messages;
-					});
-
-					const aiMessage = await this.generateChatRoomMessagePartial(messages);
-
-					await this.sendChatRoomMessage(id, aiMessage);
-				}
+				//await this.triggerGeneration(id, notifications);
 			},
 		);
 
+		// Process all chat rooms in parallel
 		await Promise.all(processingPromises);
 
+		// Check if we have pending notifications
 		const chatRoomsToVerify = await this.getChatRooms();
-
 		const chatRoomHasNotifications = chatRoomsToVerify.some(
 			({ notifications }) => notifications > 0,
 		);
@@ -113,6 +85,8 @@ export class AgentDurableObject extends DurableObject<Env> {
 			lastNotificationAt: Date.now(),
 		});
 
+		console.log("receivedNotification", chatRoomId, newNotifications);
+
 		this.setChatRoomCheckAlarm();
 	}
 
@@ -124,12 +98,134 @@ export class AgentDurableObject extends DurableObject<Env> {
 		}
 	}
 
+	private async shouldTriggerGeneration(
+		notifications: number,
+		lastNotificationAt: number,
+	) {
+		let triggerGeneration = false;
+		if (notifications === 0) {
+			return triggerGeneration;
+		}
+
+		if (notifications > MAX_NOTIFICATION_TO_WAIT_FOR_CHECK) {
+			triggerGeneration = true;
+		} else {
+			const timeStep =
+				(MAX_CHECK_TIME_IN_MS - MIN_CHECK_TIME_IN_MS) /
+				MAX_NOTIFICATION_TO_WAIT_FOR_CHECK;
+
+			const notificationTimeStep =
+				(MAX_NOTIFICATION_TO_WAIT_FOR_CHECK - notifications + 1) * timeStep;
+
+			const timeToCheck = MIN_CHECK_TIME_IN_MS + notificationTimeStep;
+
+			const timeAgo = Date.now() - timeToCheck;
+
+			const lastNotificationIsNewerThanTimeToCheck =
+				lastNotificationAt > timeAgo;
+
+			if (lastNotificationIsNewerThanTimeToCheck) {
+				triggerGeneration = false;
+			} else {
+				triggerGeneration = true;
+			}
+		}
+
+		return triggerGeneration;
+	}
+
+	private async triggerGeneration(chatRoomId: string, notifications: number) {
+		const messages = await this.ctx.blockConcurrencyWhile(async () => {
+			const messagesToGet = notifications + 10;
+			const messages = await this.getChatRoomMessages(
+				chatRoomId,
+				messagesToGet,
+			);
+
+			await this.updateChatRoom(chatRoomId, {
+				notifications: 0,
+			});
+
+			return messages;
+		});
+
+		console.log("messages", messages);
+
+		const aiMessage = await this.generateChatRoomMessagePartial(messages);
+
+		if (aiMessage) {
+			await this.sendChatRoomMessage(chatRoomId, aiMessage);
+		}
+	}
+
+	private async shouldAiRespond(messages: CoreMessage[]) {
+		const agentConfig = await this.getAgentConfig();
+
+		const groqClient = createGroq({
+			baseURL: this.env.AI_GATEWAY_GROQ_URL,
+			apiKey: this.env.GROQ_API_KEY,
+		});
+
+		const result = await generateText({
+			model: groqClient("llama-3.1-8b-instant"),
+			system: getAiCheckerPrompt({
+				agentConfig,
+			}),
+			messages,
+			tools: shouldRespondTools,
+			toolChoice: "required",
+		});
+
+		const toolResult = result.toolResults;
+
+		console.log("toolResult", toolResult);
+
+		const shouldRespond = toolResult.some(
+			(toolResult) =>
+				toolResult.toolName === "shouldRespond" &&
+				toolResult.args.shouldRespond,
+		);
+
+		return shouldRespond;
+	}
+
+	private async generateAiResponse(messages: CoreMessage[]) {
+		const agentConfig = await this.getAgentConfig();
+
+		const groqClient = createGroq({
+			baseURL: this.env.AI_GATEWAY_GROQ_URL,
+			apiKey: this.env.GROQ_API_KEY,
+		});
+
+		const result = await generateText({
+			model: groqClient("llama-3.3-70b-versatile"),
+			system: getAgentPrompt({
+				agentConfig,
+			}),
+			messages,
+		});
+
+		return result.text;
+	}
+
 	private async generateChatRoomMessagePartial(
 		messages: ChatRoomMessage[],
-	): Promise<ChatRoomMessagePartial> {
+	): Promise<ChatRoomMessagePartial | null> {
 		const aiMessages = chatRoomMessagesToAiMessages(messages);
+		console.log("aiMessages", aiMessages);
+		const shouldRespond = await this.shouldAiRespond(aiMessages);
+
+		console.log("shouldRespond", shouldRespond);
+
+		if (!shouldRespond) {
+			return null;
+		}
 
 		const result = await this.generateAiResponse(aiMessages);
+
+		if (!result) {
+			return null;
+		}
 
 		const agentConfig = await this.getAgentConfig();
 
@@ -142,30 +238,6 @@ export class AgentDurableObject extends DurableObject<Env> {
 			content: result,
 			createdAt: Date.now(),
 		};
-	}
-
-	private async generateAiResponse(messages: CoreMessage[]) {
-		const agentConfig = await this.getAgentConfig();
-
-		/* const openaiClient = createOpenAI({
-			baseURL: this.env.AI_GATEWAY_OPENAI_URL,
-			apiKey: this.env.OPENAI_API_KEY,
-		}); */
-
-		const groqClient = createGroq({
-			baseURL: this.env.AI_GATEWAY_GROQ_URL,
-			apiKey: this.env.GROQ_API_KEY,
-		});
-
-		const result = await generateText({
-			model: groqClient("llama-3.1-8b-instant"),
-			system: getAgentPrompt({
-				agentConfig,
-			}),
-			messages,
-		});
-
-		return result.text;
 	}
 
 	async upsertAgentConfig(

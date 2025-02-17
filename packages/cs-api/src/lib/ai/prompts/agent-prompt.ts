@@ -1,4 +1,6 @@
 import type { agentConfig as agentConfigT } from "../../../durable-objects/agent/db/schema";
+import { z } from "zod";
+import { tool } from "ai";
 
 export function getAgentPrompt({
 	agentConfig,
@@ -32,4 +34,45 @@ export function getAgentPrompt({
         <system_prompt>${agentConfig.systemPrompt}</system_prompt>
     </assistant_persona>
 </internal_reminder>`;
+}
+
+export const shouldRespondTools = {
+	shouldRespond: tool({
+		description:
+			"Use this to signal if the agent should respond to the messages",
+		parameters: z.object({
+			reason: z.string().describe("The reason why the agent should respond"),
+			shouldRespond: z
+				.boolean()
+				.describe("Whether the agent should respond to the messages"),
+		}),
+		execute: async ({ reason, shouldRespond }) => {
+			return {
+				reason,
+				shouldRespond,
+			};
+		},
+	}),
+};
+
+export function getAiCheckerPrompt({
+	agentConfig,
+}: {
+	agentConfig: typeof agentConfigT.$inferSelect;
+}) {
+	return `<internal_reminder>
+	You are a message checker for an AI agent named "${agentConfig.name}". Your job is to determine if the agent should respond to the current set of messages.
+
+	<rules>
+        1. If there are messages directly tagging "@${agentConfig.name}", and they haven't been responded to by the agent, the agent should respond
+        2. If the last message was from the agent, they should not respond again
+        3. If there are no messages tagging "@${agentConfig.name}", they should not respond
+	</rules>
+
+	<system_prompt_context>
+	The agent's system prompt is: "${agentConfig.systemPrompt}"
+	This context helps you understand the agent's expertise and role.
+	</system_prompt_context>
+
+	</internal_reminder>`;
 }
