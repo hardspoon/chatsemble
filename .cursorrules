@@ -1,0 +1,82 @@
+# Project Rules
+
+You are an expert in TypeScript, Node.js, Next.js App Router, React, Shadcn UI, Radix UI, Tailwind CSS and DrizzleORM.
+
+You are also excellent at Cloudflare Workers and other tools like D1 serverless database, KV and Durable Objects. You can suggest usage of new tools (changes in wrangler.json file) to add more primitives like:
+
+- R2: File storage
+- KV: Key-value storage
+  - Always use the existing KV namespace in `wrangler.json` don't ever create new ones.
+- Durable Objects: Serverless compute with persistent storage
+- AI: AI multimodal inference
+- others primitives in `wrangler.json`
+- After adding a new primitive to `wrangler.json`, always run `npm run cf-typegen` to generate the new types.
+
+## Authentication
+
+- The authentication logic is in `src/lib/auth/auth-client.ts` and `src/lib/auth/auth-server.ts` and uses better-auth.
+
+## Database
+
+We have a shared database schema in `cs-shared/src/db/schema`.
+
+Never generate SQL migration files. Instead after making schema changes to `cs-shared/src/db/schema` you should run in shared project `npm run db:generate` to generate the migrations.
+
+In the terminal, you are also an expert at suggesting wrangler commands to manage the project.
+
+- Always use npm to install dependencies.
+
+## Code Style and Structure
+
+- Write concise, technical TypeScript code with accurate examples.
+- Use functional and declarative programming patterns; avoid classes.
+- Prefer iteration and modularization over code duplication.
+- Use descriptive variable names with auxiliary verbs (e.g., isLoading, hasError).
+- Structure files: exported component, subcomponents, helpers, static content, types.
+- When using a "container" class, use the "mx-auto" class to center the content.
+- Never delete any comments in the code unless they are no longer relevant.
+- When a fuction has more than 1 parameter, always pass them as a named object.
+- Add `import "server-only"` at the top of the file (ignore this rule for page.tsx files) if it's only intended to be used on the server.
+
+## Naming Conventions
+
+- Use lowercase with dashes for directories (e.g., components/auth-wizard).
+- Favor named exports for components.
+
+## Data Fetching
+
+- Use react-query for data fetching together with hono rpc client
+
+## TypeScript Usage
+
+- Use TypeScript for all code; prefer interfaces over types.
+- Avoid enums; use maps instead.
+- Use functional components with TypeScript interfaces.
+
+## Syntax and Formatting
+
+- Use the "function" keyword for pure functions.
+- Avoid unnecessary curly braces in conditionals; use concise syntax for simple statements.
+- Use declarative JSX.
+
+## UI and Styling
+
+- Use Shadcn UI, Radix, and Tailwind for components and styling.
+- Implement responsive design with Tailwind CSS; use a mobile-first approach.
+- Optimize for light and dark mode.
+
+## Performance Optimization
+
+- Minimize 'use client', 'useEffect', and 'setState'; favor React Server Components (RSC).
+- Wrap client components in Suspense with fallback.
+- Use dynamic loading for non-critical components.
+- Optimize images: use WebP format, include size data, implement lazy loading.
+
+## Key Conventions
+
+- Optimize Web Vitals (LCP, CLS, FID).
+- Limit 'use client':
+- Favor server components and Next.js SSR.
+- Avoid for data fetching or state management.
+
+Follow Next.js docs for Data Fetching, Rendering, and Routing.
