@@ -1,0 +1,16 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "cs-shared",
+  "compatibility_date": "2024-09-26",
+  "compatibility_flags": [
+    "nodejs_compat"
+  ],
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "cs-d1",
+      "database_id": "90d6b36b-6705-40b3-b51a-7c49896ee6da",
+      "migrations_dir": "src/db/migrations"
+    }
+  ]
+} 

@@ -1,0 +1,27 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1739739130674,
+      "tag": "0000_worthless_scalphunter",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1739793177384,
+      "tag": "0001_powerful_zodiak",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1739796707301,
+      "tag": "0002_curved_bastion",
+      "breakpoints": true
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+{
+	"name": "cs-api",
+	"version": "0.0.0",
+	"private": true,
+	"scripts": {
+		"deploy": "wrangler deploy",
+		"dev": "wrangler dev --persist-to ../../.wrangler/state",
+		"start": "wrangler dev --persist-to ../../.wrangler/state",
+		"cf-typegen": "wrangler types",
+		"lint": "biome check --write src",
+		"db:generate:chat": "DRIZZLE_SCHEMA=./src/durable-objects/chat-room/db/schema.ts DRIZZLE_OUT=./src/durable-objects/chat-room/db/migrations drizzle-kit generate",
+		"db:generate:agent": "DRIZZLE_SCHEMA=./src/durable-objects/agent/db/schema.ts DRIZZLE_OUT=./src/durable-objects/agent/db/migrations drizzle-kit generate"
+	},
+	"dependencies": {
+		"@ai-sdk/groq": "^1.1.9",
+		"@hono/zod-validator": "^0.4.2",
+		"dotenv": "^16.4.7",
+		"drizzle-orm": "^0.39.3",
+		"hono": "^4.7.0",
+		"nano": "^10.1.4",
+		"zod": "^3.24.1"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "1.9.4",
+		"@cloudflare/workers-types": "^4.20250204.0",
+		"@types/node": "^22.13.4",
+		"drizzle-kit": "^0.30.4",
+		"typescript": "^5.5.2",
+		"wrangler": "^3.107.3"
+	}
+}
