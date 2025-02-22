@@ -37,8 +37,8 @@
   "d1_databases": [
     {
       "binding": "DB",
-      "database_name": "cs-d1",
-      "database_id": "90d6b36b-6705-40b3-b51a-7c49896ee6da"
+      "database_name": "cs-prod-db",
+      "database_id": "52e82066-c12f-4f99-9573-43ddf7f1c7e6"
     }
   ]
 }
