@@ -5,6 +5,10 @@ import { getDB } from "@/server/db"; // your drizzle instance
 import { eq } from "drizzle-orm";
 import { schema } from "@/cs-shared";
 
+const trustedOrigins = process.env.BETTER_AUTH_URL
+	? [process.env.BETTER_AUTH_URL]
+	: undefined;
+
 export const getAuth = () =>
 	betterAuth({
 		database: drizzleAdapter(getDB(), {
@@ -19,22 +23,8 @@ export const getAuth = () =>
 				enabled: true,
 			},
 		},
+		trustedOrigins,
 		databaseHooks: {
-			/* user: {
-				create: {
-					after: async (user) => {
-						const authClient = getAuth();
-						await authClient.api.createOrganization({
-							body: {
-								name: `${user.name} Organization`,
-								slug: user.email,
-								userId: user.id,
-							},
-						});
-						console.log("finished creating organization");
-					},
-				},
-			}, */
 			session: {
 				create: {
 					before: async (session) => {
