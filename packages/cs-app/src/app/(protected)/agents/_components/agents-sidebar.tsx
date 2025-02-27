@@ -6,7 +6,6 @@ import {
 	SidebarHeader,
 	SidebarInput,
 } from "@/components/ui/sidebar";
-import { client } from "@/lib/api-client";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useRouter } from "next/navigation";
 import { NewAgentDialog } from "./new-agent-dialog";
@@ -19,7 +18,16 @@ export function AgentsSidebar() {
 			console.log({
 				reason: "Querying agents",
 			});
-			const response = await client.protected.agent.$get();
+			const apiHost = process.env.NEXT_PUBLIC_DO_CHAT_API_HOST;
+			const response = await fetch(`${apiHost}/protected/agent`, {
+				method: "GET",
+				credentials: "include",
+			});
+
+			if (!response.ok) {
+				throw new Error("Failed to fetch agents");
+			}
+
 			const data = await response.json();
 			console.log({
 				reason: "Agents data",
