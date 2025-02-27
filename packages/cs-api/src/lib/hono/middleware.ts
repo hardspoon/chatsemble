@@ -20,7 +20,10 @@ export const honoAuthMiddleware = async (c: Context, next: Next) => {
 		getCookie(c, "__Secure-better-auth.session_token");
 	console.log({
 		reason: "Session token",
-		sessionToken,
+		sessionToken: JSON.stringify({
+			simple: getCookie(c, "better-auth.session_token"),
+			secure: getCookie(c, "__Secure-better-auth.session_token"),
+		}),
 	});
 	if (!sessionToken) {
 		return c.json({ error: "Unauthorized" }, 401);
