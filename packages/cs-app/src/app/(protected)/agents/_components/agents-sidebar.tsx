@@ -11,26 +11,25 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useRouter } from "next/navigation";
 import { NewAgentDialog } from "./new-agent-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useEffect } from "react";
 
 export function AgentsSidebar() {
 	const { data: agentsData, isLoading } = useQuery({
 		queryKey: ["agents"],
 		queryFn: async () => {
+			console.log({
+				reason: "Querying agents",
+			});
 			const response = await client.protected.agent.$get();
 			const data = await response.json();
+			console.log({
+				reason: "Agents data",
+				data,
+			});
 			return data;
 		},
 	});
 
 	const router = useRouter();
-
-	useEffect(() => {
-		console.log({
-			reason: "AgentsSidebar",
-			agentsData,
-		});
-	}, [agentsData]);
 
 	return (
 		<>
