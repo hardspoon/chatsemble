@@ -244,6 +244,11 @@ export class AgentDurableObject extends DurableObject<Env> {
 		agentConfigData: Omit<typeof agentConfig.$inferSelect, "id" | "createdAt">,
 	) {
 		const doId = this.ctx.id.toString();
+		console.log({
+			reason: "Upserting agent config",
+			agentConfigData,
+			doId,
+		});
 		await this.db
 			.insert(agentConfig)
 			.values({
@@ -266,6 +271,11 @@ export class AgentDurableObject extends DurableObject<Env> {
 			.from(agentConfig)
 			.where(eq(agentConfig.id, this.ctx.id.toString()))
 			.get();
+
+		console.log({
+			reason: "Getting agent config",
+			config,
+		});
 
 		if (!config) {
 			throw new Error("Agent config not found");

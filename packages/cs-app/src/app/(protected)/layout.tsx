@@ -6,6 +6,7 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
 import { schema } from "@/cs-shared";
+
 export default async function RootLayout({
 	children,
 }: Readonly<{

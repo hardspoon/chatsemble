@@ -11,6 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useRouter } from "next/navigation";
 import { NewAgentDialog } from "./new-agent-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useEffect } from "react";
 
 export function AgentsSidebar() {
 	const { data: agentsData, isLoading } = useQuery({
@@ -23,6 +24,13 @@ export function AgentsSidebar() {
 	});
 
 	const router = useRouter();
+
+	useEffect(() => {
+		console.log({
+			reason: "AgentsSidebar",
+			agentsData,
+		});
+	}, [agentsData]);
 
 	return (
 		<>
