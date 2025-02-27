@@ -15,7 +15,9 @@ export const honoDbMiddleware = async (c: Context, next: Next) => {
 };
 
 export const honoAuthMiddleware = async (c: Context, next: Next) => {
-	const sessionToken = getCookie(c, "better-auth.session_token");
+	const sessionToken =
+		getCookie(c, "better-auth.session_token") ??
+		getCookie(c, "__Secure-better-auth.session_token");
 	console.log({
 		reason: "Session token",
 		sessionToken,
