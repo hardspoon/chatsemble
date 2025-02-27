@@ -3,7 +3,8 @@ import type { AppType } from "../../../cs-api/src/index";
 //import { getSession } from "next-auth/react";
 
 const API_HOST =
-	process.env.NEXT_PUBLIC_DO_CHAT_API_HOST || "http://localhost:8787";
+	// biome-ignore lint/style/noNonNullAssertion: <explanation>
+	process.env.NEXT_PUBLIC_DO_CHAT_API_HOST!;
 
 export const client = hc<AppType>(API_HOST, {
 	init: {
