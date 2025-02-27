@@ -2,7 +2,7 @@ import { createAuthClient } from "better-auth/react";
 import { organizationClient } from "better-auth/client/plugins";
 
 console.log({
-	reason: "ENV auth-client",
+	reason: "ENV auth-clientc",
 	BETTER_AUTH_URL: process.env.BETTER_AUTH_URL,
 	NEXT_PUBLIC_URL: process.env.NEXT_PUBLIC_URL,
 	BETTER_AUTH_SECRET: process.env.BETTER_AUTH_SECRET,
