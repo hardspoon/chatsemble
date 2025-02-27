@@ -5,12 +5,20 @@ import { getDB } from "@/server/db"; // your drizzle instance
 import { eq } from "drizzle-orm";
 import { schema } from "@/cs-shared";
 
-const trustedOrigins = process.env.BETTER_AUTH_URL
-	? [process.env.BETTER_AUTH_URL]
-	: undefined;
-
-export const getAuth = () =>
-	betterAuth({
+export const getAuth = () => {
+	const trustedOrigins = process.env.BETTER_AUTH_URL
+		? [process.env.BETTER_AUTH_URL]
+		: undefined;
+	console.log({
+		reason: "Trusted origins",
+		trustedOrigins: JSON.stringify(process.env.BETTER_AUTH_URL ?? "MISSING"),
+	});
+	const crossDomain = process.env.BETTER_AUTH_DOMAIN;
+	console.log({
+		reason: "Cross domain",
+		crossDomain: JSON.stringify(crossDomain ?? "MISSING"),
+	});
+	return betterAuth({
 		database: drizzleAdapter(getDB(), {
 			provider: "sqlite",
 		}),
@@ -21,6 +29,12 @@ export const getAuth = () =>
 		advanced: {
 			crossSubDomainCookies: {
 				enabled: true,
+				domain: crossDomain,
+			},
+			defaultCookieAttributes: {
+				httpOnly: true,
+				sameSite: "none",
+				secure: true,
 			},
 		},
 		trustedOrigins,
@@ -66,3 +80,4 @@ export const getAuth = () =>
 			}),
 		},
 	});
+};
