@@ -6,12 +6,18 @@ import { eq } from "drizzle-orm";
 import { schema } from "@/cs-shared";
 
 export const getAuth = () => {
-	const trustedOrigins = process.env.BETTER_AUTH_URL
-		? [process.env.BETTER_AUTH_URL]
-		: undefined;
+	const apiHost = process.env.NEXT_PUBLIC_DO_CHAT_API_HOST;
+	const authHost = process.env.BETTER_AUTH_URL;
+	const trustedOrigins: string[] = [];
+	if (authHost) {
+		trustedOrigins.push(authHost);
+	}
+	if (apiHost) {
+		trustedOrigins.push(apiHost);
+	}
 	console.log({
 		reason: "Trusted origins",
-		trustedOrigins: JSON.stringify(process.env.BETTER_AUTH_URL ?? "MISSING"),
+		trustedOrigins: JSON.stringify(trustedOrigins ?? "MISSING"),
 	});
 	const crossDomain = process.env.BETTER_AUTH_DOMAIN;
 	console.log({

@@ -9,6 +9,5 @@ const API_HOST =
 export const client = hc<AppType>(API_HOST, {
 	init: {
 		credentials: "include",
-
 	},
 });
