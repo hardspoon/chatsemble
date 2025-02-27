@@ -6,6 +6,11 @@ const API_HOST =
 	// biome-ignore lint/style/noNonNullAssertion: <explanation>
 	process.env.NEXT_PUBLIC_DO_CHAT_API_HOST!;
 
+console.log({
+	reason: "API_HOST",
+	API_HOST,
+});
+
 export const client = hc<AppType>(API_HOST, {
 	init: {
 		credentials: "include",
