@@ -12,10 +12,18 @@ const app = new Hono<HonoVariables>()
 		"*",
 		cors({
 			origin: (_origin, c) => {
+				console.log(
+					JSON.stringify({
+						reason: "Origin",
+						origin: _origin,
+						allowedOrigins: c.env.ALLOWED_ORIGINS,
+					}),
+				);
 				return c.env.ALLOWED_ORIGINS;
 			},
 			allowMethods: ["GET", "POST", "OPTIONS", "PUT", "DELETE"],
-			allowHeaders: ["Content-Type"],
+			allowHeaders: ["Content-Type", "Cookie"],
+			exposeHeaders: ["Set-Cookie"],
 			credentials: true,
 		}),
 	)
