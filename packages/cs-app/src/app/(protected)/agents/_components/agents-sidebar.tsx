@@ -28,7 +28,8 @@ export function AgentsSidebar() {
 				throw new Error("Failed to fetch agents");
 			}
 
-			const data = await response.json();
+			// biome-ignore lint/suspicious/noExplicitAny: <explanation>
+			const data = (await response.json()) as any;
 			console.log({
 				reason: "Agents data",
 				data,
@@ -54,7 +55,8 @@ export function AgentsSidebar() {
 						{isLoading ? (
 							<ChatRoomSkeleton />
 						) : agentsData && agentsData.length > 0 ? (
-							agentsData.map((agent) => (
+							// biome-ignore lint/suspicious/noExplicitAny: <explanation>
+							agentsData.map((agent: any) => (
 								<button
 									type="button"
 									onClick={() => {
