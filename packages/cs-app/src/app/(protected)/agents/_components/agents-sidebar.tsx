@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
 	SidebarContent,
 	SidebarGroup,
@@ -7,10 +7,10 @@ import {
 	SidebarInput,
 } from "@/components/ui/sidebar";
 import { Skeleton } from "@/components/ui/skeleton";
+import { client } from "@/lib/api-client";
+import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { NewAgentDialog } from "./new-agent-dialog";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { client } from "@/lib/api-client";
 
 export function AgentsSidebar() {
 	const { data: agentsData, isLoading } = useQuery({

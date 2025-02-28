@@ -1,14 +1,14 @@
-import { cn } from "@/lib/utils";
 import { MarkdownContent } from "@/components/ui/markdown-content";
-import { type VariantProps, cva } from "class-variance-authority";
-import { SparklesIcon, UserIcon } from "lucide-react";
-import React, { type ReactNode } from "react";
 import {
 	Tooltip,
 	TooltipContent,
 	TooltipProvider,
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { cn } from "@/lib/utils";
+import { type VariantProps, cva } from "class-variance-authority";
+import { SparklesIcon, UserIcon } from "lucide-react";
+import React, { type ReactNode } from "react";
 
 const chatMessageVariants = cva("flex gap-4 w-full", {
 	variants: {

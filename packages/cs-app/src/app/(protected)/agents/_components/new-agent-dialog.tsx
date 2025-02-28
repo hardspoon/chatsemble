@@ -1,8 +1,8 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -24,11 +24,11 @@ import {
 	FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { client } from "@/lib/api-client";
 import { Plus } from "lucide-react";
 import { useState } from "react";
 import { AgentAvatarPicker } from "./agent-avatar-picker";
-import { Textarea } from "@/components/ui/textarea";
 
 const formSchema = z.object({
 	name: z.string().min(1, "Name is required"),

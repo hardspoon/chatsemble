@@ -1,10 +1,10 @@
 "use client";
 
+import { usePathname } from "next/navigation";
 import { AgentsSidebar } from "../../app/(protected)/agents/_components/agents-sidebar";
 import { ChatsSidebar } from "../chat/chats-sidebar";
 import { SettingsSidebar } from "../settings/settings-sidebar";
 import { Sidebar } from "../ui/sidebar";
-import { usePathname } from "next/navigation";
 
 export function AppInnerSidebar() {
 	return (

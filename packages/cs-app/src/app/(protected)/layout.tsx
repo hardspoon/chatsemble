@@ -1,11 +1,11 @@
 import AppLayout from "@/components/layout/app-layout";
+import { schema } from "@/cs-shared";
 import { getAuth } from "@/lib/auth/auth-server";
 import { getDB } from "@/server/db";
 import { eq } from "drizzle-orm";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
-import { schema } from "@/cs-shared";
 
 export default async function RootLayout({
 	children,

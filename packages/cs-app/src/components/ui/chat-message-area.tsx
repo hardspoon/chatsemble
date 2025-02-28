@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { cn } from "@/lib/utils";
 import { useScrollToBottom } from "@/hooks/use-scroll-to-bottom";
+import { cn } from "@/lib/utils";
 import { ChevronDown } from "lucide-react";
 import type { ReactNode } from "react";
 

@@ -21,8 +21,8 @@ import { Input } from "@/components/ui/input";
 import { authClient } from "@/lib/auth/auth-client";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
-import { AvatarPicker } from "./avatar-picker";
 import { useRouter } from "next/navigation";
+import { AvatarPicker } from "./avatar-picker";
 
 export const signupFormSchema = z.object({
 	email: z.string().email("Please enter a valid email address"),

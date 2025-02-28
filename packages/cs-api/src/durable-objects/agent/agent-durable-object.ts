@@ -2,25 +2,25 @@
 /// <reference types="../../../worker-configuration" />
 
 import { DurableObject } from "cloudflare:workers";
+import type { ChatRoomMessage, ChatRoomMessagePartial } from "@/cs-shared";
 //import { createOpenAI } from "@ai-sdk/openai";
 import { createGroq } from "@ai-sdk/groq";
-import { generateText, type CoreMessage } from "ai";
-import type { ChatRoomMessage, ChatRoomMessagePartial } from "@/cs-shared";
-import { nanoid } from "nanoid";
-import migrations from "./db/migrations/migrations";
+import { type CoreMessage, generateText } from "ai";
+import { eq } from "drizzle-orm";
 import {
-	drizzle,
 	type DrizzleSqliteDODatabase,
+	drizzle,
 } from "drizzle-orm/durable-sqlite";
 import { migrate } from "drizzle-orm/durable-sqlite/migrator";
-import { agentChatRoom, agentConfig } from "./db/schema";
-import { eq } from "drizzle-orm";
+import { nanoid } from "nanoid";
 import { chatRoomMessagesToAiMessages } from "../../lib/ai/ai-utils";
 import {
 	getAgentPrompt,
 	getAiCheckerPrompt,
 	shouldRespondTools,
 } from "../../lib/ai/prompts/agent-prompt";
+import migrations from "./db/migrations/migrations";
+import { agentChatRoom, agentConfig } from "./db/schema";
 
 const ALARM_TIME_IN_MS = 5 * 1000;
 const MAX_NOTIFICATION_TO_WAIT_FOR_CHECK = 3;

@@ -1,12 +1,12 @@
-import { useCallback, useRef, useState, useEffect } from "react";
 import type {
+	ChatRoomMember,
 	ChatRoomMessage,
 	ChatRoomMessagePartial,
 	WsChatRoomMessage,
-	ChatRoomMember,
 } from "@/cs-shared";
-import { nanoid } from "nanoid";
 import type { User } from "better-auth";
+import { nanoid } from "nanoid";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 //const RETRY_DELAYS = [1000, 2000, 5000, 10000]; // Increasing delays between retries in ms
 

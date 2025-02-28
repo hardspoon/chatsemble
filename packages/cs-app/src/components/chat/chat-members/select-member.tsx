@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
 	FormControl,
 	FormField,
@@ -13,9 +13,9 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { client } from "@/lib/api-client";
 import { Skeleton } from "@/components/ui/skeleton";
+import { client } from "@/lib/api-client";
+import { useQuery } from "@tanstack/react-query";
 import type { UseFormReturn } from "react-hook-form";
 import type { FormValues } from "./add-member-form";
 

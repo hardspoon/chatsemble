@@ -1,9 +1,9 @@
-import { betterAuth } from "better-auth";
-import { createAuthMiddleware, organization } from "better-auth/plugins";
-import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { getDB } from "@/server/db"; // your drizzle instance
-import { eq } from "drizzle-orm";
 import { schema } from "@/cs-shared";
+import { getDB } from "@/server/db"; // your drizzle instance
+import { betterAuth } from "better-auth";
+import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { createAuthMiddleware, organization } from "better-auth/plugins";
+import { eq } from "drizzle-orm";
 
 export const getAuth = () => {
 	const apiHost = process.env.NEXT_PUBLIC_DO_CHAT_API_HOST;

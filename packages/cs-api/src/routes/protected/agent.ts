@@ -1,10 +1,10 @@
 import { Hono } from "hono";
 import { z } from "zod";
 
-import type { HonoVariables } from "../../types/hono";
 import { schema as d1Schema } from "@/cs-shared";
 import { zValidator } from "@hono/zod-validator";
 import { eq } from "drizzle-orm";
+import type { HonoVariables } from "../../types/hono";
 
 const app = new Hono<HonoVariables>()
 	.post(
@@ -103,7 +103,6 @@ const app = new Hono<HonoVariables>()
 	.get("/", async (c) => {
 		const db = c.get("db");
 		const session = c.get("session");
-		const user = c.get("user");
 		const { activeOrganizationId } = session;
 
 		if (!activeOrganizationId) {
