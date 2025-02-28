@@ -10,30 +10,15 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useRouter } from "next/navigation";
 import { NewAgentDialog } from "./new-agent-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { client } from "@/lib/api-client";
 
 export function AgentsSidebar() {
 	const { data: agentsData, isLoading } = useQuery({
 		queryKey: ["agents"],
 		queryFn: async () => {
-			console.log({
-				reason: "Querying agents",
-			});
-			const apiHost = process.env.NEXT_PUBLIC_DO_CHAT_API_HOST;
-			const response = await fetch(`${apiHost}/protected/agent`, {
-				method: "GET",
-				credentials: "include",
-			});
+			const response = await client.protected.agent.$get();
 
-			if (!response.ok) {
-				throw new Error("Failed to fetch agents");
-			}
-
-			// biome-ignore lint/suspicious/noExplicitAny: <explanation>
-			const data = (await response.json()) as any;
-			console.log({
-				reason: "Agents data",
-				data,
-			});
+			const data = await response.json();
 			return data;
 		},
 	});
@@ -55,8 +40,7 @@ export function AgentsSidebar() {
 						{isLoading ? (
 							<ChatRoomSkeleton />
 						) : agentsData && agentsData.length > 0 ? (
-							// biome-ignore lint/suspicious/noExplicitAny: <explanation>
-							agentsData.map((agent: any) => (
+							agentsData.map((agent) => (
 								<button
 									type="button"
 									onClick={() => {

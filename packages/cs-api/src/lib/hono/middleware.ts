@@ -6,10 +6,6 @@ import { getCookie } from "hono/cookie";
 
 export const honoDbMiddleware = async (c: Context, next: Next) => {
 	const db = drizzle(c.env.DB, { schema });
-	console.log({
-		reason: "Setting db",
-		db,
-	});
 	c.set("db", db);
 	await next();
 };
@@ -18,13 +14,7 @@ export const honoAuthMiddleware = async (c: Context, next: Next) => {
 	const sessionToken =
 		getCookie(c, "better-auth.session_token") ??
 		getCookie(c, "__Secure-better-auth.session_token");
-	console.log({
-		reason: "Session token",
-		sessionToken: JSON.stringify({
-			simple: getCookie(c, "better-auth.session_token") ?? null,
-			secure: getCookie(c, "__Secure-better-auth.session_token") ?? null,
-		}),
-	});
+
 	if (!sessionToken) {
 		return c.json({ error: "Unauthorized" }, 401);
 	}
@@ -43,31 +33,11 @@ export const honoAuthMiddleware = async (c: Context, next: Next) => {
 		},
 	});
 
-	console.log({
-		reason: "Validating session",
-		validSession,
-	});
-
 	if (!validSession) {
-		console.log({
-			reason: "Invalid session",
-			validSession,
-		});
 		return c.json({ error: "Invalid session" }, 401);
 	}
 
-	console.log({
-		reason: "Valid session",
-		validSession,
-	});
-
 	const { user, ...session } = validSession;
-
-	console.log({
-		reason: "Setting user and session",
-		user,
-		session,
-	});
 
 	c.set("user", user);
 	c.set("session", session);

@@ -35,7 +35,6 @@ export class AgentDurableObject extends DurableObject<Env> {
 		super(ctx, env);
 		this.storage = ctx.storage;
 		this.db = drizzle(this.storage, { logger: false });
-		console.log("constructor");
 		this.storage.deleteAlarm();
 	}
 

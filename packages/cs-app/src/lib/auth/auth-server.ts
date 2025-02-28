@@ -15,15 +15,9 @@ export const getAuth = () => {
 	if (apiHost) {
 		trustedOrigins.push(apiHost);
 	}
-	console.log({
-		reason: "Trusted origins",
-		trustedOrigins: JSON.stringify(trustedOrigins ?? "MISSING"),
-	});
+
 	const crossDomain = process.env.BETTER_AUTH_DOMAIN;
-	console.log({
-		reason: "Cross domain",
-		crossDomain: JSON.stringify(crossDomain ?? "MISSING"),
-	});
+
 	return betterAuth({
 		database: drizzleAdapter(getDB(), {
 			provider: "sqlite",
@@ -68,7 +62,6 @@ export const getAuth = () => {
 				if (ctx.path.startsWith("/sign-up")) {
 					const newSession = ctx.context.newSession;
 					if (newSession) {
-						console.log("ctx", ctx.body);
 						const authClient = getAuth();
 						const orgName = ctx.body.orgName;
 						const org = await authClient.api.createOrganization({

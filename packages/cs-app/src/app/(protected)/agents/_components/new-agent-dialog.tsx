@@ -59,10 +59,6 @@ export function NewAgentDialog() {
 			return data;
 		},
 		onSuccess: (data) => {
-			console.log({
-				reason: "Creating agent success",
-				data,
-			});
 			queryClient.invalidateQueries({ queryKey: ["agents"] });
 			router.push(`/agents?agentId=${data.agentId}`);
 			setOpen(false);
@@ -70,10 +66,6 @@ export function NewAgentDialog() {
 	});
 
 	const onSubmit = (values: FormValues) => {
-		console.log({
-			reason: "Submitting form",
-			values,
-		});
 		createChatMutation.mutate(values);
 	};
 
