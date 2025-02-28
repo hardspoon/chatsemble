@@ -1,6 +1,6 @@
-import { Hono } from "hono";
 import { schema as d1Schema } from "@/cs-shared";
 import { eq } from "drizzle-orm";
+import { Hono } from "hono";
 import type { HonoVariables } from "../../types/hono";
 
 const app = new Hono<HonoVariables>().get("/", async (c) => {

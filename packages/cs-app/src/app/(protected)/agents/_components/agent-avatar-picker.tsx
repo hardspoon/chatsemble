@@ -1,4 +1,4 @@
-import type { Control } from "react-hook-form";
+import type { FormValues } from "@/app/(protected)/agents/_components/new-agent-dialog";
 import {
 	FormControl,
 	FormField,
@@ -6,7 +6,7 @@ import {
 	FormLabel,
 	FormMessage,
 } from "@/components/ui/form";
-import type { FormValues } from "@/app/(protected)/agents/_components/new-agent-dialog";
+import type { Control } from "react-hook-form";
 
 interface AgentAvatarPickerProps {
 	control: Control<FormValues>;

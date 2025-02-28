@@ -1,5 +1,6 @@
 "use client";
 
+import { useChatWsContext } from "@/components/chat/chat-ws-provider";
 import {
 	ChatInput,
 	ChatInputSubmit,
@@ -9,11 +10,10 @@ import {
 	ChatMessage,
 	ChatMessageAvatar,
 	ChatMessageContent,
-	ChatMessageMetadata,
 	ChatMessageContentArea,
+	ChatMessageMetadata,
 } from "@/components/ui/chat-message";
 import { ChatMessageArea } from "@/components/ui/chat-message-area";
-import { useChatWsContext } from "@/components/chat/chat-ws-provider";
 
 export function ChatContent() {
 	const { messages, input, handleInputChange, handleSubmit } =

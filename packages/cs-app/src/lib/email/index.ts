@@ -1,11 +1,11 @@
 import "server-only";
 
-import { type ComponentType, createElement } from "react";
-import { Resend } from "resend";
 import {
 	EmailMagicLinkTemplate,
 	type EmailMagicLinkTemplateProps,
 } from "@/lib/email/templates/email-magic-link";
+import { type ComponentType, createElement } from "react";
+import { Resend } from "resend";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 

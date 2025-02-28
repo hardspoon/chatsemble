@@ -1,7 +1,7 @@
-import { sqliteTable, text, integer } from "drizzle-orm/sqlite-core";
-import { sql } from "drizzle-orm";
-import { nanoid } from "nanoid";
 import type { ChatRoomMemberRole, ChatRoomMemberType } from "@/cs-shared";
+import { sql } from "drizzle-orm";
+import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import { nanoid } from "nanoid";
 
 export const chatRoomConfig = sqliteTable("chat_room_config", {
 	id: text("id").primaryKey(),

@@ -1,9 +1,9 @@
-import { Plus } from "lucide-react";
-import { DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import type { ChatRoomMember } from "@/cs-shared";
+import { Plus } from "lucide-react";
 
 interface ChatMembersListProps {
 	members: ChatRoomMember[];

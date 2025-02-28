@@ -1,4 +1,3 @@
-import { useQuery } from "@tanstack/react-query";
 import {
 	SidebarContent,
 	SidebarGroup,
@@ -6,10 +5,11 @@ import {
 	SidebarHeader,
 	SidebarInput,
 } from "@/components/ui/sidebar";
-import { client } from "@/lib/api-client";
-import { NewChatDialog } from "./new-chat-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
+import { client } from "@/lib/api-client";
+import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
+import { NewChatDialog } from "./new-chat-dialog";
 
 export function ChatsSidebar() {
 	const { data: chatRoomsData, isLoading } = useQuery({

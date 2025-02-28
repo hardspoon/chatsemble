@@ -1,15 +1,21 @@
 "use client";
 
-import { createContext, useContext, type ReactNode } from "react";
-import { useChatWS, type UseChatWSProps } from "@/hooks/use-chat-ws";
+import { type UseChatWSProps, useChatWS } from "@/hooks/use-chat-ws";
+import { type ReactNode, createContext, useContext } from "react";
 
-const ChatWsContext = createContext<ReturnType<typeof useChatWS> & { roomId: string } | null>(null);
+const ChatWsContext = createContext<
+	(ReturnType<typeof useChatWS> & { roomId: string }) | null
+>(null);
 
 interface ChatProviderProps extends UseChatWSProps {
 	children: ReactNode;
 }
 
-export function ChatWsProvider({ children, roomId, ...props }: ChatProviderProps) {
+export function ChatWsProvider({
+	children,
+	roomId,
+	...props
+}: ChatProviderProps) {
 	const chat = useChatWS({ roomId, ...props });
 
 	return (

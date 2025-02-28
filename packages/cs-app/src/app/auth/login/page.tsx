@@ -7,7 +7,7 @@ import LoginForm from "./_components/login-form";
 export default async function LoginPage() {
 	const auth = getAuth();
 	const session = await auth.api.getSession({
-		headers: await headers()
+		headers: await headers(),
 	});
 
 	if (session?.user) {

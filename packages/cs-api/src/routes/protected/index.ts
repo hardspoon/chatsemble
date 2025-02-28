@@ -1,11 +1,11 @@
 import { Hono } from "hono";
-import type { HonoVariables } from "../../types/hono";
-import chatRoomRoutes from "./chat-room";
-import organizationUserRoutes from "./organization-user";
-import agentRoutes from "./agent";
+import { cors } from "hono/cors";
 import { honoAuthMiddleware } from "../../lib/hono/middleware";
 import { honoDbMiddleware } from "../../lib/hono/middleware";
-import { cors } from "hono/cors";
+import type { HonoVariables } from "../../types/hono";
+import agentRoutes from "./agent";
+import chatRoomRoutes from "./chat-room";
+import organizationUserRoutes from "./organization-user";
 
 const app = new Hono<HonoVariables>()
 	.use(

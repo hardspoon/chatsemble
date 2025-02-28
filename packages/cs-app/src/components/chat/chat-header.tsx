@@ -1,9 +1,9 @@
-import { SidebarTrigger } from "@/components/ui/sidebar";
-import { Separator } from "@/components/ui/separator";
+import { ChatMembersDialog } from "@/components/chat/chat-members/chat-members-dialog";
+import { useChatWsContext } from "@/components/chat/chat-ws-provider";
 import { DynamicBreadcrumb } from "@/components/layout/dynamic-breadcrumb";
 import { Badge } from "@/components/ui/badge";
-import { useChatWsContext } from "@/components/chat/chat-ws-provider";
-import { ChatMembersDialog } from "@/components/chat/chat-members/chat-members-dialog";
+import { Separator } from "@/components/ui/separator";
+import { SidebarTrigger } from "@/components/ui/sidebar";
 
 export function ChatHeader() {
 	const { connectionStatus, roomId } = useChatWsContext();

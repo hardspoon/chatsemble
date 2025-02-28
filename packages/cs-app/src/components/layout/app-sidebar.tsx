@@ -1,8 +1,8 @@
 "use client";
 
-import type * as React from "react";
 import { Bot, MessageSquare, Settings } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
+import type * as React from "react";
 
 import { NavUser } from "@/components/layout/nav-user";
 import {
@@ -18,8 +18,8 @@ import {
 	useSidebar,
 } from "@/components/ui/sidebar";
 import Link from "next/link";
-import { ThemeToggle } from "../theme-toggle";
 import { LogoIcon } from "../icons/logo-icon";
+import { ThemeToggle } from "../theme-toggle";
 import { AppInnerSidebar } from "./app-inner-sidebar";
 
 // Updated sample data with activeMatch regex

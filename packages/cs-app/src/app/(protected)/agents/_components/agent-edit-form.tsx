@@ -1,11 +1,14 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
+import { AgentPlaceholderNotFound } from "@/app/(protected)/agents/_components/agent-placeholder";
+import { AgentSkeleton } from "@/app/(protected)/agents/_components/agent-skeleton";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
 	Form,
 	FormControl,
@@ -16,13 +19,10 @@ import {
 	FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/hooks/use-toast";
 import { client } from "@/lib/api-client";
 import { AgentAvatarPicker } from "./agent-avatar-picker";
-import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { AgentSkeleton } from "@/app/(protected)/agents/_components/agent-skeleton";
-import { AgentPlaceholderNotFound } from "@/app/(protected)/agents/_components/agent-placeholder";
-import { useToast } from "@/hooks/use-toast";
 
 const formSchema = z.object({
 	name: z.string().min(1, "Name is required"),

@@ -1,6 +1,6 @@
-import type { agentConfig as agentConfigT } from "../../../durable-objects/agent/db/schema";
-import { z } from "zod";
 import { tool } from "ai";
+import { z } from "zod";
+import type { agentConfig as agentConfigT } from "../../../durable-objects/agent/db/schema";
 
 export function getAgentPrompt({
 	agentConfig,
