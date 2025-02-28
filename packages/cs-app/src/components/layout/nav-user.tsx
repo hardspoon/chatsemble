@@ -21,7 +21,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { authClient } from "@/lib/auth/auth-client";
 import { useRouter } from "next/navigation";
 import { Separator } from "../ui/separator";
-import { useEffect } from "react";
 
 export function NavUser() {
 	const { isMobile } = useSidebar();
@@ -31,14 +30,6 @@ export function NavUser() {
 		authClient.useSession();
 	const { data: activeOrganization, isPending: isActiveOrganizationPending } =
 		authClient.useActiveOrganization();
-
-	useEffect(() => {
-		console.log({
-			reason: "NavUser",
-			session,
-			activeOrganization,
-		});
-	}, [session, activeOrganization]);
 
 	const handleSignOut = async () => {
 		await authClient.signOut({
