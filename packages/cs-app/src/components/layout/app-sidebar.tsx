@@ -30,17 +30,18 @@ const navMain = [
 		icon: MessageSquare,
 		activeMatch: /^\/chat/, // Exact match for home
 	},
-	{
-		title: "Settings",
-		url: "/settings/profile", // Redirect URL
-		icon: Settings,
-		activeMatch: /^\/settings/, // Matches any settings route
-	},
+
 	{
 		title: "Agents",
 		url: "/agents", // Redirect URL
 		icon: Bot,
 		activeMatch: /^\/agents/, // Matches any agents route
+	},
+	{
+		title: "Settings",
+		url: "/settings/profile", // Redirect URL
+		icon: Settings,
+		activeMatch: /^\/settings/, // Matches any settings route
 	},
 ];
 

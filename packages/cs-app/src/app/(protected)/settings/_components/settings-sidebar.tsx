@@ -24,6 +24,10 @@ const settingsLinks = [
 		title: "Appearance",
 		href: "/settings/appearance",
 	},
+	{
+		title: "Organization",
+		href: "/settings/organization",
+	},
 ];
 
 export function SettingsSidebar() {

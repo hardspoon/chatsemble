@@ -11,6 +11,14 @@ export default async function AcceptInvitationPage({
 	const auth = getAuth();
 	const headersList = await headers();
 
+	const session = await auth.api.getSession({
+		headers: headersList,
+	});
+
+	if (!session) {
+		return redirect(`/auth/signup?invitationId=${params.id}`);
+	}
+
 	const invitation = await auth.api.getInvitation({
 		headers: headersList,
 		query: {
@@ -20,16 +28,6 @@ export default async function AcceptInvitationPage({
 
 	if (!invitation) {
 		return redirect("/auth/login");
-	}
-
-	const session = await auth.api.getSession({
-		headers: headersList,
-	});
-
-	if (!session) {
-		return redirect(
-			`/auth/signup?invitationId=${params.id}&email=${invitation.email}`,
-		);
 	}
 
 	return <InvitationForm invitationId={params.id} />;
