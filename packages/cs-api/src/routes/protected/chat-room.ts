@@ -18,7 +18,7 @@ const app = new Hono<HonoVariables>()
 		const user = c.get("user");
 		const session = c.get("session");
 		const { activeOrganizationId } = session;
-		const { name, isPrivate } = c.req.valid("json");
+		const { name, type } = c.req.valid("json");
 
 		if (!activeOrganizationId) {
 			throw new Error("Organization not set");
@@ -34,7 +34,7 @@ const app = new Hono<HonoVariables>()
 			id: chatRoomDoId.toString(),
 			name,
 			organizationId: activeOrganizationId,
-			isPrivate: isPrivate ?? false,
+			type,
 			createdAt: Date.now(),
 		};
 

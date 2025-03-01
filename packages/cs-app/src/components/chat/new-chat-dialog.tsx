@@ -32,7 +32,7 @@ import { useState } from "react";
 
 type FormValues = z.infer<typeof createChatRoomSchema>;
 
-export function NewChatDialog() {
+export function NewGroupChatDialog() {
 	const [open, setOpen] = useState(false);
 	const router = useRouter();
 	const queryClient = useQueryClient();
@@ -40,7 +40,7 @@ export function NewChatDialog() {
 		resolver: zodResolver(createChatRoomSchema),
 		defaultValues: {
 			name: "",
-			isPrivate: false,
+			type: "public_group",
 		},
 	});
 
@@ -98,7 +98,7 @@ export function NewChatDialog() {
 						/>
 						<FormField
 							control={form.control}
-							name="isPrivate"
+							name="type"
 							render={({ field }) => (
 								<FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
 									<div className="space-y-0.5">
@@ -109,8 +109,12 @@ export function NewChatDialog() {
 									</div>
 									<FormControl>
 										<Switch
-											checked={field.value}
-											onCheckedChange={field.onChange}
+											checked={field.value === "private_group"}
+											onCheckedChange={(checked) => {
+												field.onChange(
+													checked ? "private_group" : "public_group",
+												);
+											}}
 										/>
 									</FormControl>
 								</FormItem>
@@ -118,7 +122,9 @@ export function NewChatDialog() {
 						/>
 						<DialogFooter>
 							<Button type="submit" disabled={createChatMutation.isPending}>
-								{createChatMutation.isPending ? "Creating..." : "Create Chat"}
+								{createChatMutation.isPending
+									? "Creating..."
+									: "Create group chat"}
 							</Button>
 						</DialogFooter>
 					</form>

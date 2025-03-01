@@ -1,4 +1,8 @@
-import type { ChatRoomMemberRole, ChatRoomMemberType } from "@/cs-shared";
+import type {
+	ChatRoomMemberRole,
+	ChatRoomMemberType,
+	ChatRoomType,
+} from "@/cs-shared";
 import { sql } from "drizzle-orm";
 import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
 import { nanoid } from "nanoid";
@@ -6,9 +10,7 @@ import { nanoid } from "nanoid";
 export const chatRoomConfig = sqliteTable("chat_room_config", {
 	id: text("id").primaryKey(),
 	name: text("name").notNull(),
-	isPrivate: integer("is_private", { mode: "boolean" })
-		.notNull()
-		.default(false),
+	type: text("type").$type<ChatRoomType>().notNull(),
 	organizationId: text("organization_id").notNull(),
 	createdAt: integer("created_at", { mode: "number" })
 		.notNull()

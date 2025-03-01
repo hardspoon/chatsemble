@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "a9d5d723-b701-4973-bd44-708b3cb3dbd5",
+  "id": "f8607618-16ba-48f3-a4f0-e9856bcb6742",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "agent": {
@@ -654,13 +654,12 @@
           "notNull": true,
           "autoincrement": false
         },
-        "is_private": {
-          "name": "is_private",
-          "type": "integer",
+        "type": {
+          "name": "type",
+          "type": "text",
           "primaryKey": false,
           "notNull": true,
-          "autoincrement": false,
-          "default": false
+          "autoincrement": false
         },
         "organization_id": {
           "name": "organization_id",
