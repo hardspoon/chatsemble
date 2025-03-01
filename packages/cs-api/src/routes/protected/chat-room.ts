@@ -147,15 +147,18 @@ const app = new Hono<HonoVariables>()
 					.select({
 						user: d1Schema.user,
 					})
-					.from(d1Schema.member)
+					.from(d1Schema.organizationMember)
 					.innerJoin(
 						d1Schema.user,
-						eq(d1Schema.member.userId, d1Schema.user.id),
+						eq(d1Schema.organizationMember.userId, d1Schema.user.id),
 					)
 					.where(
 						and(
-							eq(d1Schema.member.userId, memberId),
-							eq(d1Schema.member.organizationId, activeOrganizationId),
+							eq(d1Schema.organizationMember.userId, memberId),
+							eq(
+								d1Schema.organizationMember.organizationId,
+								activeOrganizationId,
+							),
 						),
 					)
 					.get();

@@ -11,9 +11,15 @@ import { client } from "@/lib/api-client";
 import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { NewAgentDialog } from "./new-agent-dialog";
+import { AlertCircle } from "lucide-react";
+import type { Agent } from "@/cs-shared";
 
 export function AgentsSidebar() {
-	const { data: agentsData, isLoading } = useQuery({
+	const {
+		data: agentsData,
+		isLoading,
+		error,
+	} = useQuery({
 		queryKey: ["agents"],
 		queryFn: async () => {
 			const response = await client.protected.agent.$get();
@@ -22,8 +28,6 @@ export function AgentsSidebar() {
 			return data;
 		},
 	});
-
-	const router = useRouter();
 
 	return (
 		<>
@@ -38,28 +42,15 @@ export function AgentsSidebar() {
 				<SidebarGroup className="px-0 py-0">
 					<SidebarGroupContent>
 						{isLoading ? (
-							<ChatRoomSkeleton />
+							<AgentsSkeleton />
+						) : error ? (
+							<AgentsError />
 						) : agentsData && agentsData.length > 0 ? (
 							agentsData.map((agent) => (
-								<button
-									type="button"
-									onClick={() => {
-										router.push(`/agents?agentId=${agent.id}`);
-									}}
-									key={agent.id}
-									className="flex w-full items-center justify-between border-b px-4 py-3 text-sm hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-								>
-									<span className="font-medium">{agent.name}</span>
-									<Avatar>
-										<AvatarImage src={agent.image} />
-										<AvatarFallback>{agent.name.charAt(0)}</AvatarFallback>
-									</Avatar>
-								</button>
+								<AgentSidebarItem key={agent.id} agent={agent} />
 							))
 						) : (
-							<div className="flex items-center justify-center py-10 text-sm text-muted-foreground">
-								No agents found
-							</div>
+							<AgentsEmpty />
 						)}
 					</SidebarGroupContent>
 				</SidebarGroup>
@@ -68,7 +59,44 @@ export function AgentsSidebar() {
 	);
 }
 
-function ChatRoomSkeleton() {
+function AgentSidebarItem({ agent }: { agent: Agent }) {
+	const router = useRouter();
+
+	return (
+		<button
+			type="button"
+			onClick={() => {
+				router.push(`/agents?agentId=${agent.id}`);
+			}}
+			className="flex w-full items-center justify-between border-b px-4 py-3 text-sm hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+		>
+			<span className="font-medium">{agent.name}</span>
+			<Avatar>
+				<AvatarImage src={agent.image} />
+				<AvatarFallback>{agent.name.charAt(0)}</AvatarFallback>
+			</Avatar>
+		</button>
+	);
+}
+
+function AgentsEmpty() {
+	return (
+		<div className="flex items-center justify-center py-10 text-sm text-muted-foreground">
+			No agents found
+		</div>
+	);
+}
+
+function AgentsError() {
+	return (
+		<div className="flex items-center justify-center py-10 text-sm text-muted-foreground gap-2">
+			<AlertCircle className="h-4 w-4" />
+			Error fetching agents
+		</div>
+	);
+}
+
+function AgentsSkeleton() {
 	return (
 		<div>
 			<div className="flex flex-col gap-1 border-b px-4 py-3">
