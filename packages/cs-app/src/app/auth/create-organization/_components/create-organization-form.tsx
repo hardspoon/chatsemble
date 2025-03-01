@@ -2,11 +2,11 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
-import { useForm } from "react-hook-form";
-import * as z from "zod";
-import { useEffect } from "react";
 import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useEffect } from "react";
+import { useForm } from "react-hook-form";
+import * as z from "zod";
 
 import { LogoIcon } from "@/components/icons/logo-icon";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -21,8 +21,8 @@ import {
 	FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { authClient } from "@/lib/auth-client";
 import { useToast } from "@/hooks/use-toast";
+import { authClient } from "@/lib/auth-client";
 import type { User } from "better-auth";
 
 export const createOrganizationFormSchema = z.object({

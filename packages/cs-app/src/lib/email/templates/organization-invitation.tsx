@@ -33,7 +33,8 @@ export function OrganizationInvitationTemplate({
 				<Container style={container}>
 					<Heading style={h1}>Team Invitation</Heading>
 					<Text style={text}>
-						Hi {username}, you've been invited by {invitedByUsername} ({invitedByEmail}) to join the team {teamName}.
+						Hi {username}, you've been invited by {invitedByUsername} (
+						{invitedByEmail}) to join the team {teamName}.
 					</Text>
 					<Section style={buttonContainer}>
 						<Button style={button} href={inviteLink}>
@@ -88,4 +89,4 @@ const button = {
 	textAlign: "center" as const,
 	display: "block",
 	padding: "12px",
-}; 
+};

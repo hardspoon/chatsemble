@@ -1,5 +1,5 @@
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { useState } from "react";
 
 export const CopyButton = ({ textToCopy }: { textToCopy: string }) => {
 	const [copied, setCopied] = useState(false);

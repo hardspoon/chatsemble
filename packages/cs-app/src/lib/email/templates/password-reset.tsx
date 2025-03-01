@@ -27,7 +27,8 @@ export function PasswordResetTemplate({
 				<Container style={container}>
 					<Heading style={h1}>Reset your password</Heading>
 					<Text style={text}>
-						Hi {username}, you requested to reset your password. Click the button below to create a new password.
+						Hi {username}, you requested to reset your password. Click the
+						button below to create a new password.
 					</Text>
 					<Section style={buttonContainer}>
 						<Button style={button} href={resetLink}>
@@ -82,4 +83,4 @@ const button = {
 	textAlign: "center" as const,
 	display: "block",
 	padding: "12px",
-}; 
+};

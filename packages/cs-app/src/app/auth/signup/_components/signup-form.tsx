@@ -2,10 +2,10 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
+import { CheckCircle2 } from "lucide-react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
-import { useState } from "react";
-import { CheckCircle2 } from "lucide-react";
 
 import { LogoIcon } from "@/components/icons/logo-icon";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -23,8 +23,8 @@ import { Input } from "@/components/ui/input";
 import { authClient } from "@/lib/auth-client";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
-import { AvatarPicker } from "./avatar-picker";
 import { useSearchParams } from "next/navigation";
+import { AvatarPicker } from "./avatar-picker";
 
 export const signupFormSchema = z.object({
 	email: z.string().email("Please enter a valid email address"),

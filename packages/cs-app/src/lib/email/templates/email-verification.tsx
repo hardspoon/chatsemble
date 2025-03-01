@@ -27,7 +27,8 @@ export function EmailVerificationTemplate({
 				<Container style={container}>
 					<Heading style={h1}>Verify your email address</Heading>
 					<Text style={text}>
-						Hi {username}, please verify your email address by clicking the button below.
+						Hi {username}, please verify your email address by clicking the
+						button below.
 					</Text>
 					<Section style={buttonContainer}>
 						<Button style={button} href={verificationUrl}>
@@ -82,4 +83,4 @@ const button = {
 	textAlign: "center" as const,
 	display: "block",
 	padding: "12px",
-}; 
+};

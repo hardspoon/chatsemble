@@ -1,14 +1,5 @@
 "use client";
 
-import {
-	Form,
-	FormControl,
-	FormField,
-	FormItem,
-	FormLabel,
-	FormMessage,
-} from "@/components/ui/form";
-import { toast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import {
 	Dialog,
@@ -20,6 +11,14 @@ import {
 	DialogTitle,
 	DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+	Form,
+	FormControl,
+	FormField,
+	FormItem,
+	FormLabel,
+	FormMessage,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import {
 	Select,
@@ -28,13 +27,14 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
+import { toast } from "@/hooks/use-toast";
 import { authClient } from "@/lib/auth-client";
-import { MailPlus } from "lucide-react";
 import type { ActiveOrganization } from "@/types/auth";
-import { useMutation } from "@tanstack/react-query";
-import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation } from "@tanstack/react-query";
+import { MailPlus } from "lucide-react";
 import { useForm } from "react-hook-form";
+import { z } from "zod";
 
 const formSchema = z.object({
 	email: z.string().email(),

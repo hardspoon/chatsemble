@@ -1,9 +1,9 @@
 "use client";
 
-import { usePathname } from "next/navigation";
 import { AgentsSidebar } from "@/app/(protected)/agents/_components/agents-sidebar";
-import { ChatsSidebar } from "@/components/chat/chats-sidebar";
 import { SettingsSidebar } from "@/app/(protected)/settings/_components/settings-sidebar";
+import { ChatsSidebar } from "@/components/chat/chats-sidebar";
+import { usePathname } from "next/navigation";
 import { Sidebar } from "../ui/sidebar";
 
 export function AppInnerSidebar() {

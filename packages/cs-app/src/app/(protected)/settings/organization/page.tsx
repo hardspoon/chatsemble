@@ -1,8 +1,8 @@
-import { Separator } from "@/components/ui/separator";
-import { OrganizationForm } from "./_components/organization-form";
 import { getAuth } from "@/auth";
+import { Separator } from "@/components/ui/separator";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { OrganizationForm } from "./_components/organization-form";
 
 const SettingsOrganizationPage = async () => {
 	const auth = getAuth();
