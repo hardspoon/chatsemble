@@ -48,7 +48,7 @@ function SelectUser({ form }: SelectMemberProps) {
 	return (
 		<FormField
 			control={form.control}
-			name="memberId"
+			name="id"
 			render={({ field }) => (
 				<FormItem>
 					<FormLabel>User</FormLabel>
@@ -106,7 +106,7 @@ function SelectAgent({ form }: SelectMemberProps) {
 	return (
 		<FormField
 			control={form.control}
-			name="memberId"
+			name="id"
 			render={({ field }) => (
 				<FormItem>
 					<FormLabel>Agent</FormLabel>

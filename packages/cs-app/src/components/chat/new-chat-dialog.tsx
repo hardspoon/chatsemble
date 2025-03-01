@@ -2,7 +2,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
+import type { z } from "zod";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -28,20 +28,16 @@ import { Switch } from "@/components/ui/switch";
 import { client } from "@/lib/api-client";
 import { Plus } from "lucide-react";
 import { useState } from "react";
+import { createChatRoomSchema } from "@/cs-shared";
 
-const formSchema = z.object({
-	name: z.string().min(1, "Name is required"),
-	isPrivate: z.boolean().default(false),
-});
-
-type FormValues = z.infer<typeof formSchema>;
+type FormValues = z.infer<typeof createChatRoomSchema>;
 
 export function NewChatDialog() {
 	const [open, setOpen] = useState(false);
 	const router = useRouter();
 	const queryClient = useQueryClient();
 	const form = useForm<FormValues>({
-		resolver: zodResolver(formSchema),
+		resolver: zodResolver(createChatRoomSchema),
 		defaultValues: {
 			name: "",
 			isPrivate: false,

@@ -2,13 +2,13 @@ import { z } from "zod";
 
 // ChatRoomMessage
 
-export const chatMessageSchema = z.object({
+export const chatMessagePartialSchema = z.object({
 	id: z.string().min(1),
 	content: z.string().min(1),
 	createdAt: z.number(),
 });
 
-export type ChatRoomMessagePartial = z.infer<typeof chatMessageSchema>;
+export type ChatRoomMessagePartial = z.infer<typeof chatMessagePartialSchema>;
 
 export interface ChatRoomMessage extends ChatRoomMessagePartial {
 	user: ChatRoomMember;

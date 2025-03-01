@@ -121,6 +121,7 @@ export function useChatWS({ roomId, user }: UseChatWSProps) {
 				...newMessagePartial,
 				user: {
 					id: user.id,
+					roomId,
 					role: "member",
 					type: "user",
 					name: user.name,
@@ -133,7 +134,7 @@ export function useChatWS({ roomId, user }: UseChatWSProps) {
 			setMessages((prev) => [...prev, newMessage]);
 			setInput("");
 		},
-		[input, user],
+		[input, user, roomId],
 	);
 
 	const connect = useCallback(() => {

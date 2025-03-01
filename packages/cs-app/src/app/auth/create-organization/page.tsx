@@ -2,6 +2,7 @@ import { getAuth } from "@/auth";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { CreateOrganizationForm } from "./_components/create-organization-form";
+
 export default async function CreateOrganizationPage() {
 	const auth = getAuth();
 	const headersList = await headers();
@@ -23,3 +24,5 @@ export default async function CreateOrganizationPage() {
 		</div>
 	);
 }
+
+export const dynamic = "force-dynamic";

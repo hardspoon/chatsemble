@@ -25,16 +25,11 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft } from "lucide-react";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
 import { SelectMember } from "./select-member";
+import { createChatRoomMemberSchema } from "@/cs-shared";
+import type { z } from "zod";
 
-const formSchema = z.object({
-	memberId: z.string().min(1, "Member is required"),
-	type: z.enum(["user", "agent"]),
-	role: z.enum(["admin", "member"]),
-});
-
-export type FormValues = z.infer<typeof formSchema>;
+export type FormValues = z.infer<typeof createChatRoomMemberSchema>;
 
 interface AddMemberFormProps {
 	roomId: string;
@@ -49,8 +44,10 @@ export function AddMemberForm({
 }: AddMemberFormProps) {
 	const queryClient = useQueryClient();
 	const form = useForm<FormValues>({
-		resolver: zodResolver(formSchema),
+		resolver: zodResolver(createChatRoomMemberSchema),
 		defaultValues: {
+			id: "",
+			roomId,
 			type: "user",
 			role: "member",
 		},
@@ -59,10 +56,7 @@ export function AddMemberForm({
 	const addMemberMutation = useMutation({
 		mutationFn: async (values: FormValues) => {
 			const response = await client.protected["chat-room"].members.$post({
-				json: {
-					roomId,
-					...values,
-				},
+				json: values,
 			});
 			return response.json();
 		},

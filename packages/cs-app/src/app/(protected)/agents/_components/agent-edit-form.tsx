@@ -3,7 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
+import type { z } from "zod";
 
 import { AgentPlaceholderNotFound } from "@/app/(protected)/agents/_components/agent-placeholder";
 import { AgentSkeleton } from "@/app/(protected)/agents/_components/agent-skeleton";
@@ -23,14 +23,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { client } from "@/lib/api-client";
 import { AgentAvatarPicker } from "./agent-avatar-picker";
+import { createAgentSchema } from "@/cs-shared";
 
-const formSchema = z.object({
-	name: z.string().min(1, "Name is required"),
-	image: z.string().min(1, "Image is required"),
-	systemPrompt: z.string().min(1, "System prompt is required"),
-});
-
-export type FormValues = z.infer<typeof formSchema>;
+export type FormValues = z.infer<typeof createAgentSchema>;
 
 interface AgentEditFormProps {
 	agentId: string;
@@ -50,7 +45,7 @@ export function AgentEditForm({ agentId }: AgentEditFormProps) {
 	});
 
 	const form = useForm<FormValues>({
-		resolver: zodResolver(formSchema),
+		resolver: zodResolver(createAgentSchema),
 		values:
 			agent && "name" in agent
 				? {
