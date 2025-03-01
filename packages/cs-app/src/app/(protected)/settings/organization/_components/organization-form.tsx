@@ -1,18 +1,16 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { toast } from "@/hooks/use-toast";
+import { CopyButton } from "@/components/copy-button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-
-import { Label } from "@/components/ui/label";
-import { authClient } from "@/lib/auth-client";
-import { Loader2 } from "lucide-react";
-import { InviteMemberDialog } from "./invite-member-dialog";
-import { CopyButton } from "@/components/copy-button";
-import type { ActiveOrganization, Session } from "@/types/auth";
 import { Separator } from "@/components/ui/separator";
+import { toast } from "@/hooks/use-toast";
+import { authClient } from "@/lib/auth-client";
+import type { ActiveOrganization, Session } from "@/types/auth";
+import { Loader2 } from "lucide-react";
+import { useMemo, useState } from "react";
+import { InviteMemberDialog } from "./invite-member-dialog";
 
 export function OrganizationForm({
 	session,

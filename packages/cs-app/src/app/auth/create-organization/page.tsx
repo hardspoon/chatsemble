@@ -1,7 +1,7 @@
-import { CreateOrganizationForm } from "./_components/create-organization-form";
+import { getAuth } from "@/auth";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
-import { getAuth } from "@/auth";
+import { CreateOrganizationForm } from "./_components/create-organization-form";
 export default async function CreateOrganizationPage() {
 	const auth = getAuth();
 	const headersList = await headers();

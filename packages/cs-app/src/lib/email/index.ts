@@ -5,13 +5,13 @@ import {
 	type EmailVerificationTemplateProps,
 } from "@/lib/email/templates/email-verification";
 import {
-	PasswordResetTemplate,
-	type PasswordResetTemplateProps,
-} from "@/lib/email/templates/password-reset";
-import {
 	OrganizationInvitationTemplate,
 	type OrganizationInvitationTemplateProps,
 } from "@/lib/email/templates/organization-invitation";
+import {
+	PasswordResetTemplate,
+	type PasswordResetTemplateProps,
+} from "@/lib/email/templates/password-reset";
 import { type ComponentType, createElement } from "react";
 import { Resend } from "resend";
 

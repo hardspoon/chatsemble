@@ -9,12 +9,12 @@ import {
 	CardHeader,
 	CardTitle,
 } from "@/components/ui/card";
-import { CheckIcon, XIcon } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { Skeleton } from "@/components/ui/skeleton";
 import { authClient } from "@/lib/auth-client";
-import { InvitationError } from "./invitation-error";
 import { useMutation, useQuery } from "@tanstack/react-query";
+import { CheckIcon, XIcon } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { InvitationError } from "./invitation-error";
 
 export function InvitationForm({ invitationId }: { invitationId: string }) {
 	const router = useRouter();

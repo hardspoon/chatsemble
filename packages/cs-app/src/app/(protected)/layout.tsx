@@ -1,6 +1,6 @@
+import { getAuth } from "@/auth";
 import AppLayout from "@/components/layout/app-layout";
 import { schema } from "@/cs-shared";
-import { getAuth } from "@/auth";
 import { getDB } from "@/server/db";
 import { eq } from "drizzle-orm";
 import { headers } from "next/headers";

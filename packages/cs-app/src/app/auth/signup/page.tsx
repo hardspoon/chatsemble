@@ -1,7 +1,7 @@
 import { headers } from "next/headers";
 
-import { LoggedInCard } from "@/components/auth/logged-in-card";
 import { getAuth } from "@/auth";
+import { LoggedInCard } from "@/components/auth/logged-in-card";
 import SignupForm from "./_components/signup-form";
 
 export default async function SignupPage() {
