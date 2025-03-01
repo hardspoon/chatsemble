@@ -23,16 +23,20 @@ export default async function RootLayout({
 	}
 
 	if (!session.session.activeOrganizationId) {
-		console.log("no active organization, setting it");
+		console.log("no active organization, checking if user has any");
 		const db = getDB();
 		const orgSession = await db.query.member.findFirst({
 			where: eq(schema.member.userId, session.user.id),
 		});
 		console.log("orgSession", orgSession);
+
 		if (!orgSession) {
-			console.log("no orgSession, throwing error");
-			//throw new Error("No active organization found");
+			console.log(
+				"no organization found, redirecting to create organization page",
+			);
+			return redirect("/auth/create-organization");
 		}
+
 		auth.api.setActiveOrganization({
 			headers: headersList,
 			body: {
