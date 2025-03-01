@@ -24,6 +24,7 @@ import { authClient } from "@/lib/auth-client";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { AvatarPicker } from "./avatar-picker";
+import { useSearchParams } from "next/navigation";
 
 export const signupFormSchema = z.object({
 	email: z.string().email("Please enter a valid email address"),
@@ -35,11 +36,14 @@ export const signupFormSchema = z.object({
 export default function SignupForm() {
 	const [isSignupSuccess, setIsSignupSuccess] = useState(false);
 	const [userEmail, setUserEmail] = useState("");
+	const searchParams = useSearchParams();
+	const invitationId = searchParams.get("invitationId");
+	const email = searchParams.get("email");
 
 	const form = useForm<z.infer<typeof signupFormSchema>>({
 		resolver: zodResolver(signupFormSchema),
 		defaultValues: {
-			email: "",
+			email: email || "",
 			password: "",
 			name: "",
 			image: "/notion-avatars/avatar-01.svg",
@@ -53,7 +57,9 @@ export default function SignupForm() {
 				password: values.password,
 				name: values.name,
 				image: values.image,
-				callbackURL: "/chat",
+				callbackURL: invitationId
+					? `/auth/accept-invitation/${invitationId}`
+					: "/chat",
 			});
 
 			if (error) {
