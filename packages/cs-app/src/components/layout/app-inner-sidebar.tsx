@@ -2,9 +2,9 @@
 
 import { AgentsSidebar } from "@/app/(protected)/agents/_components/agents-sidebar";
 import { SettingsSidebar } from "@/app/(protected)/settings/_components/settings-sidebar";
-import { ChatsSidebar } from "@/components/chat/chats-sidebar";
+import { ChatsSidebar } from "@/app/(protected)/chat/_components/chats-sidebar";
 import { usePathname } from "next/navigation";
-import { Sidebar } from "../ui/sidebar";
+import { Sidebar } from "@/components/ui/sidebar";
 
 export function AppInnerSidebar() {
 	return (

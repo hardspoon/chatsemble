@@ -1,10 +1,10 @@
 "use client";
 
-import { ChatHeader } from "@/components/chat/chat-header";
-import { ChatWsProvider } from "@/components/chat/chat-ws-provider";
+import { ChatHeader } from "@/app/(protected)/chat/_components/chat-header";
+import { ChatWsProvider } from "@/app/(protected)/chat/_components/chat-ws-provider";
 import type { User } from "better-auth";
 import { useSearchParams } from "next/navigation";
-import { ChatContent } from "./chat-content";
+import { ChatContent } from "@/app/(protected)/chat/_components/chat-content";
 
 export function Chat({ user }: { user: User }) {
 	const queryParams = useSearchParams();

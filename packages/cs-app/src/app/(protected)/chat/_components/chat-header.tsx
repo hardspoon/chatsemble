@@ -1,5 +1,5 @@
-import { ChatMembersDialog } from "@/components/chat/chat-members/chat-members-dialog";
-import { useChatWsContext } from "@/components/chat/chat-ws-provider";
+import { ChatMembersDialog } from "@/app/(protected)/chat/_components/chat-members/chat-members-dialog";
+import { useChatWsContext } from "@/app/(protected)/chat/_components/chat-ws-provider";
 import { DynamicBreadcrumb } from "@/components/layout/dynamic-breadcrumb";
 import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
