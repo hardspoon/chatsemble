@@ -20,10 +20,10 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { createAgentSchema } from "@/cs-shared";
 import { useToast } from "@/hooks/use-toast";
 import { client } from "@/lib/api-client";
 import { AgentAvatarPicker } from "./agent-avatar-picker";
-import { createAgentSchema } from "@/cs-shared";
 
 export type FormValues = z.infer<typeof createAgentSchema>;
 
