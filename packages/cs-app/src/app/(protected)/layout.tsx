@@ -25,8 +25,8 @@ export default async function RootLayout({
 	if (!session.session.activeOrganizationId) {
 		console.log("no active organization, checking if user has any");
 		const db = getDB();
-		const orgSession = await db.query.member.findFirst({
-			where: eq(schema.member.userId, session.user.id),
+		const orgSession = await db.query.organizationMember.findFirst({
+			where: eq(schema.organizationMember.userId, session.user.id),
 		});
 		console.log("orgSession", orgSession);
 

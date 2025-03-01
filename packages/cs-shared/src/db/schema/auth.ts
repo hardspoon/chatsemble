@@ -64,7 +64,7 @@ export const organization = sqliteTable("organization", {
 });
 
 // Member table
-export const member = sqliteTable("member", {
+export const organizationMember = sqliteTable("organization_member", {
 	id: text("id")
 		.primaryKey()
 		.$defaultFn(() => nanoid(36)),
@@ -81,7 +81,7 @@ export const member = sqliteTable("member", {
 });
 
 // Invitation table
-export const invitation = sqliteTable("invitation", {
+export const organizationInvitation = sqliteTable("organization_invitation", {
 	id: text("id")
 		.primaryKey()
 		.$defaultFn(() => nanoid(36)),

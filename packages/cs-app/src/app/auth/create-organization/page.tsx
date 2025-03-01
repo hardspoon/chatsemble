@@ -13,6 +13,10 @@ export default async function CreateOrganizationPage() {
 		return redirect("/auth/login");
 	}
 
+	if (session.session.activeOrganizationId) {
+		return redirect("/chat");
+	}
+
 	return (
 		<div className="container mx-auto flex min-h-screen w-full flex-col items-center justify-center py-8">
 			<CreateOrganizationForm user={session.user} />

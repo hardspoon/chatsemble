@@ -67,16 +67,24 @@ export const getAuth = () => {
 						teamName: data.organization.name,
 					});
 				},
+				schema: {
+					member: {
+						modelName: "organizationMember",
+					},
+					invitation: {
+						modelName: "organizationInvitation",
+					},
+				},
 			}),
 		],
 
-		/* databaseHooks: {
+		databaseHooks: {
 			session: {
 				create: {
 					before: async (session) => {
 						const db = getDB();
-						const orgSession = await db.query.member.findFirst({
-							where: eq(schema.member.userId, session.userId),
+						const orgSession = await db.query.organizationMember.findFirst({
+							where: eq(schema.organizationMember.userId, session.userId),
 						});
 
 						return {
@@ -88,6 +96,6 @@ export const getAuth = () => {
 					},
 				},
 			},
-		}, */
+		},
 	});
 };
