@@ -7,12 +7,12 @@ import {
 	SidebarInput,
 } from "@/components/ui/sidebar";
 import { Skeleton } from "@/components/ui/skeleton";
+import type { Agent } from "@/cs-shared";
 import { client } from "@/lib/api-client";
 import { useQuery } from "@tanstack/react-query";
+import { AlertCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { NewAgentDialog } from "./new-agent-dialog";
-import { AlertCircle } from "lucide-react";
-import type { Agent } from "@/cs-shared";
 
 export function AgentsSidebar() {
 	const {

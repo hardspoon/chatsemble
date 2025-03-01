@@ -25,10 +25,10 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
+import { createChatRoomSchema } from "@/cs-shared";
 import { client } from "@/lib/api-client";
 import { Plus } from "lucide-react";
 import { useState } from "react";
-import { createChatRoomSchema } from "@/cs-shared";
 
 type FormValues = z.infer<typeof createChatRoomSchema>;
 
