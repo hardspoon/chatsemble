@@ -1,23 +1,18 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { toast } from "@/hooks/use-toast";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuItem,
-	DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+
 import { Label } from "@/components/ui/label";
 import { authClient } from "@/lib/auth-client";
-import { ChevronDownIcon } from "lucide-react";
 import { Loader2 } from "lucide-react";
 import { InviteMemberDialog } from "./invite-member-dialog";
 import { CopyButton } from "@/components/copy-button";
 import type { ActiveOrganization, Session } from "@/types/auth";
+import { Separator } from "@/components/ui/separator";
 
 export function OrganizationForm({
 	session,
@@ -30,13 +25,17 @@ export function OrganizationForm({
 		activeOrganization,
 	);
 
-	const organizations = authClient.useListOrganizations();
-
 	const [isRevoking, setIsRevoking] = useState<string[]>([]);
 
 	const currentMember = optimisticOrg?.members.find(
 		(member) => member.userId === session?.user.id,
 	);
+
+	const pendingInvitations = useMemo(() => {
+		return optimisticOrg?.invitations.filter(
+			(invitation) => invitation.status === "pending",
+		);
+	}, [optimisticOrg]);
 
 	const revokeInvite = (
 		invitation: ActiveOrganization["invitations"][number],
@@ -80,64 +79,15 @@ export function OrganizationForm({
 
 	return (
 		<Card>
-			<CardHeader>
-				<CardTitle>Organization</CardTitle>
-				<div className="flex justify-between">
-					<DropdownMenu>
-						<DropdownMenuTrigger asChild>
-							<div className="flex items-center gap-1 cursor-pointer">
-								<p className="text-sm">
-									<span className="font-bold" />
-									{optimisticOrg?.name || "Personal"}
-								</p>
-
-								<ChevronDownIcon />
-							</div>
-						</DropdownMenuTrigger>
-						<DropdownMenuContent align="start">
-							<DropdownMenuItem
-								className="py-1"
-								onClick={async () => {
-									authClient.organization.setActive({
-										organizationId: null,
-									});
-									setOptimisticOrg(null);
-								}}
-							>
-								<p className="text-sm sm">Personal</p>
-							</DropdownMenuItem>
-							{organizations.data?.map((org) => (
-								<DropdownMenuItem
-									className="py-1"
-									key={org.id}
-									onClick={async () => {
-										if (org.id === optimisticOrg?.id) {
-											return;
-										}
-										setOptimisticOrg({
-											members: [],
-											invitations: [],
-											...org,
-										});
-										const { data } = await authClient.organization.setActive({
-											organizationId: org.id,
-										});
-										setOptimisticOrg(data);
-									}}
-								>
-									<p className="text-sm sm">{org.name}</p>
-								</DropdownMenuItem>
-							))}
-						</DropdownMenuContent>
-					</DropdownMenu>
-				</div>
+			<CardHeader className="gap-2">
+				<CardTitle>Your current organization</CardTitle>
 				<div className="flex items-center gap-2">
-					<Avatar className="rounded-none">
+					<Avatar>
 						<AvatarImage
-							className="object-cover w-full h-full rounded-none"
+							className="object-cover w-full h-full"
 							src={optimisticOrg?.logo || ""}
 						/>
-						<AvatarFallback className="rounded-none">
+						<AvatarFallback>
 							{optimisticOrg?.name?.charAt(0) || "P"}
 						</AvatarFallback>
 					</Avatar>
@@ -150,11 +100,10 @@ export function OrganizationForm({
 				</div>
 			</CardHeader>
 			<CardContent>
-				<div className="flex gap-8 flex-col md:flex-row">
+				<div className="flex flex-col xl:flex-row gap-8">
 					<div className="flex flex-col gap-2 flex-grow">
-						<p className="font-medium border-b-2 border-b-foreground/10">
-							Members
-						</p>
+						<p className="font-medium py-1">Members</p>
+						<Separator />
 						<div className="flex flex-col gap-2">
 							{optimisticOrg?.members.map((member) => (
 								<div
@@ -180,7 +129,8 @@ export function OrganizationForm({
 									</div>
 									{member.role !== "owner" &&
 										(currentMember?.role === "owner" ||
-											currentMember?.role === "admin") && (
+											currentMember?.role === "admin") &&
+										currentMember?.id !== member.id && (
 											<Button
 												size="sm"
 												variant="destructive"
@@ -190,7 +140,7 @@ export function OrganizationForm({
 													});
 												}}
 											>
-												{currentMember?.id === member.id ? "Leave" : "Remove"}
+												Remove
 											</Button>
 										)}
 								</div>
@@ -214,13 +164,19 @@ export function OrganizationForm({
 						</div>
 					</div>
 					<div className="flex flex-col gap-2 flex-grow">
-						<p className="font-medium border-b-2 border-b-foreground/10">
-							Invites
-						</p>
+						<div className="flex items-center justify-between">
+							<p className="font-medium">Invites</p>
+							{optimisticOrg?.id && (
+								<InviteMemberDialog
+									setOptimisticOrg={setOptimisticOrg}
+									optimisticOrg={optimisticOrg}
+								/>
+							)}
+						</div>
+						<Separator />
 						<div className="flex flex-col gap-2">
-							{optimisticOrg?.invitations
-								.filter((invitation) => invitation.status === "pending")
-								.map((invitation) => (
+							{pendingInvitations && pendingInvitations.length > 0 ? (
+								pendingInvitations.map((invitation) => (
 									<div
 										key={invitation.id}
 										className="flex items-center justify-between"
@@ -251,28 +207,11 @@ export function OrganizationForm({
 											</div>
 										</div>
 									</div>
-								))}
-							{optimisticOrg?.invitations.length === 0 && (
+								))
+							) : (
 								<p className="text-sm text-muted-foreground">
 									No Active Invitations
 								</p>
-							)}
-							{!optimisticOrg?.id && (
-								<Label className="text-xs text-muted-foreground">
-									You can&apos;t invite members to your personal workspace.
-								</Label>
-							)}
-						</div>
-					</div>
-				</div>
-				<div className="flex justify-end w-full mt-4">
-					<div>
-						<div>
-							{optimisticOrg?.id && (
-								<InviteMemberDialog
-									setOptimisticOrg={setOptimisticOrg}
-									optimisticOrg={optimisticOrg}
-								/>
 							)}
 						</div>
 					</div>

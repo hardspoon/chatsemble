@@ -15,7 +15,6 @@ import {
 	FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/hooks/use-toast";
 
 const profileFormSchema = z.object({
@@ -32,16 +31,14 @@ const profileFormSchema = z.object({
 			required_error: "Please select an email to display.",
 		})
 		.email(),
-	bio: z.string().max(160).min(4),
 });
 
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
 
 // This can come from your database or API.
 const defaultValues: Partial<ProfileFormValues> = {
-	username: "shadcn",
-	email: "m@example.com",
-	bio: "I own a computer.",
+	username: "john-doe",
+	email: "john@example.com",
 };
 
 export function ProfileForm() {
@@ -98,26 +95,7 @@ export function ProfileForm() {
 						</FormItem>
 					)}
 				/>
-				<FormField
-					control={form.control}
-					name="bio"
-					render={({ field }) => (
-						<FormItem>
-							<FormLabel>Bio</FormLabel>
-							<FormControl>
-								<Textarea
-									placeholder="Tell us a little bit about yourself"
-									className="resize-none"
-									{...field}
-								/>
-							</FormControl>
-							<FormDescription>
-								You can <span>@mention</span> other users and organizations.
-							</FormDescription>
-							<FormMessage />
-						</FormItem>
-					)}
-				/>
+
 				<Button type="submit">Update profile</Button>
 			</form>
 		</Form>
