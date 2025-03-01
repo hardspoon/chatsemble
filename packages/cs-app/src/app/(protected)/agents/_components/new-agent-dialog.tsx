@@ -2,7 +2,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
+import type { z } from "zod";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -29,21 +29,16 @@ import { client } from "@/lib/api-client";
 import { Plus } from "lucide-react";
 import { useState } from "react";
 import { AgentAvatarPicker } from "./agent-avatar-picker";
+import { createAgentSchema } from "@/cs-shared";
 
-const formSchema = z.object({
-	name: z.string().min(1, "Name is required"),
-	image: z.string().min(1, "Image is required"),
-	systemPrompt: z.string().min(1, "System prompt is required"),
-});
-
-export type FormValues = z.infer<typeof formSchema>;
+export type FormValues = z.infer<typeof createAgentSchema>;
 
 export function NewAgentDialog() {
 	const [open, setOpen] = useState(false);
 	const router = useRouter();
 	const queryClient = useQueryClient();
 	const form = useForm<FormValues>({
-		resolver: zodResolver(formSchema),
+		resolver: zodResolver(createAgentSchema),
 		defaultValues: {
 			name: "",
 			image: "/notion-avatars/avatar-01.svg",

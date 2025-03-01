@@ -19,9 +19,14 @@ const app = new Hono<HonoVariables>().get("/", async (c) => {
 			email: d1Schema.user.email,
 			image: d1Schema.user.image,
 		})
-		.from(d1Schema.member)
-		.innerJoin(d1Schema.user, eq(d1Schema.member.userId, d1Schema.user.id))
-		.where(eq(d1Schema.member.organizationId, activeOrganizationId));
+		.from(d1Schema.organizationMember)
+		.innerJoin(
+			d1Schema.user,
+			eq(d1Schema.organizationMember.userId, d1Schema.user.id),
+		)
+		.where(
+			eq(d1Schema.organizationMember.organizationId, activeOrganizationId),
+		);
 
 	return c.json(users);
 });
