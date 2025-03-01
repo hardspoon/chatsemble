@@ -58,7 +58,7 @@ export const getAuth = () => {
 		plugins: [
 			organization({
 				async sendInvitationEmail(data) {
-					const url = `${process.env.BETTER_AUTH_URL}/accept-invitation/${data.id}`;
+					const url = `${process.env.BETTER_AUTH_URL}/auth/accept-invitation/${data.id}`;
 					await sendMail(data.email, "organization-invitation", {
 						inviteLink: url,
 						username: data.email,
