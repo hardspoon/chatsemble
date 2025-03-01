@@ -1,35 +1,70 @@
 import { z } from "zod";
 
-export interface ChatRoomMessagePartial {
-	id: string;
-	content: string;
-	createdAt: number;
-}
+// ChatRoomMessage
+
+export const chatMessageSchema = z.object({
+	id: z.string().min(1),
+	content: z.string().min(1),
+	createdAt: z.number(),
+});
+
+export type ChatRoomMessagePartial = z.infer<typeof chatMessageSchema>;
 
 export interface ChatRoomMessage extends ChatRoomMessagePartial {
 	user: ChatRoomMember;
 }
 
-export const CHAT_ROOM_MEMBER_ROLES = ["member", "admin"] as const;
+// ChatRoomMember
 
-export const chatRoomMembersRolesSchema = z.enum(CHAT_ROOM_MEMBER_ROLES);
+const CHAT_ROOM_MEMBER_ROLES = ["member", "admin"] as const;
+
+const chatRoomMembersRolesSchema = z.enum(CHAT_ROOM_MEMBER_ROLES);
 
 export type ChatRoomMemberRole = (typeof CHAT_ROOM_MEMBER_ROLES)[number];
 
-export const CHAT_ROOM_MEMBER_TYPES = ["user", "agent"] as const;
+const CHAT_ROOM_MEMBER_TYPES = ["user", "agent"] as const;
 
-export const chatRoomMembersTypesSchema = z.enum(CHAT_ROOM_MEMBER_TYPES);
+const chatRoomMembersTypesSchema = z.enum(CHAT_ROOM_MEMBER_TYPES);
 
 export type ChatRoomMemberType = (typeof CHAT_ROOM_MEMBER_TYPES)[number];
 
-export interface ChatRoomMember {
-	id: string; // User ID or Agent ID
-	role: ChatRoomMemberRole;
-	type: ChatRoomMemberType;
-	name: string;
-	email: string;
-	image: string | null;
-}
+export const chatRoomMemberSchema = z.object({
+	id: z.string().min(1),
+	roomId: z.string().min(1),
+	role: chatRoomMembersRolesSchema,
+	type: chatRoomMembersTypesSchema,
+	name: z.string().min(1),
+	email: z.string().min(1),
+	image: z.string().nullable(),
+});
+
+export const createChatRoomMemberSchema = chatRoomMemberSchema.omit({
+	name: true,
+	email: true,
+	image: true,
+});
+
+export type ChatRoomMember = z.infer<typeof chatRoomMemberSchema>;
+
+// ChatRoom
+
+export const chatRoomSchema = z.object({
+	id: z.string().min(1),
+	name: z.string().min(1),
+	isPrivate: z.boolean().optional(),
+	organizationId: z.string().min(1),
+	createdAt: z.number(),
+});
+
+export const createChatRoomSchema = chatRoomSchema.omit({
+	id: true,
+	createdAt: true,
+	organizationId: true,
+});
+
+export type ChatRoom = z.infer<typeof chatRoomSchema>;
+
+// WsChatRoomMessage
 
 export type WsChatRoomMessage =
 	| { type: "message-receive"; message: ChatRoomMessagePartial }
