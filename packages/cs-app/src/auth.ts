@@ -70,7 +70,7 @@ export const getAuth = () => {
 			}),
 		],
 
-		databaseHooks: {
+		/* databaseHooks: {
 			session: {
 				create: {
 					before: async (session) => {
@@ -88,6 +88,6 @@ export const getAuth = () => {
 					},
 				},
 			},
-		},
+		}, */
 	});
 };

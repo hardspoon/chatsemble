@@ -29,7 +29,6 @@ export const signupFormSchema = z.object({
 	email: z.string().email("Please enter a valid email address"),
 	password: z.string().min(8, "Password must be at least 8 characters"),
 	name: z.string().min(2, "Name must be at least 2 characters"),
-	orgName: z.string().min(2, "Organization name must be at least 2 characters"),
 	image: z.string().min(1, "Please select an avatar"),
 });
 
@@ -43,7 +42,6 @@ export default function SignupForm() {
 			email: "",
 			password: "",
 			name: "",
-			orgName: "",
 			image: "/notion-avatars/avatar-01.svg",
 		},
 	});
@@ -55,6 +53,7 @@ export default function SignupForm() {
 				password: values.password,
 				name: values.name,
 				image: values.image,
+				callbackURL: "/chat",
 			});
 
 			if (error) {
