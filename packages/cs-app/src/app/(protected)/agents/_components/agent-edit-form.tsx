@@ -21,7 +21,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { createAgentSchema } from "@/cs-shared";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "@/hooks/use-toast";
 import { client } from "@/lib/api-client";
 import { AgentAvatarPicker } from "./agent-avatar-picker";
 
@@ -33,7 +33,6 @@ interface AgentEditFormProps {
 
 export function AgentEditForm({ agentId }: AgentEditFormProps) {
 	const queryClient = useQueryClient();
-	const { toast } = useToast();
 	const { data: agent, isLoading } = useQuery({
 		queryKey: ["agent", agentId],
 		queryFn: async () => {

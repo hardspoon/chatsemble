@@ -21,7 +21,7 @@ import {
 	FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "@/hooks/use-toast";
 import { authClient } from "@/lib/auth-client";
 import type { User } from "better-auth";
 
@@ -46,7 +46,6 @@ const orgNameAndSlugFromUser = (user: User) => {
 
 export function CreateOrganizationForm({ user }: { user: User }) {
 	const router = useRouter();
-	const { toast } = useToast();
 
 	const form = useForm<z.infer<typeof createOrganizationFormSchema>>({
 		resolver: zodResolver(createOrganizationFormSchema),
