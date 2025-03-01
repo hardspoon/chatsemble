@@ -191,6 +191,7 @@ export class ChatDurableObject extends DurableObject<Env> {
 				createdAt: chatMessage.createdAt,
 				user: {
 					id: chatRoomMember.id,
+					roomId: chatRoomMember.roomId,
 					role: chatRoomMember.role,
 					type: chatRoomMember.type,
 					name: chatRoomMember.name,
@@ -219,6 +220,7 @@ export class ChatDurableObject extends DurableObject<Env> {
 				createdAt: chatMessage.createdAt,
 				user: {
 					id: chatRoomMember.id,
+					roomId: chatRoomMember.roomId,
 					role: chatRoomMember.role,
 					type: chatRoomMember.type,
 					name: chatRoomMember.name,

@@ -6,6 +6,9 @@ import { nanoid } from "nanoid";
 export const chatRoomConfig = sqliteTable("chat_room_config", {
 	id: text("id").primaryKey(),
 	name: text("name").notNull(),
+	isPrivate: integer("is_private", { mode: "boolean" })
+		.notNull()
+		.default(false),
 	organizationId: text("organization_id").notNull(),
 	createdAt: integer("created_at", { mode: "number" })
 		.notNull()
@@ -27,6 +30,7 @@ export const chatMessage = sqliteTable("chat_message", {
 
 export const chatRoomMember = sqliteTable("chat_room_member", {
 	id: text("id").primaryKey(), // User ID or Agent ID
+	roomId: text("room_id").notNull(),
 	type: text("type").$type<ChatRoomMemberType>().notNull(),
 	role: text("role").$type<ChatRoomMemberRole>().notNull(),
 	name: text("name").notNull(),
