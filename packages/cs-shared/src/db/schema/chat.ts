@@ -7,14 +7,16 @@ import {
 import { sql } from "drizzle-orm";
 import { relations } from "drizzle-orm";
 import { organization } from "./auth";
-import type { ChatRoomMemberRole, ChatRoomMemberType } from "../../types/chat";
+import type {
+	ChatRoomMemberRole,
+	ChatRoomMemberType,
+	ChatRoomType,
+} from "../../types/chat";
 
 export const chatRoom = sqliteTable("chat_room", {
 	id: text("id").primaryKey(), // Same as the DO ID
 	name: text("name").notNull(),
-	isPrivate: integer("is_private", { mode: "boolean" })
-		.notNull()
-		.default(false),
+	type: text("type").$type<ChatRoomType>().notNull(),
 	organizationId: text("organization_id")
 		.notNull()
 		.references(() => organization.id),

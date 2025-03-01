@@ -1,7 +1,6 @@
 "use client";
 
 import { ChatHeader } from "@/components/chat/chat-header";
-import { ChatPlaceholderNoRoomSelected } from "@/components/chat/chat-placeholder";
 import { ChatWsProvider } from "@/components/chat/chat-ws-provider";
 import type { User } from "better-auth";
 import { useSearchParams } from "next/navigation";
@@ -20,5 +19,16 @@ export function Chat({ user }: { user: User }) {
 			<ChatHeader />
 			<ChatContent />
 		</ChatWsProvider>
+	);
+}
+
+function ChatPlaceholderNoRoomSelected() {
+	return (
+		<div className="flex flex-1 flex-col items-center justify-center">
+			<span className="text-lg font-bold">No room selected</span>
+			<p className="text-sm text-muted-foreground">
+				Please select a room from the sidebar
+			</p>
+		</div>
 	);
 }

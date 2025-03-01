@@ -95,7 +95,7 @@ CREATE TABLE `verification` (
 CREATE TABLE `chat_room` (
 	`id` text PRIMARY KEY NOT NULL,
 	`name` text NOT NULL,
-	`is_private` integer DEFAULT false NOT NULL,
+	`type` text NOT NULL,
 	`organization_id` text NOT NULL,
 	`created_at` integer DEFAULT (unixepoch() * 1000) NOT NULL,
 	FOREIGN KEY (`organization_id`) REFERENCES `organization`(`id`) ON UPDATE no action ON DELETE no action
