@@ -17,14 +17,6 @@ const settingsLinks = [
 		href: "/settings/profile",
 	},
 	{
-		title: "Notifications",
-		href: "/settings/notifications",
-	},
-	{
-		title: "Appearance",
-		href: "/settings/appearance",
-	},
-	{
 		title: "Organization",
 		href: "/settings/organization",
 	},

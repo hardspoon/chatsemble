@@ -89,7 +89,7 @@ export function InviteMemberDialog({
 	return (
 		<Dialog>
 			<DialogTrigger asChild>
-				<Button size="sm" className="w-full gap-2" variant="secondary">
+				<Button size="sm" className="gap-2" variant="default">
 					<MailPlus size={16} />
 					<p>Invite Member</p>
 				</Button>
@@ -142,7 +142,7 @@ export function InviteMemberDialog({
 								)}
 							/>
 						</div>
-						<DialogFooter>
+						<DialogFooter className="mt-2">
 							<DialogClose>
 								<Button type="submit" disabled={handleInvite.isPending}>
 									{handleInvite.isPending ? "Inviting..." : "Invite"}
