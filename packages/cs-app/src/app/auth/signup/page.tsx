@@ -1,8 +1,8 @@
 import { headers } from "next/headers";
 
 import { getAuth } from "@/auth";
-import { LoggedInCard } from "@/components/auth/logged-in-card";
-import SignupForm from "./_components/signup-form";
+import { LoggedInCard } from "@/app/auth/_components/logged-in-card";
+import SignupForm from "@/app/auth/signup/_components/signup-form";
 
 export default async function SignupPage() {
 	const auth = getAuth();

@@ -1,6 +1,6 @@
-import { AddMemberForm } from "@/components/chat/chat-members/add-member-form";
-import { ChatMembersList } from "@/components/chat/chat-members/chat-members-list";
-import { useChatWsContext } from "@/components/chat/chat-ws-provider";
+import { AddMemberForm } from "@/app/(protected)/chat/_components/chat-members/add-member-form";
+import { ChatMembersList } from "@/app/(protected)/chat/_components/chat-members/chat-members-list";
+import { useChatWsContext } from "@/app/(protected)/chat/_components/chat-ws-provider";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { Users } from "lucide-react";
