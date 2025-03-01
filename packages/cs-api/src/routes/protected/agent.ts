@@ -1,105 +1,82 @@
 import { Hono } from "hono";
-import { z } from "zod";
 
-import { schema as d1Schema } from "@/cs-shared";
+import { type Agent, createAgentSchema, schema as d1Schema } from "@/cs-shared";
 import { zValidator } from "@hono/zod-validator";
 import { eq } from "drizzle-orm";
 import type { HonoVariables } from "../../types/hono";
 
 const app = new Hono<HonoVariables>()
-	.post(
-		"/create",
-		zValidator(
-			"json",
-			z.object({
-				name: z.string().min(1),
-				image: z.string().min(1),
-				systemPrompt: z.string().min(1),
-			}),
-		),
-		async (c) => {
-			const { AGENT_DURABLE_OBJECT } = c.env;
-			const db = c.get("db");
-			const session = c.get("session");
-			const { activeOrganizationId } = session;
-			const { name, image, systemPrompt } = c.req.valid("json");
+	.post("/create", zValidator("json", createAgentSchema), async (c) => {
+		const { AGENT_DURABLE_OBJECT } = c.env;
+		const db = c.get("db");
+		const session = c.get("session");
+		const { activeOrganizationId } = session;
+		const { name, image, systemPrompt } = c.req.valid("json");
 
-			if (!activeOrganizationId) {
-				throw new Error("Organization not set");
-			}
+		if (!activeOrganizationId) {
+			throw new Error("Organization not set");
+		}
 
-			// Create durable object
-			const id = AGENT_DURABLE_OBJECT.newUniqueId();
+		// Create durable object
+		const agentDoId = AGENT_DURABLE_OBJECT.newUniqueId();
 
-			const agent = AGENT_DURABLE_OBJECT.get(id);
+		const agentDo = AGENT_DURABLE_OBJECT.get(agentDoId);
 
-			await agent.migrate();
-			await agent.upsertAgentConfig({
+		await agentDo.migrate();
+		await agentDo.upsertAgentConfig({
+			name,
+			image,
+			systemPrompt,
+			organizationId: activeOrganizationId,
+		});
+
+		await db.insert(d1Schema.agent).values({
+			id: agentDoId.toString(),
+			name,
+			image,
+			systemPrompt,
+			organizationId: activeOrganizationId,
+		});
+
+		return c.json({ agentId: agentDoId.toString() });
+	})
+	.put("/:id", zValidator("json", createAgentSchema), async (c) => {
+		const { AGENT_DURABLE_OBJECT } = c.env;
+		const db = c.get("db");
+		const session = c.get("session");
+		const { activeOrganizationId } = session;
+		const { name, image, systemPrompt } = c.req.valid("json");
+		const { id } = c.req.param();
+
+		if (!activeOrganizationId) {
+			throw new Error("Organization not set");
+		}
+
+		const agentId = AGENT_DURABLE_OBJECT.idFromString(id);
+		const agent = AGENT_DURABLE_OBJECT.get(agentId);
+
+		await agent.upsertAgentConfig({
+			name,
+			image,
+			systemPrompt,
+			organizationId: activeOrganizationId,
+		});
+
+		// Update agent record in D1
+		await db
+			.update(d1Schema.agent)
+			.set({
 				name,
 				image,
 				systemPrompt,
-				organizationId: activeOrganizationId,
-			});
+			})
+			.where(
+				eq(d1Schema.agent.id, id) &&
+					eq(d1Schema.agent.organizationId, activeOrganizationId),
+			);
 
-			await db.insert(d1Schema.agent).values({
-				id: id.toString(),
-				name,
-				image,
-				systemPrompt,
-				organizationId: activeOrganizationId,
-			});
-
-			return c.json({ agentId: id.toString() });
-		},
-	)
-	.put(
-		"/:id",
-		zValidator(
-			"json",
-			z.object({
-				name: z.string().min(1),
-				image: z.string().min(1),
-				systemPrompt: z.string().min(1),
-			}),
-		),
-		async (c) => {
-			const { AGENT_DURABLE_OBJECT } = c.env;
-			const db = c.get("db");
-			const session = c.get("session");
-			const { activeOrganizationId } = session;
-			const { name, image, systemPrompt } = c.req.valid("json");
-			const { id } = c.req.param();
-
-			if (!activeOrganizationId) {
-				throw new Error("Organization not set");
-			}
-
-			const agentId = AGENT_DURABLE_OBJECT.idFromString(id);
-			const agent = AGENT_DURABLE_OBJECT.get(agentId);
-
-			await agent.upsertAgentConfig({
-				name,
-				image,
-				systemPrompt,
-				organizationId: activeOrganizationId,
-			});
-
-			// Update agent record in D1
-			await db
-				.update(d1Schema.agent)
-				.set({
-					name,
-					image,
-					systemPrompt,
-				})
-				.where(
-					eq(d1Schema.agent.id, id) &&
-						eq(d1Schema.agent.organizationId, activeOrganizationId),
-				);
-
-			return c.json({ success: true });
-		},
-	)
+		return c.json({ success: true });
+	})
 	.get("/", async (c) => {
 		const db = c.get("db");
 		const session = c.get("session");
@@ -109,7 +86,7 @@ const app = new Hono<HonoVariables>()
 			throw new Error("Organization not set");
 		}
 
-		const agents = await db
+		const agents: Agent[] = await db
 			.select()
 			.from(d1Schema.agent)
 			.where(eq(d1Schema.agent.organizationId, activeOrganizationId));
@@ -126,7 +103,7 @@ const app = new Hono<HonoVariables>()
 			throw new Error("Organization not set");
 		}
 
-		const agent = await db
+		const agent: Agent | undefined = await db
 			.select()
 			.from(d1Schema.agent)
 			.where(
