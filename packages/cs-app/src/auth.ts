@@ -1,8 +1,9 @@
 import { schema } from "@/cs-shared";
-import { getDB } from "@/server/db"; // your drizzle instance
+import { getDB } from "@/server/db";
+import { sendMail } from "@/lib/email";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { createAuthMiddleware, organization } from "better-auth/plugins";
+import { organization } from "better-auth/plugins";
 import { eq } from "drizzle-orm";
 
 export const getAuth = () => {
@@ -22,10 +23,26 @@ export const getAuth = () => {
 		database: drizzleAdapter(getDB(), {
 			provider: "sqlite",
 		}),
+		emailVerification: {
+			sendOnSignUp: true,
+			autoSignInAfterVerification: true,
+			async sendVerificationEmail({ user, url }) {
+				await sendMail(user.email, "email-verification", {
+					verificationUrl: url,
+					username: user.email,
+				});
+			},
+		},
 		emailAndPassword: {
 			enabled: true,
+			requireEmailVerification: true,
+			async sendResetPassword({ user, url }) {
+				await sendMail(user.email, "password-reset", {
+					resetLink: url,
+					username: user.email,
+				});
+			},
 		},
-		plugins: [organization()],
 		advanced: {
 			crossSubDomainCookies: {
 				enabled: true,
@@ -38,6 +55,21 @@ export const getAuth = () => {
 			},
 		},
 		trustedOrigins,
+		plugins: [
+			organization({
+				async sendInvitationEmail(data) {
+					const url = `${process.env.BETTER_AUTH_URL}/accept-invitation/${data.id}`;
+					await sendMail(data.email, "organization-invitation", {
+						inviteLink: url,
+						username: data.email,
+						invitedByUsername: data.inviter.user.name,
+						invitedByEmail: data.inviter.user.email,
+						teamName: data.organization.name,
+					});
+				},
+			}),
+		],
+
 		databaseHooks: {
 			session: {
 				create: {
@@ -56,27 +88,6 @@ export const getAuth = () => {
 					},
 				},
 			},
-		},
-		hooks: {
-			after: createAuthMiddleware(async (ctx) => {
-				if (ctx.path.startsWith("/sign-up")) {
-					const newSession = ctx.context.newSession;
-					if (newSession) {
-						const authClient = getAuth();
-						const orgName = ctx.body.orgName;
-						const org = await authClient.api.createOrganization({
-							body: {
-								name: orgName,
-								slug: newSession.user.email,
-								userId: newSession.user.id,
-							},
-						});
-						if (!org) {
-							throw new Error("Failed to create organization");
-						}
-					}
-				}
-			}),
 		},
 	});
 };

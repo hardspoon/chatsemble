@@ -1,7 +1,7 @@
 import { headers } from "next/headers";
 
 import { LoggedInCard } from "@/components/auth/logged-in-card";
-import { getAuth } from "@/lib/auth/auth-server";
+import { getAuth } from "@/auth";
 import LoginForm from "./_components/login-form";
 
 export default async function LoginPage() {

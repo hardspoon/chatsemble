@@ -4,9 +4,11 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
+import { useState } from "react";
+import { CheckCircle2 } from "lucide-react";
 
 import { LogoIcon } from "@/components/icons/logo-icon";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -18,10 +20,9 @@ import {
 	FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { authClient } from "@/lib/auth/auth-client";
+import { authClient } from "@/lib/auth-client";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { AvatarPicker } from "./avatar-picker";
 
 export const signupFormSchema = z.object({
@@ -33,7 +34,9 @@ export const signupFormSchema = z.object({
 });
 
 export default function SignupForm() {
-	const router = useRouter();
+	const [isSignupSuccess, setIsSignupSuccess] = useState(false);
+	const [userEmail, setUserEmail] = useState("");
+
 	const form = useForm<z.infer<typeof signupFormSchema>>({
 		resolver: zodResolver(signupFormSchema),
 		defaultValues: {
@@ -52,16 +55,6 @@ export default function SignupForm() {
 				password: values.password,
 				name: values.name,
 				image: values.image,
-				fetchOptions: {
-					body: {
-						orgName: values.orgName,
-						email: values.email,
-						password: values.password,
-						name: values.name,
-						image: values.image,
-					},
-				},
-				callbackURL: "/chat",
 			});
 
 			if (error) {
@@ -69,14 +62,51 @@ export default function SignupForm() {
 			}
 			return data;
 		},
-		onSuccess: () => {
-			router.push("/chat");
+		onSuccess: (data) => {
+			console.log("signup success", data);
+			setUserEmail(form.getValues().email);
+			setIsSignupSuccess(true);
 		},
 	});
 
 	const onSubmit = (values: z.infer<typeof signupFormSchema>) => {
 		mutate(values);
 	};
+
+	if (isSignupSuccess) {
+		return (
+			<div className="container mx-auto flex min-h-screen w-full flex-col items-center justify-center py-8">
+				<Card className="w-full max-w-md">
+					<CardHeader className="flex flex-row items-center justify-start gap-4">
+						<LogoIcon className="size-14" />
+						<CardTitle className="text-2xl font-bold">
+							Verification Email Sent
+						</CardTitle>
+					</CardHeader>
+					<CardContent className="space-y-6">
+						<Alert variant="success" className="flex items-start gap-3">
+							<CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-50" />
+							<div>
+								<AlertTitle>Account created successfully!</AlertTitle>
+								<AlertDescription>
+									We've sent a verification email to{" "}
+									<strong>{userEmail}</strong>. Please check your inbox and
+									click the verification link to activate your account.
+								</AlertDescription>
+							</div>
+						</Alert>
+
+						<div className="text-center">
+							<p className="text-sm text-muted-foreground">
+								If you don't see the email in your inbox, please check your spam
+								folder. The verification link will expire in 24 hours.
+							</p>
+						</div>
+					</CardContent>
+				</Card>
+			</div>
+		);
+	}
 
 	return (
 		<div className="container mx-auto flex min-h-screen w-full flex-col items-center justify-center py-8">
@@ -142,24 +172,6 @@ export default function SignupForm() {
 														placeholder="Create a secure password"
 														type="password"
 														autoComplete="new-password"
-														{...field}
-													/>
-												</FormControl>
-												<FormMessage />
-											</FormItem>
-										)}
-									/>
-
-									<FormField
-										control={form.control}
-										name="orgName"
-										render={({ field }) => (
-											<FormItem>
-												<FormLabel>Organization Name</FormLabel>
-												<FormControl>
-													<Input
-														placeholder="Your Company or Team Name"
-														type="text"
 														{...field}
 													/>
 												</FormControl>
