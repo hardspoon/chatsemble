@@ -4,7 +4,8 @@ import type {
 	ChatRoomMemberType,
 	ChatRoomMessage,
 	ChatRoomMessagePartial,
-	WsChatRoomMessage,
+	WsChatIncomingMessage,
+	WsChatOutgoingMessage,
 } from "@/cs-shared";
 import { desc, eq } from "drizzle-orm";
 /// <reference types="@cloudflare/workers-types" />
@@ -59,22 +60,6 @@ export class ChatDurableObject extends DurableObject<Env> {
 		server.serializeAttachment(session);
 		this.sessions.set(server, session);
 
-		this.sendWebSocketMessageToUser(
-			{
-				type: "messages-sync",
-				messages: await this.selectChatRoomMessages(),
-			},
-			session.userId,
-		);
-
-		this.sendWebSocketMessageToUser(
-			{
-				type: "member-sync",
-				members: await this.getMembers(),
-			},
-			session.userId,
-		);
-
 		return new Response(null, { status: 101, webSocket: client });
 	}
 
@@ -85,12 +70,25 @@ export class ChatDurableObject extends DurableObject<Env> {
 		}
 
 		try {
-			const parsedMsg: WsChatRoomMessage = JSON.parse(message);
-
-			if (parsedMsg.type === "message-receive") {
-				await this.receiveChatRoomMessage(session.userId, parsedMsg.message, {
-					notifyAgents: true,
-				});
+			const parsedMsg: WsChatIncomingMessage = JSON.parse(message);
+			switch (parsedMsg.type) {
+				case "message-receive": {
+					await this.receiveChatRoomMessage(session.userId, parsedMsg.message, {
+						notifyAgents: true,
+					});
+					break;
+				}
+				case "chat-init": {
+					this.sendWebSocketMessageToUser(
+						{
+							type: "chat-ready",
+							messages: await this.selectChatRoomMessages(),
+							members: await this.getMembers(),
+						},
+						session.userId,
+					);
+					break;
+				}
 			}
 		} catch (err) {
 			if (err instanceof Error) {
@@ -110,7 +108,7 @@ export class ChatDurableObject extends DurableObject<Env> {
 	}
 
 	private sendWebSocketMessageToUser(
-		message: WsChatRoomMessage,
+		message: WsChatOutgoingMessage,
 		sentToUserId: string,
 	) {
 		for (const [ws, session] of this.sessions.entries()) {
@@ -121,7 +119,7 @@ export class ChatDurableObject extends DurableObject<Env> {
 	}
 
 	private broadcastWebSocketMessage(
-		message: WsChatRoomMessage,
+		message: WsChatOutgoingMessage,
 		excludeUserId?: string,
 	) {
 		for (const [ws, session] of this.sessions.entries()) {

@@ -1,9 +1,14 @@
 import { ChatMembersDialog } from "@/components/chat/chat-members/chat-members-dialog";
 import { useChatWsContext } from "@/components/chat/chat-ws-provider";
 import { DynamicBreadcrumb } from "@/components/layout/dynamic-breadcrumb";
-import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
+import {
+	Tooltip,
+	TooltipContent,
+	TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { cn } from "@/lib/utils";
 
 export function ChatHeader() {
 	const { connectionStatus, roomId } = useChatWsContext();
@@ -16,17 +21,21 @@ export function ChatHeader() {
 			<div className="ml-auto flex items-center gap-2">
 				<ChatMembersDialog roomId={roomId} />
 				{connectionStatus && (
-					<Badge
-						variant={
-							connectionStatus === "connected"
-								? "success"
-								: connectionStatus === "connecting"
-									? "warning"
-									: "destructive"
-						}
-					>
-						{connectionStatus}
-					</Badge>
+					<Tooltip>
+						<TooltipTrigger>
+							<div
+								className={cn("h-2 w-2 rounded-full transition-colors", {
+									"bg-green-500": connectionStatus === "ready",
+									"bg-yellow-500": connectionStatus === "connected",
+									"bg-orange-500": connectionStatus === "connecting",
+									"bg-gray-600": connectionStatus === "disconnected",
+								})}
+							/>
+						</TooltipTrigger>
+						<TooltipContent side="bottom">
+							<p className="capitalize">{connectionStatus}</p>
+						</TooltipContent>
+					</Tooltip>
 				)}
 			</div>
 		</header>

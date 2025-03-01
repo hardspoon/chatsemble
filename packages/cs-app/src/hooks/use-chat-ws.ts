@@ -2,7 +2,10 @@ import type {
 	ChatRoomMember,
 	ChatRoomMessage,
 	ChatRoomMessagePartial,
-	WsChatRoomMessage,
+	WsChatIncomingMessage,
+	WsChatOutgoingMessage,
+	WsMessageChatInit,
+	WsMessageReceive,
 } from "@/cs-shared";
 import type { User } from "better-auth";
 import { nanoid } from "nanoid";
@@ -17,11 +20,12 @@ export interface UseChatWSProps {
 
 export function useChatWS({ roomId, user }: UseChatWSProps) {
 	const wsRef = useRef<WebSocket | null>(null);
+
 	const [messages, setMessages] = useState<ChatRoomMessage[]>([]);
 	const [members, setMembers] = useState<ChatRoomMember[]>([]);
 	const [input, setInput] = useState("");
 	const [connectionStatus, setConnectionStatus] = useState<
-		"disconnected" | "connecting" | "connected"
+		"disconnected" | "connecting" | "connected" | "ready"
 	>("disconnected");
 
 	const startWebSocket = useCallback(() => {
@@ -36,17 +40,20 @@ export function useChatWS({ roomId, user }: UseChatWSProps) {
 
 		ws.onopen = () => {
 			console.log("WebSocket connected");
+			const wsMessage: WsMessageChatInit = {
+				type: "chat-init",
+			};
+			sendMessage(wsMessage);
 			setConnectionStatus("connected");
 		};
 
 		ws.onmessage = (event) => {
 			try {
-				const wsMessage: WsChatRoomMessage = JSON.parse(event.data);
+				const wsMessage: WsChatOutgoingMessage = JSON.parse(event.data);
 
 				switch (wsMessage.type) {
 					case "message-broadcast": {
 						const newMessage = wsMessage.message;
-						console.log("new message", newMessage);
 						setMessages((prev) => [...prev, newMessage]);
 						break;
 					}
@@ -60,8 +67,12 @@ export function useChatWS({ roomId, user }: UseChatWSProps) {
 						setMembers(newMembers);
 						break;
 					}
-					default:
-						console.warn("Unknown message type:", wsMessage.type);
+					case "chat-ready": {
+						setConnectionStatus("ready");
+						setMessages(wsMessage.messages);
+						setMembers(wsMessage.members);
+						break;
+					}
 				}
 			} catch (error) {
 				console.error("Failed to parse message:", error);
@@ -75,14 +86,19 @@ export function useChatWS({ roomId, user }: UseChatWSProps) {
 
 		ws.onclose = () => {
 			setConnectionStatus("disconnected");
+			console.log("WebSocket closed");
 		};
 
-		return ws;
+		wsRef.current = ws;
 	}, [roomId]);
+
+	const sendMessage = useCallback((message: WsChatIncomingMessage) => {
+		wsRef.current?.send(JSON.stringify(message));
+	}, []);
 
 	// Initialize WebSocket connection
 	useEffect(() => {
-		wsRef.current = startWebSocket();
+		startWebSocket();
 		return () => wsRef.current?.close();
 	}, [startWebSocket]);
 
@@ -112,7 +128,7 @@ export function useChatWS({ roomId, user }: UseChatWSProps) {
 				createdAt: Date.now(),
 			};
 
-			const wsMessage: WsChatRoomMessage = {
+			const wsMessage: WsMessageReceive = {
 				type: "message-receive",
 				message: newMessagePartial,
 			};
@@ -130,26 +146,12 @@ export function useChatWS({ roomId, user }: UseChatWSProps) {
 				},
 			};
 
-			wsRef.current.send(JSON.stringify(wsMessage));
+			sendMessage(wsMessage);
 			setMessages((prev) => [...prev, newMessage]);
 			setInput("");
 		},
-		[input, user, roomId],
+		[input, user, roomId, sendMessage],
 	);
-
-	const connect = useCallback(() => {
-		if (wsRef.current?.readyState === WebSocket.OPEN) {
-			return;
-		}
-		wsRef.current?.close();
-		wsRef.current = startWebSocket();
-	}, [startWebSocket]);
-
-	const disconnect = useCallback(() => {
-		wsRef.current?.close();
-		wsRef.current = null;
-		setConnectionStatus("disconnected");
-	}, []);
 
 	return {
 		messages,
@@ -159,7 +161,5 @@ export function useChatWS({ roomId, user }: UseChatWSProps) {
 		handleInputChange,
 		handleSubmit,
 		connectionStatus,
-		connect,
-		disconnect,
 	};
 }

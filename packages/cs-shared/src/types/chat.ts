@@ -63,11 +63,3 @@ export const createChatRoomSchema = chatRoomSchema.omit({
 });
 
 export type ChatRoom = z.infer<typeof chatRoomSchema>;
-
-// WsChatRoomMessage
-
-export type WsChatRoomMessage =
-	| { type: "message-receive"; message: ChatRoomMessagePartial }
-	| { type: "message-broadcast"; message: ChatRoomMessage }
-	| { type: "messages-sync"; messages: ChatRoomMessage[] }
-	| { type: "member-sync"; members: ChatRoomMember[] };
