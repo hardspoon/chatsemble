@@ -1,6 +1,6 @@
 import Database from "better-sqlite3";
 import { drizzle } from "drizzle-orm/better-sqlite3";
-import { account, member, organization, user } from "./schema";
+import { account, organizationMember, organization, user } from "./schema";
 import { findSqliteFile } from "../lib/db";
 import * as schema from "./schema";
 
@@ -67,15 +67,17 @@ async function createOrganizationWithMembers(
 ) {
 	await db.insert(organization).values(orgData).onConflictDoNothing();
 
-	const members: (typeof member.$inferSelect)[] = users.map((user) => ({
-		id: `member_${user.id}`,
-		userId: user.id,
-		organizationId: orgData.id,
-		role: user.id === ownerUserId ? "owner" : "member",
-		createdAt: new Date(),
-	}));
+	const members: (typeof organizationMember.$inferSelect)[] = users.map(
+		(user) => ({
+			id: `member_${user.id}`,
+			userId: user.id,
+			organizationId: orgData.id,
+			role: user.id === ownerUserId ? "owner" : "member",
+			createdAt: new Date(),
+		}),
+	);
 
-	await db.insert(member).values(members).onConflictDoNothing();
+	await db.insert(organizationMember).values(members).onConflictDoNothing();
 }
 
 async function seed() {
