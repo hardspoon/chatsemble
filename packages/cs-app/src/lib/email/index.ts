@@ -1,9 +1,17 @@
 import "server-only";
 
 import {
-	EmailMagicLinkTemplate,
-	type EmailMagicLinkTemplateProps,
-} from "@/lib/email/templates/email-magic-link";
+	EmailVerificationTemplate,
+	type EmailVerificationTemplateProps,
+} from "@/lib/email/templates/email-verification";
+import {
+	PasswordResetTemplate,
+	type PasswordResetTemplateProps,
+} from "@/lib/email/templates/password-reset";
+import {
+	OrganizationInvitationTemplate,
+	type OrganizationInvitationTemplateProps,
+} from "@/lib/email/templates/organization-invitation";
 import { type ComponentType, createElement } from "react";
 import { Resend } from "resend";
 
@@ -11,10 +19,20 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 
 // Create a record of all available email templates
 const emailTemplates = {
-	"email-magic-link": {
-		id: "email-magic-link",
-		subject: "Magic link to sign in",
-		component: EmailMagicLinkTemplate,
+	"email-verification": {
+		id: "email-verification",
+		subject: "Verify your email address",
+		component: EmailVerificationTemplate,
+	},
+	"password-reset": {
+		id: "password-reset",
+		subject: "Reset your password",
+		component: PasswordResetTemplate,
+	},
+	"organization-invitation": {
+		id: "organization-invitation",
+		subject: "You've been invited to join an organization",
+		component: OrganizationInvitationTemplate,
 	},
 } as const;
 
@@ -23,7 +41,9 @@ type TemplateId = keyof typeof emailTemplates;
 
 // Create a type that maps template IDs to their respective prop types
 type TemplateProps = {
-	"email-magic-link": EmailMagicLinkTemplateProps;
+	"email-verification": EmailVerificationTemplateProps;
+	"password-reset": PasswordResetTemplateProps;
+	"organization-invitation": OrganizationInvitationTemplateProps;
 };
 
 export const sendMail = async <T extends TemplateId>(

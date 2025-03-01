@@ -1,6 +1,6 @@
 import AppLayout from "@/components/layout/app-layout";
 import { schema } from "@/cs-shared";
-import { getAuth } from "@/lib/auth/auth-server";
+import { getAuth } from "@/auth";
 import { getDB } from "@/server/db";
 import { eq } from "drizzle-orm";
 import { headers } from "next/headers";
@@ -23,10 +23,16 @@ export default async function RootLayout({
 	}
 
 	if (!session.session.activeOrganizationId) {
+		console.log("no active organization, setting it");
 		const db = getDB();
 		const orgSession = await db.query.member.findFirst({
 			where: eq(schema.member.userId, session.user.id),
 		});
+		console.log("orgSession", orgSession);
+		if (!orgSession) {
+			console.log("no orgSession, throwing error");
+			//throw new Error("No active organization found");
+		}
 		auth.api.setActiveOrganization({
 			headers: headersList,
 			body: {

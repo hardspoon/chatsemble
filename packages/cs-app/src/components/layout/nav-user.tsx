@@ -18,7 +18,7 @@ import {
 	useSidebar,
 } from "@/components/ui/sidebar";
 import { Skeleton } from "@/components/ui/skeleton";
-import { authClient } from "@/lib/auth/auth-client";
+import { authClient } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
 import { Separator } from "../ui/separator";
 

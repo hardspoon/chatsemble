@@ -10,27 +10,28 @@ import {
 	Text,
 } from "@react-email/components";
 
-export interface EmailMagicLinkTemplateProps {
-	signInUrl: string;
-	email: string;
+export interface PasswordResetTemplateProps {
+	resetLink: string;
+	username: string;
 }
 
-export function EmailMagicLinkTemplate({
-	signInUrl,
-}: EmailMagicLinkTemplateProps) {
+export function PasswordResetTemplate({
+	resetLink,
+	username,
+}: PasswordResetTemplateProps) {
 	return (
 		<Html>
 			<Head />
-			<Preview>Sign in to your account</Preview>
+			<Preview>Reset your password</Preview>
 			<Body style={main}>
 				<Container style={container}>
-					<Heading style={h1}>Sign in to your account</Heading>
+					<Heading style={h1}>Reset your password</Heading>
 					<Text style={text}>
-						Click the button below to sign in to your account.
+						Hi {username}, you requested to reset your password. Click the button below to create a new password.
 					</Text>
 					<Section style={buttonContainer}>
-						<Button style={button} href={signInUrl}>
-							Sign in
+						<Button style={button} href={resetLink}>
+							Reset Password
 						</Button>
 					</Section>
 					<Text style={text}>
@@ -81,4 +82,4 @@ const button = {
 	textAlign: "center" as const,
 	display: "block",
 	padding: "12px",
-};
+}; 
