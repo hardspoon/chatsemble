@@ -17,11 +17,11 @@ import {
 	SidebarMenuItem,
 	useSidebar,
 } from "@/components/ui/sidebar";
+import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { LogoIcon } from "../icons/logo-icon";
 import { ThemeToggle } from "../theme-toggle";
 import { AppInnerSidebarContent } from "./app-inner-sidebar";
-import { cn } from "@/lib/utils";
 
 // Updated sample data with activeMatch regex
 const navMain = [
