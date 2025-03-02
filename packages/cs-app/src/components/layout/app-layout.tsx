@@ -3,10 +3,7 @@
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import { AppRightSidebar } from "@/components/layout/app-right-sidebar";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
-import {
-	SidebarSimpleInset,
-	SidebarSimpleProvider,
-} from "../ui/sidebar-simple";
+import { SidebarRightProvider } from "../ui/sidebar-right";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
 	return (
@@ -19,10 +16,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 		>
 			<AppSidebar />
 			<SidebarInset>
-				<SidebarSimpleProvider>
-					<SidebarSimpleInset>{children}</SidebarSimpleInset>
+				<SidebarRightProvider defaultOpen={false}>
+					<SidebarInset>{children}</SidebarInset>
 					<AppRightSidebar />
-				</SidebarSimpleProvider>
+				</SidebarRightProvider>
 			</SidebarInset>
 		</SidebarProvider>
 	);
