@@ -4,17 +4,9 @@ import { AgentsSidebar } from "@/app/(protected)/agents/_components/agents-sideb
 import { SettingsSidebar } from "@/app/(protected)/settings/_components/settings-sidebar";
 import { ChatsSidebar } from "@/app/(protected)/chat/_components/chats-sidebar";
 import { usePathname } from "next/navigation";
-import { Sidebar } from "@/components/ui/sidebar";
 
-export function AppInnerSidebar() {
-	return (
-		<Sidebar collapsible="none" className="hidden flex-1 md:flex">
-			<AppInnerSidebarContent />
-		</Sidebar>
-	);
-}
-
-function AppInnerSidebarContent() {
+// Export this separately so it can be used in both desktop and mobile layouts
+export function AppInnerSidebarContent() {
 	const pathname = usePathname();
 
 	if (pathname.startsWith("/chat")) {

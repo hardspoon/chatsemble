@@ -20,7 +20,8 @@ import {
 import Link from "next/link";
 import { LogoIcon } from "../icons/logo-icon";
 import { ThemeToggle } from "../theme-toggle";
-import { AppInnerSidebar } from "./app-inner-sidebar";
+import { AppInnerSidebarContent } from "./app-inner-sidebar";
+import { cn } from "@/lib/utils";
 
 // Updated sample data with activeMatch regex
 const navMain = [
@@ -30,7 +31,6 @@ const navMain = [
 		icon: MessageSquare,
 		activeMatch: /^\/chat/, // Exact match for home
 	},
-
 	{
 		title: "Agents",
 		url: "/agents", // Redirect URL
@@ -48,8 +48,59 @@ const navMain = [
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 	const pathname = usePathname();
 	const router = useRouter();
-	const { setOpen } = useSidebar();
+	const { setOpen, isMobile } = useSidebar();
 
+	// For mobile, we'll use a different internal structure but still use the Sidebar component
+	if (isMobile) {
+		return (
+			<Sidebar {...props}>
+				{/* Mobile Header with Logo */}
+				<SidebarHeader className="border-b p-4">
+					<div className="flex items-center">
+						<LogoIcon className="size-6 mr-2" />
+						<span className="font-semibold text-sm">Chatsemble</span>
+					</div>
+				</SidebarHeader>
+
+				{/* Horizontal Navigation */}
+				<div className="border-b overflow-x-auto">
+					<div className="flex p-2 gap-1">
+						{navMain.map((item) => (
+							<Link
+								key={item.title}
+								href={item.url}
+								/* onClick={() => {
+									setOpenMobile(false);
+								}} */
+								className={cn(
+									"flex items-center gap-1.5 px-3 py-2 rounded-md text-sm transition-colors",
+									item.activeMatch.test(pathname)
+										? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
+										: "hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground/90",
+								)}
+							>
+								<item.icon className="size-4" />
+								<span>{item.title}</span>
+							</Link>
+						))}
+					</div>
+				</div>
+
+				{/* Inner Content Section */}
+				<SidebarContent className="overflow-auto">
+					<AppInnerSidebarContent />
+				</SidebarContent>
+
+				{/* Footer with user and theme toggle */}
+				<SidebarFooter className="border-t p-3 flex items-center justify-between">
+					<NavUser />
+					<ThemeToggle />
+				</SidebarFooter>
+			</Sidebar>
+		);
+	}
+
+	// Desktop version (unchanged)
 	return (
 		<Sidebar
 			collapsible="icon"
@@ -115,7 +166,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 			</Sidebar>
 
 			{/* Second sidebar - content */}
-			<AppInnerSidebar />
+			<Sidebar collapsible="none" className="hidden flex-1 md:flex">
+				<AppInnerSidebarContent />
+			</Sidebar>
 		</Sidebar>
 	);
 }

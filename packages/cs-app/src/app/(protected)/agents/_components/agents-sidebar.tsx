@@ -4,7 +4,7 @@ import {
 	SidebarGroup,
 	SidebarGroupContent,
 	SidebarHeader,
-	SidebarInput,
+	useSidebar,
 } from "@/components/ui/sidebar";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { Agent } from "@/cs-shared";
@@ -36,7 +36,6 @@ export function AgentsSidebar() {
 					<div className="text-base font-medium text-foreground">Agents</div>
 					<NewAgentDialog />
 				</div>
-				<SidebarInput placeholder="Search chats..." />
 			</SidebarHeader>
 			<SidebarContent>
 				<SidebarGroup className="px-0 py-0">
@@ -61,12 +60,14 @@ export function AgentsSidebar() {
 
 function AgentSidebarItem({ agent }: { agent: Agent }) {
 	const router = useRouter();
+	const { setOpenMobile } = useSidebar();
 
 	return (
 		<button
 			type="button"
 			onClick={() => {
 				router.push(`/agents?agentId=${agent.id}`);
+				setOpenMobile(false);
 			}}
 			className="flex w-full items-center justify-between border-b px-4 py-3 text-sm hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
 		>
