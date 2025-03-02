@@ -8,13 +8,13 @@ import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 
-const SIDEBAR_COOKIE_NAME = "sidebar_simple_state";
+const SIDEBAR_COOKIE_NAME = "sidebar_right_state";
 const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7;
 const SIDEBAR_WIDTH = "30rem";
 const SIDEBAR_WIDTH_MOBILE = "22rem";
 const SIDEBAR_KEYBOARD_SHORTCUT = "b";
 
-type SidebarSimpleContext = {
+type SidebarRightContext = {
 	state: "expanded" | "collapsed";
 	open: boolean;
 	setOpen: (open: boolean) => void;
@@ -24,12 +24,12 @@ type SidebarSimpleContext = {
 	toggleSidebar: () => void;
 };
 
-const SidebarSimpleContext = React.createContext<SidebarSimpleContext | null>(
+const SidebarRightContext = React.createContext<SidebarRightContext | null>(
 	null,
 );
 
-function useSidebarSimple() {
-	const context = React.useContext(SidebarSimpleContext);
+function useSidebarRight() {
+	const context = React.useContext(SidebarRightContext);
 	if (!context) {
 		throw new Error(
 			"useSidebarSimple must be used within a SidebarSimpleProvider.",
@@ -39,7 +39,7 @@ function useSidebarSimple() {
 	return context;
 }
 
-const SidebarSimpleProvider = React.forwardRef<
+const SidebarRightProvider = React.forwardRef<
 	HTMLDivElement,
 	React.ComponentProps<"div"> & {
 		defaultOpen?: boolean;
@@ -110,7 +110,7 @@ const SidebarSimpleProvider = React.forwardRef<
 		const state = open ? "expanded" : "collapsed";
 
 		// biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
-		const contextValue = React.useMemo<SidebarSimpleContext>(
+		const contextValue = React.useMemo<SidebarRightContext>(
 			() => ({
 				state,
 				open,
@@ -132,7 +132,7 @@ const SidebarSimpleProvider = React.forwardRef<
 		);
 
 		return (
-			<SidebarSimpleContext.Provider value={contextValue}>
+			<SidebarRightContext.Provider value={contextValue}>
 				<div
 					style={
 						{
@@ -149,19 +149,19 @@ const SidebarSimpleProvider = React.forwardRef<
 				>
 					{children}
 				</div>
-			</SidebarSimpleContext.Provider>
+			</SidebarRightContext.Provider>
 		);
 	},
 );
-SidebarSimpleProvider.displayName = "SidebarProvider";
+SidebarRightProvider.displayName = "SidebarRightProvider";
 
-const SidebarSimple = React.forwardRef<
+const SidebarRight = React.forwardRef<
 	HTMLDivElement,
 	React.ComponentProps<"div"> & {
 		side?: "left" | "right";
 	}
 >(({ side = "right", className, children, ...props }, ref) => {
-	const { isMobile, state, openMobile, setOpenMobile } = useSidebarSimple();
+	const { isMobile, state, openMobile, setOpenMobile } = useSidebarRight();
 
 	if (isMobile) {
 		return (
@@ -209,30 +209,13 @@ const SidebarSimple = React.forwardRef<
 		</div>
 	);
 });
-SidebarSimple.displayName = "SidebarSimple";
+SidebarRight.displayName = "SidebarRight";
 
-const SidebarSimpleInset = React.forwardRef<
-	HTMLDivElement,
-	React.ComponentProps<"div">
->(({ className, ...props }, ref) => {
-	return (
-		<div
-			ref={ref}
-			className={cn(
-				"relative flex min-h-svh flex-1 flex-col bg-background",
-				className,
-			)}
-			{...props}
-		/>
-	);
-});
-SidebarSimpleInset.displayName = "SidebarSimpleInset";
-
-const SidebarSimpleTrigger = React.forwardRef<
+const SidebarRightTrigger = React.forwardRef<
 	React.ElementRef<typeof Button>,
 	React.ComponentProps<typeof Button>
 >(({ className, onClick, ...props }, ref) => {
-	const { toggleSidebar } = useSidebarSimple();
+	const { toggleSidebar } = useSidebarRight();
 
 	return (
 		<Button
@@ -252,63 +235,11 @@ const SidebarSimpleTrigger = React.forwardRef<
 		</Button>
 	);
 });
-SidebarSimpleTrigger.displayName = "SidebarSimpleTrigger";
-
-const SidebarSimpleHeader = React.forwardRef<
-	HTMLDivElement,
-	React.ComponentProps<"div">
->(({ className, ...props }, ref) => {
-	return (
-		<div
-			ref={ref}
-			data-sidebar="header"
-			className={cn("flex flex-col gap-2 p-2", className)}
-			{...props}
-		/>
-	);
-});
-SidebarSimpleHeader.displayName = "SidebarSimpleHeader";
-
-const SidebarSimpleFooter = React.forwardRef<
-	HTMLDivElement,
-	React.ComponentProps<"div">
->(({ className, ...props }, ref) => {
-	return (
-		<div
-			ref={ref}
-			data-sidebar="footer"
-			className={cn("flex flex-col gap-2 p-2", className)}
-			{...props}
-		/>
-	);
-});
-SidebarSimpleFooter.displayName = "SidebarSimpleFooter";
-
-const SidebarSimpleContent = React.forwardRef<
-	HTMLDivElement,
-	React.ComponentProps<"div">
->(({ className, ...props }, ref) => {
-	return (
-		<div
-			ref={ref}
-			data-sidebar="content"
-			className={cn(
-				"flex min-h-0 flex-1 flex-col gap-2 overflow-auto",
-				className,
-			)}
-			{...props}
-		/>
-	);
-});
-SidebarSimpleContent.displayName = "SidebarSimpleContent";
+SidebarRightTrigger.displayName = "SidebarSimpleTrigger";
 
 export {
-	SidebarSimple,
-	SidebarSimpleContent,
-	SidebarSimpleFooter,
-	SidebarSimpleHeader,
-	SidebarSimpleInset,
-	SidebarSimpleProvider,
-	SidebarSimpleTrigger,
-	useSidebarSimple,
+	SidebarRight,
+	SidebarRightProvider,
+	SidebarRightTrigger,
+	useSidebarRight,
 };

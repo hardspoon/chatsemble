@@ -1,11 +1,11 @@
 "use client";
 
+import { SidebarRight } from "@/components/ui/sidebar-right";
 import {
-	SidebarSimple,
-	SidebarSimpleContent,
-	SidebarSimpleFooter,
-	SidebarSimpleHeader,
-} from "@/components/ui/sidebar-simple";
+	SidebarContent,
+	SidebarFooter,
+	SidebarHeader,
+} from "@/components/ui/sidebar";
 import { useState } from "react";
 import {
 	ChatInput,
@@ -130,7 +130,7 @@ const mockMessages: Message[] = [
 
 export function AppRightSidebar({
 	...props
-}: React.ComponentProps<typeof SidebarSimple>) {
+}: React.ComponentProps<typeof SidebarRight>) {
 	const [input, setInput] = useState("");
 	const [messages, setMessages] = useState<Message[]>(mockMessages);
 	const isLoading = false;
@@ -160,17 +160,17 @@ export function AppRightSidebar({
 	};
 
 	return (
-		<SidebarSimple {...props}>
-			<SidebarSimpleHeader className="flex h-16 items-center justify-between border-b px-4">
+		<SidebarRight {...props}>
+			<SidebarHeader className="flex h-16 items-center justify-between border-b px-4">
 				<div className="flex flex-col">
 					<div className="font-medium">Thread</div>
 					<div className="text-xs text-muted-foreground">
 						{messages.length} messages
 					</div>
 				</div>
-			</SidebarSimpleHeader>
+			</SidebarHeader>
 
-			<SidebarSimpleContent>
+			<SidebarContent>
 				<div className="flex-1 flex flex-col h-full overflow-y-auto">
 					<ChatMessageArea scrollButtonAlignment="center">
 						<div className="px-4 py-8 space-y-4">
@@ -199,9 +199,9 @@ export function AppRightSidebar({
 						</div>
 					</ChatMessageArea>
 				</div>
-			</SidebarSimpleContent>
+			</SidebarContent>
 
-			<SidebarSimpleFooter className="border-t p-4">
+			<SidebarFooter className="border-t p-4">
 				<ChatInput
 					value={input}
 					onChange={handleInputChange}
@@ -210,8 +210,8 @@ export function AppRightSidebar({
 					<ChatInputTextArea placeholder="Type a message..." />
 					<ChatInputSubmit />
 				</ChatInput>
-			</SidebarSimpleFooter>
-		</SidebarSimple>
+			</SidebarFooter>
+		</SidebarRight>
 	);
 }
 
