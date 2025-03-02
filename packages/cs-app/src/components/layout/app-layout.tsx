@@ -1,4 +1,7 @@
+"use client";
+
 import { AppSidebar } from "@/components/layout/app-sidebar";
+import { AppRightSidebar } from "@/components/layout/app-right-sidebar";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
@@ -11,10 +14,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 			}
 		>
 			<AppSidebar />
-			<SidebarInset className="flex flex-col h-screen overflow-y-auto">
-				{/* <AppHeader /> */}
+			<SidebarInset className="flex flex-col h-screen overflow-auto">
 				{children}
 			</SidebarInset>
+
+			<AppRightSidebar />
 		</SidebarProvider>
 	);
 }
