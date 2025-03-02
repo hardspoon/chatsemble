@@ -4,6 +4,7 @@ import {
 	SidebarGroupContent,
 	SidebarHeader,
 	SidebarInput,
+	useSidebar,
 } from "@/components/ui/sidebar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { client } from "@/lib/api-client";
@@ -59,12 +60,14 @@ export function ChatsSidebar() {
 
 function ChatRoomSidebarItem({ chat }: { chat: ChatRoom }) {
 	const router = useRouter();
+	const { setOpenMobile } = useSidebar();
 
 	return (
 		<button
 			type="button"
 			onClick={() => {
 				router.push(`/chat?roomId=${chat.id}`);
+				setOpenMobile(false);
 			}}
 			className="flex w-full flex-col gap-1 border-b px-4 py-3 text-sm hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
 		>
