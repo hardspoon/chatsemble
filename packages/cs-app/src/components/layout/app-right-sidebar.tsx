@@ -1,12 +1,5 @@
 "use client";
 
-import { SidebarRight } from "@/components/ui/sidebar-right";
-import {
-	SidebarContent,
-	SidebarFooter,
-	SidebarHeader,
-} from "@/components/ui/sidebar";
-import { useState } from "react";
 import {
 	ChatInput,
 	ChatInputSubmit,
@@ -20,7 +13,14 @@ import {
 	ChatMessageMetadata,
 } from "@/components/ui/chat-message";
 import { ChatMessageArea } from "@/components/ui/chat-message-area";
+import {
+	SidebarContent,
+	SidebarFooter,
+	SidebarHeader,
+} from "@/components/ui/sidebar";
+import { SidebarRight } from "@/components/ui/sidebar-right";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useState } from "react";
 
 interface Message {
 	id: string;

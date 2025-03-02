@@ -1,5 +1,5 @@
-import { getAuth } from "@/auth";
 import { Chat } from "@/app/(protected)/chat/_components/chat";
+import { getAuth } from "@/auth";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 

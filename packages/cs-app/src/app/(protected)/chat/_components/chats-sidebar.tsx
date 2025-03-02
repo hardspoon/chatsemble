@@ -7,12 +7,12 @@ import {
 	useSidebar,
 } from "@/components/ui/sidebar";
 import { Skeleton } from "@/components/ui/skeleton";
+import type { ChatRoom } from "@/cs-shared";
 import { client } from "@/lib/api-client";
 import { useQuery } from "@tanstack/react-query";
+import { AlertCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { NewGroupChatDialog } from "./new-chat-dialog";
-import type { ChatRoom } from "@/cs-shared";
-import { AlertCircle } from "lucide-react";
 
 export function ChatsSidebar() {
 	const {
