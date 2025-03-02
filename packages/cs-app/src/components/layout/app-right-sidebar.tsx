@@ -1,11 +1,11 @@
 "use client";
 
 import {
-	Sidebar,
-	SidebarContent,
-	SidebarFooter,
-	SidebarHeader,
-} from "@/components/ui/sidebar";
+	SidebarSimple,
+	SidebarSimpleContent,
+	SidebarSimpleFooter,
+	SidebarSimpleHeader,
+} from "@/components/ui/sidebar-simple";
 import { useState } from "react";
 import {
 	ChatInput,
@@ -130,7 +130,7 @@ const mockMessages: Message[] = [
 
 export function AppRightSidebar({
 	...props
-}: React.ComponentProps<typeof Sidebar>) {
+}: React.ComponentProps<typeof SidebarSimple>) {
 	const [input, setInput] = useState("");
 	const [messages, setMessages] = useState<Message[]>(mockMessages);
 	const isLoading = false;
@@ -160,27 +160,17 @@ export function AppRightSidebar({
 	};
 
 	return (
-		<Sidebar
-			side="right"
-			collapsible="none"
-			className="sticky hidden lg:flex top-0 h-svh border-l"
-			style={
-				{
-					"--sidebar-width": "30rem",
-				} as React.CSSProperties
-			}
-			{...props}
-		>
-			<SidebarHeader className="flex h-16 items-center justify-between border-b px-4">
+		<SidebarSimple {...props}>
+			<SidebarSimpleHeader className="flex h-16 items-center justify-between border-b px-4">
 				<div className="flex flex-col">
 					<div className="font-medium">Thread</div>
 					<div className="text-xs text-muted-foreground">
 						{messages.length} messages
 					</div>
 				</div>
-			</SidebarHeader>
+			</SidebarSimpleHeader>
 
-			<SidebarContent>
+			<SidebarSimpleContent>
 				<div className="flex-1 flex flex-col h-full overflow-y-auto">
 					<ChatMessageArea scrollButtonAlignment="center">
 						<div className="px-4 py-8 space-y-4">
@@ -209,9 +199,9 @@ export function AppRightSidebar({
 						</div>
 					</ChatMessageArea>
 				</div>
-			</SidebarContent>
+			</SidebarSimpleContent>
 
-			<SidebarFooter className="border-t p-4">
+			<SidebarSimpleFooter className="border-t p-4">
 				<ChatInput
 					value={input}
 					onChange={handleInputChange}
@@ -220,8 +210,8 @@ export function AppRightSidebar({
 					<ChatInputTextArea placeholder="Type a message..." />
 					<ChatInputSubmit />
 				</ChatInput>
-			</SidebarFooter>
-		</Sidebar>
+			</SidebarSimpleFooter>
+		</SidebarSimple>
 	);
 }
 
