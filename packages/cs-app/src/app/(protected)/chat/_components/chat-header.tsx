@@ -3,6 +3,7 @@ import { useChatWsContext } from "@/app/(protected)/chat/_components/chat-ws-pro
 import { DynamicBreadcrumb } from "@/components/layout/dynamic-breadcrumb";
 import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
+import { SidebarSimpleTrigger } from "@/components/ui/sidebar-simple";
 import {
 	Tooltip,
 	TooltipContent,
@@ -18,6 +19,7 @@ export function ChatHeader() {
 			<SidebarTrigger className="-ml-1" />
 			<Separator orientation="vertical" className="mr-2 h-4" />
 			<DynamicBreadcrumb />
+			<SidebarSimpleTrigger className="ml-2" />
 			<div className="ml-auto flex items-center gap-2">
 				<ChatMembersDialog roomId={roomId} />
 				{connectionStatus && (

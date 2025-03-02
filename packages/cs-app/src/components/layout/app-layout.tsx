@@ -3,6 +3,10 @@
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import { AppRightSidebar } from "@/components/layout/app-right-sidebar";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
+import {
+	SidebarSimpleInset,
+	SidebarSimpleProvider,
+} from "../ui/sidebar-simple";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
 	return (
@@ -14,11 +18,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 			}
 		>
 			<AppSidebar />
-			<SidebarInset className="flex flex-col h-screen overflow-auto">
-				{children}
+			<SidebarInset>
+				<SidebarSimpleProvider>
+					<SidebarSimpleInset>{children}</SidebarSimpleInset>
+					<AppRightSidebar />
+				</SidebarSimpleProvider>
 			</SidebarInset>
-
-			<AppRightSidebar />
 		</SidebarProvider>
 	);
 }
