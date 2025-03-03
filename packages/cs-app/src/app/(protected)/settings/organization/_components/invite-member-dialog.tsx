@@ -38,7 +38,7 @@ import { z } from "zod";
 
 const formSchema = z.object({
 	email: z.string().email(),
-	role: z.enum(["member", "admin"]),
+	role: z.enum(["member", "admin", "owner"]),
 });
 
 export function InviteMemberDialog({
@@ -60,7 +60,7 @@ export function InviteMemberDialog({
 		mutationFn: async (values: z.infer<typeof formSchema>) => {
 			const { data } = await authClient.organization.inviteMember({
 				email: values.email,
-				role: values.role as "member" | "admin",
+				role: values.role as "member" | "admin" | "owner",
 			});
 			if (!data) {
 				throw new Error("Failed to invite member");
@@ -70,6 +70,7 @@ export function InviteMemberDialog({
 		onSuccess: (data) => {
 			setOptimisticOrg({
 				...optimisticOrg,
+				// @ts-expect-error - role is not typed
 				invitations: [...(optimisticOrg?.invitations || []), data],
 			});
 		},

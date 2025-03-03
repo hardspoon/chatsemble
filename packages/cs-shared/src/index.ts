@@ -6,3 +6,4 @@ export * from "./types/chat";
 export * from "./types/chat-ws";
 export * from "./types/agent";
 export * from "./types/drizzle";
+export * from "./auth";

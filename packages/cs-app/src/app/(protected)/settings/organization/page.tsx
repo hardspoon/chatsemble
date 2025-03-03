@@ -14,8 +14,7 @@ const SettingsOrganizationPage = async () => {
 		auth.api.getFullOrganization({
 			headers: headersList,
 		}),
-	]).catch((e) => {
-		console.log(e);
+	]).catch(() => {
 		throw redirect("/sign-in");
 	});
 

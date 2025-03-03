@@ -12,6 +12,7 @@
 		"db:seed": "WRANGLER_STATE_PATH=../../.wrangler/state tsx src/db/seed.ts"
 	},
 	"dependencies": {
+		"better-auth": "^1.2.2",
 		"drizzle-orm": "^0.39.3",
 		"drizzle-seed": "^0.3.1",
 		"nanoid": "^5.0.9",
