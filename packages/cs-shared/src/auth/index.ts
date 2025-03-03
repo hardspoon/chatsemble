@@ -1,13 +1,13 @@
-import type { betterAuth } from "better-auth";
+import type { BetterAuthOptions } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { organization } from "better-auth/plugins";
 import type { DrizzleDB } from "../types/drizzle";
-import { organizationPermissions } from "./organization-permissions";
+import {
+	organizationPermissions,
+	type StatementKeys,
+} from "./organization-permissions";
 
-export { organizationPermissions };
-
-type BetterAuthConfig = Parameters<typeof betterAuth>[0];
-
+export { organizationPermissions, type StatementKeys };
 export interface AuthBaseConfig {
 	authHost: string;
 	secret: string;
@@ -19,7 +19,7 @@ export interface AuthBaseConfig {
 		templateId: string,
 		props: Record<string, string>,
 	) => Promise<void>;
-	databaseHooks?: BetterAuthConfig["databaseHooks"];
+	databaseHooks?: BetterAuthOptions["databaseHooks"];
 }
 
 export const getAuthBaseConfig = ({
@@ -105,7 +105,7 @@ export const getAuthBaseConfig = ({
 			}),
 		],
 		databaseHooks,
-	} satisfies BetterAuthConfig;
+	} satisfies BetterAuthOptions;
 
 	return baseConfig;
 };

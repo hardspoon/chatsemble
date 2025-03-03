@@ -1,9 +1,9 @@
 import { schema as d1Schema } from "@/cs-shared";
 import { eq } from "drizzle-orm";
 import { Hono } from "hono";
-import type { HonoVariables } from "../../types/hono";
+import type { HonoContextWithAuth } from "../../types/hono";
 
-const app = new Hono<HonoVariables>().get("/", async (c) => {
+const app = new Hono<HonoContextWithAuth>().get("/", async (c) => {
 	const db = c.get("db");
 	const session = c.get("session");
 	const { activeOrganizationId } = session;

@@ -3,9 +3,9 @@ import { Hono } from "hono";
 import { type Agent, createAgentSchema, schema as d1Schema } from "@/cs-shared";
 import { zValidator } from "@hono/zod-validator";
 import { eq } from "drizzle-orm";
-import type { HonoVariables } from "../../types/hono";
+import type { HonoContextWithAuth } from "../../types/hono";
 
-const app = new Hono<HonoVariables>()
+const app = new Hono<HonoContextWithAuth>()
 	.post("/create", zValidator("json", createAgentSchema), async (c) => {
 		const { AGENT_DURABLE_OBJECT } = c.env;
 		const db = c.get("db");

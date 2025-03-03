@@ -4,9 +4,9 @@ export { AgentDurableObject } from "./durable-objects/agent/agent-durable-object
 import { Hono } from "hono";
 import protectedRoutes from "./routes/protected";
 import websocketRoutes from "./routes/websocket";
-import type { HonoVariables } from "./types/hono";
+import type { HonoContext } from "./types/hono";
 
-const app = new Hono<HonoVariables>();
+const app = new Hono<HonoContext>();
 
 const routes = app
 	.route("/protected", protectedRoutes)
