@@ -1,13 +1,17 @@
 import { schema as d1Schema } from "@/cs-shared";
 import { and, eq } from "drizzle-orm";
 import { Hono } from "hono";
-import { honoAuthMiddleware } from "../lib/hono/middleware";
-import { honoDbMiddleware } from "../lib/hono/middleware";
-import type { HonoVariables } from "../types/hono";
+import {
+	honoAuthCheckMiddleware,
+	honoAuthMiddleware,
+	honoDbMiddleware,
+} from "../lib/hono/middleware";
+import type { HonoContextWithAuth } from "../types/hono";
 
-const app = new Hono<HonoVariables>()
+const app = new Hono<HonoContextWithAuth>()
 	.use(honoDbMiddleware)
 	.use(honoAuthMiddleware)
+	.use(honoAuthCheckMiddleware)
 	.get("/chat-room/:roomId", async (c) => {
 		const upgradeHeader = c.req.header("Upgrade");
 		if (!upgradeHeader || upgradeHeader !== "websocket") {

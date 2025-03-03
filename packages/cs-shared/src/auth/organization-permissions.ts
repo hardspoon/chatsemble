@@ -6,9 +6,8 @@ import {
 	ownerAc,
 } from "better-auth/plugins/organization/access";
 
-/**
- * make sure to use `as const` so typescript can infer the type correctly
- */
+export type StatementKeys = "chatRoom";
+
 const statement = {
 	...defaultStatements,
 	chatRoom: ["create", "update", "delete"],

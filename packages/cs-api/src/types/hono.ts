@@ -1,11 +1,24 @@
-import type { schema } from "@/cs-shared";
 import type { DrizzleDB } from "@/cs-shared";
+import type { getAuth } from "../lib/auth";
 
-export type HonoVariables = {
+type Auth = ReturnType<typeof getAuth>;
+
+type HonoVariables = {
+	user: Auth["$Infer"]["Session"]["user"] | null;
+	session: Auth["$Infer"]["Session"]["session"] | null;
+	db: DrizzleDB;
+	auth: Auth | null;
+};
+
+export type HonoContext = {
 	Bindings: Env;
-	Variables: {
-		user: typeof schema.user.$inferSelect;
-		session: typeof schema.session.$inferSelect;
-		db: DrizzleDB;
+	Variables: HonoVariables;
+};
+
+export type HonoContextWithAuth = HonoContext & {
+	Variables: HonoVariables & {
+		user: NonNullable<HonoVariables["user"]>;
+		session: NonNullable<HonoVariables["session"]>;
+		auth: NonNullable<HonoVariables["auth"]>;
 	};
 };

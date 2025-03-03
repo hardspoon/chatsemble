@@ -35,7 +35,7 @@ export const chatRoomMemberSchema = z.object({
 	type: chatRoomMembersTypesSchema,
 	name: z.string().min(1),
 	email: z.string().min(1),
-	image: z.string().nullable(),
+	image: z.string().optional().nullable(),
 });
 
 export const createChatRoomMemberSchema = chatRoomMemberSchema.omit({

@@ -9,9 +9,13 @@ import {
 } from "@/cs-shared";
 import { zValidator } from "@hono/zod-validator";
 import { and, eq } from "drizzle-orm";
-import type { HonoVariables } from "../../types/hono";
+import type { HonoContextWithAuth } from "../../types/hono";
+import { honoAuthPermissionMiddleware } from "../../lib/hono/middleware";
 
-const app = new Hono<HonoVariables>()
+const app = new Hono<HonoContextWithAuth>()
+	.use(async (c, next) => {
+		await honoAuthPermissionMiddleware(c, next, "chatRoom");
+	})
 	.post("/create", zValidator("json", createChatRoomSchema), async (c) => {
 		const { CHAT_DURABLE_OBJECT } = c.env;
 		const db = c.get("db");
