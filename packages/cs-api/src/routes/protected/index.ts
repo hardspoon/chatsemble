@@ -12,7 +12,7 @@ const app = new Hono<HonoVariables>()
 		"*",
 		cors({
 			origin: (_origin, c) => {
-				return c.env.ALLOWED_ORIGINS;
+				return c.env.BETTER_AUTH_URL;
 			},
 			allowMethods: ["GET", "POST", "OPTIONS", "PUT", "DELETE"],
 			allowHeaders: ["Content-Type", "Cookie"],

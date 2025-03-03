@@ -18,11 +18,27 @@ export const getAuth = () => {
 	}
 
 	const crossDomain = process.env.BETTER_AUTH_DOMAIN;
+	const secret = process.env.BETTER_AUTH_SECRET;
 
 	return betterAuth({
+		appName: "Chatsemble",
+		baseURL: authHost,
+		secret,
+		trustedOrigins,
 		database: drizzleAdapter(getDB(), {
 			provider: "sqlite",
 		}),
+		advanced: {
+			crossSubDomainCookies: {
+				enabled: true,
+				domain: crossDomain,
+			},
+			defaultCookieAttributes: {
+				httpOnly: true,
+				sameSite: "none",
+				secure: true,
+			},
+		},
 		emailVerification: {
 			sendOnSignUp: true,
 			autoSignInAfterVerification: true,
@@ -43,18 +59,6 @@ export const getAuth = () => {
 				});
 			},
 		},
-		advanced: {
-			crossSubDomainCookies: {
-				enabled: true,
-				domain: crossDomain,
-			},
-			defaultCookieAttributes: {
-				httpOnly: true,
-				sameSite: "none",
-				secure: true,
-			},
-		},
-		trustedOrigins,
 		plugins: [
 			organization({
 				async sendInvitationEmail(data) {
@@ -77,7 +81,6 @@ export const getAuth = () => {
 				},
 			}),
 		],
-
 		databaseHooks: {
 			session: {
 				create: {
