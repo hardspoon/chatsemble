@@ -1,8 +1,7 @@
 import { schema } from "@/cs-shared";
-import { and, eq, gt } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
 import type { Context, Next } from "hono";
-import { getCookie } from "hono/cookie";
+import { getAuth } from "../auth";
 
 export const honoDbMiddleware = async (c: Context, next: Next) => {
 	const db = drizzle(c.env.DB, { schema });
@@ -11,35 +10,22 @@ export const honoDbMiddleware = async (c: Context, next: Next) => {
 };
 
 export const honoAuthMiddleware = async (c: Context, next: Next) => {
-	const sessionToken =
-		getCookie(c, "better-auth.session_token") ??
-		getCookie(c, "__Secure-better-auth.session_token");
+	const auth = getAuth({
+		authHost: c.env.BETTER_AUTH_URL,
+		secret: c.env.BETTER_AUTH_SECRET,
+		crossDomain: c.env.BETTER_AUTH_DOMAIN,
+		trustedOrigins: [c.env.DO_CHAT_API_URL, c.env.BETTER_AUTH_URL],
+		db: c.get("db"),
+	});
+	const session = await auth.api.getSession({
+		headers: c.req.raw.headers,
+	});
 
-	if (!sessionToken) {
+	if (!session) {
 		return c.json({ error: "Unauthorized" }, 401);
 	}
 
-	const searchToken = sessionToken.split(".")[0];
-
-	const db = c.get("db");
-
-	const validSession = await db.query.session.findFirst({
-		where: and(
-			eq(schema.session.token, searchToken),
-			gt(schema.session.expiresAt, new Date()),
-		),
-		with: {
-			user: true,
-		},
-	});
-
-	if (!validSession) {
-		return c.json({ error: "Invalid session" }, 401);
-	}
-
-	const { user, ...session } = validSession;
-
-	c.set("user", user);
-	c.set("session", session);
+	c.set("user", session.user);
+	c.set("session", session.session);
 	await next();
 };
