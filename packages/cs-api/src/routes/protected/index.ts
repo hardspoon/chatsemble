@@ -15,8 +15,8 @@ const app = new Hono<HonoVariables>()
 				return c.env.BETTER_AUTH_URL;
 			},
 			allowMethods: ["GET", "POST", "OPTIONS", "PUT", "DELETE"],
-			allowHeaders: ["Content-Type", "Cookie"],
-			exposeHeaders: ["Set-Cookie"],
+			allowHeaders: ["Content-Type", "Authorization"],
+			exposeHeaders: ["Content-Length"],
 			credentials: true,
 		}),
 	)
