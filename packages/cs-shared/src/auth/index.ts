@@ -2,6 +2,9 @@ import type { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { organization } from "better-auth/plugins";
 import type { DrizzleDB } from "../types/drizzle";
+import { organizationPermissions } from "./organization-permissions";
+
+export { organizationPermissions };
 
 type BetterAuthConfig = Parameters<typeof betterAuth>[0];
 
@@ -73,6 +76,12 @@ export const getAuthBaseConfig = ({
 		},
 		plugins: [
 			organization({
+				ac: organizationPermissions.accessControl,
+				roles: {
+					member: organizationPermissions.member,
+					admin: organizationPermissions.admin,
+					owner: organizationPermissions.owner,
+				},
 				schema: {
 					member: {
 						modelName: "organizationMember",
