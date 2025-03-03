@@ -14,13 +14,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 				} as React.CSSProperties
 			}
 		>
-			<AppSidebar />
-			<SidebarInset>
-				<SidebarRightProvider defaultOpen={false}>
-					<SidebarInset>{children}</SidebarInset>
-					<AppRightSidebar />
-				</SidebarRightProvider>
-			</SidebarInset>
+			<SidebarRightProvider defaultOpen={false}>
+				<AppSidebar />
+				<SidebarInset>{children}</SidebarInset>
+				<AppRightSidebar />
+			</SidebarRightProvider>
 		</SidebarProvider>
 	);
 }

@@ -20,119 +20,14 @@ import {
 } from "@/components/ui/sidebar";
 import { SidebarRight } from "@/components/ui/sidebar-right";
 import { Skeleton } from "@/components/ui/skeleton";
+import type { ChatRoomMessage } from "@/cs-shared";
 import { useState } from "react";
-
-interface Message {
-	id: string;
-	content: string;
-	user: {
-		name: string;
-		image?: string;
-	};
-	createdAt: number;
-	isCurrentUser: boolean;
-}
-
-// This is a placeholder component that will be replaced with actual data
-const mockMessages: Message[] = [
-	{
-		id: "1",
-		content: "Hey there! How's the project coming along?",
-		user: {
-			name: "Alex Johnson",
-			image: "",
-		},
-		createdAt: Date.now() - 1000 * 60 * 5, // 5 minutes ago
-		isCurrentUser: false,
-	},
-	{
-		id: "2",
-		content: "Making good progress. Just finishing up the UI components.",
-		user: {
-			name: "You",
-			image: "",
-		},
-		createdAt: Date.now() - 1000 * 60 * 3, // 3 minutes ago
-		isCurrentUser: true,
-	},
-	{
-		id: "3",
-		content: "Great! Can you share a preview when you're done?",
-		user: {
-			name: "Alex Johnson",
-			image: "",
-		},
-		createdAt: Date.now() - 1000 * 60 * 1, // 1 minute ago
-		isCurrentUser: false,
-	},
-	{
-		id: "4",
-		content: "Sure thing. I'll have something to show by end of day.",
-		user: {
-			name: "You",
-			image: "",
-		},
-		createdAt: Date.now() - 1000 * 30, // 30 seconds ago
-		isCurrentUser: true,
-	},
-	{
-		id: "5",
-		content: "I'm running into some issues with the backend. Any thoughts?",
-		user: {
-			name: "Alex Johnson",
-			image: "",
-		},
-		createdAt: Date.now() - 1000 * 20, // 20 seconds ago
-		isCurrentUser: false,
-	},
-	{
-		id: "6",
-		content: "I'm running into some issues with the backend. Any thoughts?",
-		user: {
-			name: "Alex Johnson",
-			image: "",
-		},
-		createdAt: Date.now() - 1000 * 10, // 10 seconds ago
-		isCurrentUser: false,
-	},
-	{
-		id: "7",
-		content: "I'm running into some issues with the backend. Any thoughts?",
-		user: {
-			name: "Alex Johnson",
-			image: "",
-		},
-		createdAt: Date.now() - 1000 * 5, // 5 seconds ago
-		isCurrentUser: false,
-	},
-	{
-		id: "8",
-		content: "I'm running into some issues with the backend. Any thoughts?",
-		user: {
-			name: "Alex Johnson",
-			image: "",
-		},
-		createdAt: Date.now() - 1000 * 2, // 2 seconds ago
-		isCurrentUser: false,
-	},
-	{
-		id: "9",
-		content:
-			"I'm running into some issues with the backend. Any thoughts? Not now, I'm busy. Do you have any other questions? Can you send me the code? Do you need help with anything else?",
-		user: {
-			name: "Alex Johnson",
-			image: "",
-		},
-		createdAt: Date.now() - 1000 * 1, // 1 second ago
-		isCurrentUser: false,
-	},
-];
 
 export function AppRightSidebar({
 	...props
 }: React.ComponentProps<typeof SidebarRight>) {
 	const [input, setInput] = useState("");
-	const [messages, setMessages] = useState<Message[]>(mockMessages);
+	const [messages, setMessages] = useState<ChatRoomMessage[]>([]);
 	const isLoading = false;
 
 	const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -144,15 +39,19 @@ export function AppRightSidebar({
 			return;
 		}
 
-		const newMessage: Message = {
+		const newMessage: ChatRoomMessage = {
 			id: Date.now().toString(),
 			content: input,
 			user: {
 				name: "You",
 				image: "",
+				id: "user",
+				role: "member",
+				type: "user",
+				roomId: "room",
+				email: "you@example.com",
 			},
 			createdAt: Date.now(),
-			isCurrentUser: true,
 		};
 
 		setMessages([...messages, newMessage]);
