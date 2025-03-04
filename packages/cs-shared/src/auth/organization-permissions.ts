@@ -6,12 +6,15 @@ import {
 	ownerAc,
 } from "better-auth/plugins/organization/access";
 
-export type StatementKeys = "chatRoom" | "chatRoomMember";
+export const chatRoomPermissionTypes = ["create", "update", "delete"] as const;
+export const chatRoomMemberPermissionTypes = ["create", "delete"] as const;
+
+export type OrgnaizationStatementKeys = "chatRoom" | "chatRoomMember";
 
 const statement = {
 	...defaultStatements,
-	chatRoom: ["create", "update", "delete"],
-	chatRoomMember: ["create", "delete"],
+	chatRoom: chatRoomPermissionTypes,
+	chatRoomMember: chatRoomMemberPermissionTypes,
 } as const;
 
 const accessControl = createAccessControl(statement);

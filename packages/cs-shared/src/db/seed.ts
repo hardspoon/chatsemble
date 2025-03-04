@@ -1,7 +1,7 @@
 import Database from "better-sqlite3";
 import { drizzle } from "drizzle-orm/better-sqlite3";
 import { account, organizationMember, organization, user } from "./schema";
-import { findSqliteFile } from "../lib/db";
+import { findSqliteFile } from "../lib/db/db-helpers";
 import * as schema from "./schema";
 
 // biome-ignore lint/style/noNonNullAssertion: <explanation>
