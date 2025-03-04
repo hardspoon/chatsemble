@@ -45,7 +45,7 @@ const app = new Hono<HonoContextWithAuth>()
 		const newChatRoomMember: ChatRoomMember = {
 			id: user.id,
 			roomId: newChatRoom.id,
-			role: "admin",
+			role: "owner",
 			type: "user",
 			name: user.name,
 			email: user.email,

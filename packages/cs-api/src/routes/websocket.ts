@@ -23,15 +23,6 @@ const app = new Hono<HonoContextWithAuth>()
 		const { roomId } = c.req.param();
 		const db = c.get("db");
 
-		// Verify organization membership through D1
-		/* const roomMember = await db.query.chatRoomMember.findFirst({
-			where: (members, { eq, and }) =>
-				and(eq(members.userId, user.id), eq(members.roomId, roomId)),
-			with: {
-				room: true,
-			},
-		}); */
-
 		const roomMember = await db
 			.select({
 				roomId: d1Schema.chatRoomMember.roomId,

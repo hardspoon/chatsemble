@@ -8,6 +8,10 @@ import {
 } from "./organization-permissions";
 
 export { organizationPermissions, type StatementKeys };
+export {
+	chatRoomPermissions,
+	type ChatRoomStatementKeys,
+} from "./chat-room-permissions";
 export interface AuthBaseConfig {
 	authHost: string;
 	secret: string;
