@@ -16,7 +16,7 @@ export interface ChatRoomMessage extends ChatRoomMessagePartial {
 
 // ChatRoomMember
 
-const CHAT_ROOM_MEMBER_ROLES = ["member", "admin"] as const;
+const CHAT_ROOM_MEMBER_ROLES = ["member", "owner", "admin"] as const;
 
 const chatRoomMembersRolesSchema = z.enum(CHAT_ROOM_MEMBER_ROLES);
 
