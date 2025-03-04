@@ -36,7 +36,11 @@ function SelectUser({ form }: SelectMemberProps) {
 	const { data: users, isLoading } = useQuery({
 		queryKey: ["organization-users"],
 		queryFn: async () => {
-			const response = await client.protected["organization-user"].$get();
+			const response = await client.protected["organization-user"].$get({
+				query: {
+					includeUser: "false",
+				},
+			});
 			return response.json();
 		},
 	});
