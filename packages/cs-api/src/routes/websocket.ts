@@ -1,4 +1,4 @@
-import { getChatRoomMember } from "@/cs-shared";
+import { dbServices } from "@/cs-shared";
 import { Hono } from "hono";
 import {
 	honoAuthCheckMiddleware,
@@ -22,7 +22,7 @@ const app = new Hono<HonoContextWithAuth>()
 		const { chatRoomId } = c.req.param();
 		const db = c.get("db");
 
-		const roomMember = await getChatRoomMember(db, {
+		const roomMember = await dbServices.roomMember.getChatRoomMember(db, {
 			chatRoomId,
 			memberId: user.id,
 		});

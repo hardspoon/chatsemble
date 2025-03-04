@@ -6,7 +6,7 @@ import {
 	chatRoomMemberHasChatRoomPermission,
 	createChatRoomSchema,
 	globalSchema,
-	getChatRoom,
+	dbServices,
 } from "@/cs-shared";
 import { zValidator } from "@hono/zod-validator";
 import { eq } from "drizzle-orm";
@@ -104,7 +104,7 @@ const chatRoom = new Hono<HonoContextWithAuth>()
 			throw new Error("Chat room ID is required");
 		}
 
-		const chatRoom = await getChatRoom(db, {
+		const chatRoom = await dbServices.room.getChatRoom(db, {
 			chatRoomId,
 			organizationId: c.get("session").activeOrganizationId,
 		});

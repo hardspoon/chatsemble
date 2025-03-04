@@ -1,7 +1,7 @@
 import { createAccessControl } from "better-auth/plugins/access";
 import type { DrizzleDB } from "../types/drizzle";
 import type { ChatRoomType } from "../types/chat";
-import { getChatRoomMember } from "../lib/db/services/chat-room-member";
+import { dbServices } from "../lib/db/services";
 import {
 	chatRoomPermissionTypes,
 	chatRoomMemberPermissionTypes,
@@ -67,7 +67,7 @@ export async function chatRoomRoleHasPermission({
 		[x: string]: string[];
 	};
 }) {
-	const roomMember = await getChatRoomMember(db, {
+	const roomMember = await dbServices.roomMember.getChatRoomMember(db, {
 		chatRoomId,
 		memberId: userId,
 	});
