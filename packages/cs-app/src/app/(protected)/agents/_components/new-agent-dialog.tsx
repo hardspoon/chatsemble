@@ -47,7 +47,7 @@ export function NewAgentDialog() {
 
 	const createChatMutation = useMutation({
 		mutationFn: async (values: FormValues) => {
-			const response = await client.protected.agent.$post({
+			const response = await client.protected.agents.$post({
 				json: values,
 			});
 			const data = await response.json();

@@ -55,9 +55,7 @@ export function AddMemberForm({
 
 	const addMemberMutation = useMutation({
 		mutationFn: async (values: FormValues) => {
-			console.log("//////////////////////////////////// addMemberMutation");
-			console.log("roomId", values.roomId);
-			const response = await client.protected.chat["chat-room"][
+			const response = await client.protected.chat["chat-rooms"][
 				":chatRoomId"
 			].members.$post({
 				param: { chatRoomId: values.roomId },

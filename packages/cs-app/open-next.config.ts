@@ -1,5 +1,8 @@
 import cache from "@opennextjs/cloudflare/kvCache";
 
+// TODO: Add proper cache
+// NOTE: Look at opennext docs for more info
+
 const config = {
   default: {
     override: {

@@ -36,7 +36,7 @@ function SelectUser({ form }: SelectMemberProps) {
 	const { data: users, isLoading } = useQuery({
 		queryKey: ["organization-users"],
 		queryFn: async () => {
-			const response = await client.protected["organization-user"].$get({
+			const response = await client.protected.organization.users.$get({
 				query: {
 					includeUser: "false",
 				},
@@ -98,7 +98,7 @@ function SelectAgent({ form }: SelectMemberProps) {
 	const { data: agents, isLoading } = useQuery({
 		queryKey: ["agents"],
 		queryFn: async () => {
-			const response = await client.protected.agent.$get();
+			const response = await client.protected.agents.$get();
 			return response.json();
 		},
 	});

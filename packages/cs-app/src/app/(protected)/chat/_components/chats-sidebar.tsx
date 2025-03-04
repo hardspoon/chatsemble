@@ -22,7 +22,7 @@ export function ChatsSidebar() {
 	} = useQuery({
 		queryKey: ["chatRooms"],
 		queryFn: async () => {
-			const response = await client.protected.chat["chat-room"].$get();
+			const response = await client.protected.chat["chat-rooms"].$get();
 			const data = await response.json();
 			return data;
 		},

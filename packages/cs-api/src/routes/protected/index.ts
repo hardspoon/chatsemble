@@ -8,7 +8,7 @@ import {
 import type { HonoContext } from "../../types/hono";
 import agentRoutes from "./agent";
 import chatRoutes from "./chat";
-import organizationUserRoutes from "./organization-user";
+import organizationRoutes from "./organization-user";
 
 const app = new Hono<HonoContext>()
 	.use(
@@ -27,9 +27,7 @@ const app = new Hono<HonoContext>()
 	.use(honoAuthMiddleware)
 	.use(honoAuthCheckMiddleware)
 	.route("/chat", chatRoutes)
-	.route("/agent", agentRoutes)
-	.route("/organization-user", organizationUserRoutes);
-
-// TODO: Use nouns for resources (e.g., /users, /chatrooms, /messages).
+	.route("/agents", agentRoutes)
+	.route("/organization", organizationRoutes);
 
 export default app;

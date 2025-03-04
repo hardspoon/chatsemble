@@ -35,8 +35,9 @@ export function useChatWS({ roomId, user }: UseChatWSProps) {
 			"";
 		const wsProtocol = window.location.protocol === "https:" ? "wss" : "ws";
 		const ws = new WebSocket(
-			`${wsProtocol}://${apiHost}/websocket/chat-room/${roomId}`,
+			`${wsProtocol}://${apiHost}/websocket/chat-rooms/${roomId}`,
 		);
+		// TODO: Allow receiving url as a prop
 
 		ws.onopen = () => {
 			console.log("WebSocket connected");

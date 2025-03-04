@@ -32,7 +32,7 @@ const chatRoom = new Hono<HonoContextWithAuth>()
 
 		if (!hasChatRoomPermission) {
 			// TODO Improve error handling, add middleware to handle errors and check if throwing an error or returning a 401 is the best approach
-			// NOTE: Also, check thatt we are correcttly showing some error message on the client side
+			// NOTE: Also, check that we are correcttly showing some error message on the client side
 			throw new Error("Unauthorized");
 		}
 
