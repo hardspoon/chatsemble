@@ -12,5 +12,7 @@ const routes = app
 	.route("/protected", protectedRoutes)
 	.route("/websocket", websocketRoutes);
 
+// TODO: Add rate limiting to auth in app and api routes
+
 export type AppType = typeof routes;
 export default app;

@@ -30,4 +30,6 @@ const app = new Hono<HonoContext>()
 	.route("/agent", agentRoutes)
 	.route("/organization-user", organizationUserRoutes);
 
+// TODO: Use nouns for resources (e.g., /users, /chatrooms, /messages).
+
 export default app;
