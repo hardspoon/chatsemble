@@ -2,38 +2,34 @@ import { createAccessControl } from "better-auth/plugins/access";
 import { and, eq } from "drizzle-orm";
 import type { DrizzleDB } from "../types/drizzle";
 import * as d1Schema from "../db/schema";
+import type { ChatRoomType } from "../types/chat";
 
 // Permissions for org role member for chat room
 
-export type ChatRoomStatementKeys =
-	| "chatRoomPublicGroupMember"
-	| "chatRoomPrivateGroupMember"
-	| "chatRoomOneToOneMember";
-
 const statement = {
-	chatRoomPublicGroupMember: ["create", "update", "delete"],
-	chatRoomPrivateGroupMember: ["create", "update", "delete"],
-	chatRoomOneToOneMember: ["create", "update", "delete"],
+	publicGroupChatRoomMember: ["create", "delete"],
+	privateGroupChatRoomMember: ["create", "delete"],
+	oneToOneChatRoomMember: ["create", "delete"],
 } as const;
 
 const accessControl = createAccessControl(statement);
 
 const member = accessControl.newRole({
-	chatRoomPublicGroupMember: ["create"],
-	chatRoomPrivateGroupMember: [],
-	chatRoomOneToOneMember: ["create"],
+	publicGroupChatRoomMember: ["create"],
+	privateGroupChatRoomMember: [],
+	oneToOneChatRoomMember: ["create"],
 });
 
 const admin = accessControl.newRole({
-	chatRoomPublicGroupMember: ["create", "update", "delete"],
-	chatRoomPrivateGroupMember: ["create", "update", "delete"],
-	chatRoomOneToOneMember: ["create", "update", "delete"],
+	publicGroupChatRoomMember: ["create", "delete"],
+	privateGroupChatRoomMember: ["create", "delete"],
+	oneToOneChatRoomMember: ["create", "delete"],
 });
 
 const owner = accessControl.newRole({
-	chatRoomPublicGroupMember: ["create", "update", "delete"],
-	chatRoomPrivateGroupMember: ["create", "update", "delete"],
-	chatRoomOneToOneMember: ["create", "update", "delete"],
+	publicGroupChatRoomMember: ["create", "delete"],
+	privateGroupChatRoomMember: ["create", "delete"],
+	oneToOneChatRoomMember: ["create", "delete"],
 });
 
 export const chatRoomPermissions = {
@@ -43,7 +39,7 @@ export const chatRoomPermissions = {
 	accessControl,
 };
 
-export async function chatRoomHasPermission({
+export async function chatRoomRoleHasPermission({
 	db,
 	userId,
 	chatRoomId,
@@ -79,3 +75,27 @@ export async function chatRoomHasPermission({
 
 	return chatRoomPermissions[role].authorize(permission);
 }
+
+export const chatRoomMemberHasMemberPermission = async ({
+	userId,
+	chatRoomId,
+	chatRoomType,
+	db,
+}: {
+	userId: string;
+	chatRoomId: string;
+	chatRoomType: ChatRoomType;
+	db: DrizzleDB;
+	permission: "create" | "delete";
+}) => {
+	const hasChatRoomPermission = await chatRoomRoleHasPermission({
+		db,
+		userId,
+		chatRoomId,
+		permission: {
+			[`${chatRoomType}ChatRoomMember`]: ["create", "delete"],
+		},
+	});
+
+	return !!hasChatRoomPermission;
+};

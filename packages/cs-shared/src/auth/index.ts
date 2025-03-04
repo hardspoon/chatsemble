@@ -2,16 +2,10 @@ import type { BetterAuthOptions } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { organization } from "better-auth/plugins";
 import type { DrizzleDB } from "../types/drizzle";
-import {
-	organizationPermissions,
-	type StatementKeys,
-} from "./organization-permissions";
+import { organizationPermissions } from "./organization-permissions";
 
-export { organizationPermissions, type StatementKeys };
-export {
-	chatRoomPermissions,
-	type ChatRoomStatementKeys,
-} from "./chat-room-permissions";
+export * from "./chat-room-permissions";
+export * from "./organization-permissions";
 export interface AuthBaseConfig {
 	authHost: string;
 	secret: string;

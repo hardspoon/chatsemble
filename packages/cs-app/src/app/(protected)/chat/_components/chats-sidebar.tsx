@@ -22,7 +22,7 @@ export function ChatsSidebar() {
 	} = useQuery({
 		queryKey: ["chatRooms"],
 		queryFn: async () => {
-			const response = await client.protected["chat-room"].$get();
+			const response = await client.protected.chat["chat-room"].$get();
 			const data = await response.json();
 			return data;
 		},
@@ -74,7 +74,7 @@ function ChatRoomSidebarItem({ chat }: { chat: ChatRoom }) {
 			<div className="w-full flex items-center justify-between">
 				<span className="font-medium">{chat.name}</span>
 				<span className="text-xs text-muted-foreground">
-					{chat.type === "private_group" ? "Private" : "Public"}
+					{chat.type === "privateGroup" ? "Private" : "Public"}
 				</span>
 			</div>
 		</button>
