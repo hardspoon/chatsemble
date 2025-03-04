@@ -13,7 +13,7 @@ import { eq } from "drizzle-orm";
 import type { HonoContextWithAuth } from "../../../types/hono";
 
 const chatRoom = new Hono<HonoContextWithAuth>()
-	.post("/create", zValidator("json", createChatRoomSchema), async (c) => {
+	.post("/", zValidator("json", createChatRoomSchema), async (c) => {
 		const { CHAT_DURABLE_OBJECT } = c.env;
 		const db = c.get("db");
 		const user = c.get("user");
@@ -31,6 +31,8 @@ const chatRoom = new Hono<HonoContextWithAuth>()
 		});
 
 		if (!hasChatRoomPermission) {
+			// TODO Improve error handling, add middleware to handle errors and check if throwing an error or returning a 401 is the best approach
+			// NOTE: Also, check thatt we are correcttly showing some error message on the client side
 			throw new Error("Unauthorized");
 		}
 
@@ -60,6 +62,8 @@ const chatRoom = new Hono<HonoContextWithAuth>()
 
 		await chatRoomDo.upsertChatRoomConfig(newChatRoom);
 		await chatRoomDo.addMember(newChatRoomMember);
+
+		// TODO: Apply transactions or someway to rollback if one of the operations fails for this and other operations
 
 		// Create room record in D1
 		await db.insert(d1Schema.chatRoom).values(newChatRoom);

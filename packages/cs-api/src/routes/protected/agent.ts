@@ -6,7 +6,7 @@ import { eq } from "drizzle-orm";
 import type { HonoContextWithAuth } from "../../types/hono";
 
 const app = new Hono<HonoContextWithAuth>()
-	.post("/create", zValidator("json", createAgentSchema), async (c) => {
+	.post("/", zValidator("json", createAgentSchema), async (c) => {
 		const { AGENT_DURABLE_OBJECT } = c.env;
 		const db = c.get("db");
 		const session = c.get("session");

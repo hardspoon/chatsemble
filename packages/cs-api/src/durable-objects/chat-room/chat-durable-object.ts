@@ -74,6 +74,11 @@ export class ChatDurableObject extends DurableObject<Env> {
 		}
 
 		try {
+			// TODO: Generic opportunity in WebSocket message handlers could benefit from type guards like:
+			/* function isWsIncomingMessage(msg: unknown): msg is WsChatIncomingMessage {
+				// validation logic
+			  } */
+
 			const parsedMsg: WsChatIncomingMessage = JSON.parse(message);
 			switch (parsedMsg.type) {
 				case "message-receive": {
@@ -272,13 +277,9 @@ export class ChatDurableObject extends DurableObject<Env> {
 			.get();
 	}
 
-	async getMembers(
-		filter?:
-			| {
-					type?: ChatRoomMemberType;
-			  }
-			| undefined,
-	): Promise<ChatRoomMember[]> {
+	async getMembers(filter?: {
+		type?: ChatRoomMemberType;
+	}): Promise<ChatRoomMember[]> {
 		const query = this.db.select().from(chatRoomMember);
 
 		if (filter?.type) {

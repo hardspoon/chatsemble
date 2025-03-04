@@ -16,6 +16,7 @@ export const agentChatRoom = sqliteTable("agent_chat_room", {
 	id: text("id").primaryKey(),
 	name: text("name").notNull(),
 	notifications: integer("notifications").notNull().default(0),
+	// TODO: Add index to lastNotificationAt?
 	lastNotificationAt: integer("last_notification_at", {
 		mode: "number",
 	})

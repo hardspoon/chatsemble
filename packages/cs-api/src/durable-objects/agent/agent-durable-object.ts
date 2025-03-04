@@ -106,6 +106,8 @@ export class AgentDurableObject extends DurableObject<Env> {
 			return triggerGeneration;
 		}
 
+		// TODO: Check if this is the best approach to trigger generation
+		// NOTE: We can probably simplify it a lot
 		if (notifications > MAX_NOTIFICATION_TO_WAIT_FOR_CHECK) {
 			triggerGeneration = true;
 		} else {

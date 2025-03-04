@@ -20,7 +20,7 @@ export const chatRoomConfig = sqliteTable("chat_room_config", {
 export const chatMessage = sqliteTable("chat_message", {
 	id: text("id")
 		.primaryKey()
-		.$defaultFn(() => nanoid()),
+		.$defaultFn(() => nanoid()), // TODO: Should be sequential id
 	content: text("content").notNull(),
 	memberId: text("member_id")
 		.notNull()
@@ -31,7 +31,7 @@ export const chatMessage = sqliteTable("chat_message", {
 });
 
 export const chatRoomMember = sqliteTable("chat_room_member", {
-	id: text("id").primaryKey(), // User ID or Agent ID
+	id: text("id").primaryKey(), // User ID or Agent ID // TODO: Check about using branded types
 	roomId: text("room_id").notNull(),
 	type: text("type").$type<ChatRoomMemberType>().notNull(),
 	role: text("role").$type<ChatRoomMemberRole>().notNull(),
