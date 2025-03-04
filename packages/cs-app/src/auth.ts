@@ -1,4 +1,4 @@
-import { type DrizzleDB, getAuthBaseConfig, schema } from "@/cs-shared";
+import { type DrizzleDB, getAuthBaseConfig, globalSchema } from "@/cs-shared";
 import { sendMail } from "@/lib/email";
 import { getDB } from "@/server/db";
 import { betterAuth } from "better-auth";
@@ -35,7 +35,10 @@ export const getAuth = () => {
 						before: async (session) => {
 							const db = getDB();
 							const orgSession = await db.query.organizationMember.findFirst({
-								where: eq(schema.organizationMember.userId, session.userId),
+								where: eq(
+									globalSchema.organizationMember.userId,
+									session.userId,
+								),
 							});
 
 							return {

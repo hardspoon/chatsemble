@@ -1,6 +1,6 @@
 import { getAuth } from "@/auth";
 import AppLayout from "@/components/layout/app-layout";
-import { schema } from "@/cs-shared";
+import { globalSchema } from "@/cs-shared";
 import { getDB } from "@/server/db";
 import { eq } from "drizzle-orm";
 import { headers } from "next/headers";
@@ -25,8 +25,9 @@ export default async function RootLayout({
 	if (!session.session.activeOrganizationId) {
 		console.log("no active organization, checking if user has any");
 		const db = getDB();
+		// TODO: Create a db service for this
 		const orgSession = await db.query.organizationMember.findFirst({
-			where: eq(schema.organizationMember.userId, session.user.id),
+			where: eq(globalSchema.organizationMember.userId, session.user.id),
 		});
 		console.log("orgSession", orgSession);
 

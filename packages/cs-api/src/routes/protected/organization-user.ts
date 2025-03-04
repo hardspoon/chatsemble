@@ -1,4 +1,4 @@
-import { schema as d1Schema } from "@/cs-shared";
+import { globalSchema } from "@/cs-shared";
 import { eq, and, not } from "drizzle-orm";
 import { Hono } from "hono";
 import type { HonoContextWithAuth } from "../../types/hono";
@@ -25,20 +25,23 @@ const app = new Hono<HonoContextWithAuth>().get(
 
 		const users = await db
 			.select({
-				id: d1Schema.user.id,
-				name: d1Schema.user.name,
-				email: d1Schema.user.email,
-				image: d1Schema.user.image,
+				id: globalSchema.user.id,
+				name: globalSchema.user.name,
+				email: globalSchema.user.email,
+				image: globalSchema.user.image,
 			})
-			.from(d1Schema.organizationMember)
+			.from(globalSchema.organizationMember)
 			.innerJoin(
-				d1Schema.user,
-				eq(d1Schema.organizationMember.userId, d1Schema.user.id),
+				globalSchema.user,
+				eq(globalSchema.organizationMember.userId, globalSchema.user.id),
 			)
 			.where(
 				and(
-					eq(d1Schema.organizationMember.organizationId, activeOrganizationId),
-					!includeUser ? not(eq(d1Schema.user.id, user.id)) : undefined,
+					eq(
+						globalSchema.organizationMember.organizationId,
+						activeOrganizationId,
+					),
+					!includeUser ? not(eq(globalSchema.user.id, user.id)) : undefined,
 				),
 			);
 

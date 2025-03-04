@@ -9,8 +9,6 @@ import {
 export const chatRoomPermissionTypes = ["create", "update", "delete"] as const;
 export const chatRoomMemberPermissionTypes = ["create", "delete"] as const;
 
-export type OrgnaizationStatementKeys = "chatRoom" | "chatRoomMember";
-
 const statement = {
 	...defaultStatements,
 	chatRoom: chatRoomPermissionTypes,

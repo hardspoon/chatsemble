@@ -2,7 +2,7 @@ import { Hono } from "hono";
 
 import {
 	createChatRoomMemberSchema,
-	schema as d1Schema,
+	globalSchema,
 	getChatRoom,
 } from "@/cs-shared";
 import { zValidator } from "@hono/zod-validator";
@@ -51,11 +51,11 @@ const app = new Hono<HonoContextWithAuth>().post(
 
 		const room = await db
 			.select()
-			.from(d1Schema.chatRoom)
+			.from(globalSchema.chatRoom)
 			.where(
 				and(
-					eq(d1Schema.chatRoom.id, chatRoom.id),
-					eq(d1Schema.chatRoom.organizationId, activeOrganizationId),
+					eq(globalSchema.chatRoom.id, chatRoom.id),
+					eq(globalSchema.chatRoom.organizationId, activeOrganizationId),
 				),
 			)
 			.get();
@@ -77,18 +77,18 @@ const app = new Hono<HonoContextWithAuth>().post(
 		if (type === "user") {
 			const result = await db
 				.select({
-					user: d1Schema.user,
+					user: globalSchema.user,
 				})
-				.from(d1Schema.organizationMember)
+				.from(globalSchema.organizationMember)
 				.innerJoin(
-					d1Schema.user,
-					eq(d1Schema.organizationMember.userId, d1Schema.user.id),
+					globalSchema.user,
+					eq(globalSchema.organizationMember.userId, globalSchema.user.id),
 				)
 				.where(
 					and(
-						eq(d1Schema.organizationMember.userId, id),
+						eq(globalSchema.organizationMember.userId, id),
 						eq(
-							d1Schema.organizationMember.organizationId,
+							globalSchema.organizationMember.organizationId,
 							activeOrganizationId,
 						),
 					),
@@ -110,11 +110,11 @@ const app = new Hono<HonoContextWithAuth>().post(
 		if (type === "agent") {
 			const agent = await db
 				.select()
-				.from(d1Schema.agent)
+				.from(globalSchema.agent)
 				.where(
 					and(
-						eq(d1Schema.agent.id, id),
-						eq(d1Schema.agent.organizationId, activeOrganizationId),
+						eq(globalSchema.agent.id, id),
+						eq(globalSchema.agent.organizationId, activeOrganizationId),
 					),
 				)
 				.get();
@@ -145,7 +145,7 @@ const app = new Hono<HonoContextWithAuth>().post(
 		});
 
 		const [newMember] = await db
-			.insert(d1Schema.chatRoomMember)
+			.insert(globalSchema.chatRoomMember)
 			.values({
 				memberId: member.memberId,
 				roomId: room.id,

@@ -1,14 +1,13 @@
 import Database from "better-sqlite3";
 import { drizzle } from "drizzle-orm/better-sqlite3";
-import { account, organizationMember, organization, user } from "./schema";
 import { findSqliteFile } from "../lib/db/db-helpers";
-import * as schema from "./schema";
+import { globalSchema } from "./schema";
 
 // biome-ignore lint/style/noNonNullAssertion: <explanation>
 const WRANGLER_STATE_PATH = process.env.WRANGLER_STATE_PATH!;
 
 const sqlite = new Database(findSqliteFile(WRANGLER_STATE_PATH));
-const db = drizzle(sqlite, { schema, logger: false });
+const db = drizzle(sqlite, { schema: globalSchema, logger: false });
 
 // Test1234 password hash
 const TEST_PASSWORD_HASH =
@@ -27,7 +26,7 @@ async function createUserWithAccount({
 	email,
 	avatar,
 }: CreateUserParams) {
-	const newUser: typeof user.$inferSelect = {
+	const newUser: typeof globalSchema.user.$inferSelect = {
 		id,
 		name,
 		email,
@@ -37,9 +36,9 @@ async function createUserWithAccount({
 		updatedAt: new Date(),
 	};
 
-	await db.insert(user).values(newUser).onConflictDoNothing();
+	await db.insert(globalSchema.user).values(newUser).onConflictDoNothing();
 
-	const newAccount: typeof account.$inferSelect = {
+	const newAccount: typeof globalSchema.account.$inferSelect = {
 		id: `account_${id}`,
 		userId: id,
 		accountId: id,
@@ -55,29 +54,37 @@ async function createUserWithAccount({
 		updatedAt: new Date(),
 	};
 
-	await db.insert(account).values(newAccount).onConflictDoNothing();
+	await db
+		.insert(globalSchema.account)
+		.values(newAccount)
+		.onConflictDoNothing();
 
 	return newUser;
 }
 
 async function createOrganizationWithMembers(
-	orgData: typeof organization.$inferSelect,
-	users: (typeof user.$inferSelect)[],
+	orgData: typeof globalSchema.organization.$inferSelect,
+	users: (typeof globalSchema.user.$inferSelect)[],
 	ownerUserId: string,
 ) {
-	await db.insert(organization).values(orgData).onConflictDoNothing();
+	await db
+		.insert(globalSchema.organization)
+		.values(orgData)
+		.onConflictDoNothing();
 
-	const members: (typeof organizationMember.$inferSelect)[] = users.map(
-		(user) => ({
+	const members: (typeof globalSchema.organizationMember.$inferSelect)[] =
+		users.map((user) => ({
 			id: `member_${user.id}`,
 			userId: user.id,
 			organizationId: orgData.id,
 			role: user.id === ownerUserId ? "owner" : "member",
 			createdAt: new Date(),
-		}),
-	);
+		}));
 
-	await db.insert(organizationMember).values(members).onConflictDoNothing();
+	await db
+		.insert(globalSchema.organizationMember)
+		.values(members)
+		.onConflictDoNothing();
 }
 
 async function seed() {
@@ -105,7 +112,7 @@ async function seed() {
 		]);
 
 		// Create organization with all users
-		const orgData: typeof organization.$inferSelect = {
+		const orgData: typeof globalSchema.organization.$inferSelect = {
 			id: "bu1cEXJI1PLWqnU7nQyvmDTEaEiqE9oR",
 			name: "Alwurts",
 			slug: "alwurts",

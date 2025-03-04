@@ -5,7 +5,7 @@ import {
 	type ChatRoomMember,
 	chatRoomMemberHasChatRoomPermission,
 	createChatRoomSchema,
-	schema as d1Schema,
+	globalSchema,
 	getChatRoom,
 } from "@/cs-shared";
 import { zValidator } from "@hono/zod-validator";
@@ -66,9 +66,9 @@ const chatRoom = new Hono<HonoContextWithAuth>()
 		// TODO: Apply transactions or someway to rollback if one of the operations fails for this and other operations
 
 		// Create room record in D1
-		await db.insert(d1Schema.chatRoom).values(newChatRoom);
+		await db.insert(globalSchema.chatRoom).values(newChatRoom);
 
-		await db.insert(d1Schema.chatRoomMember).values({
+		await db.insert(globalSchema.chatRoomMember).values({
 			roomId: newChatRoom.id,
 			memberId: newChatRoomMember.id,
 			role: newChatRoomMember.role,
@@ -83,14 +83,14 @@ const chatRoom = new Hono<HonoContextWithAuth>()
 
 		const userMemberRooms = await db
 			.select({
-				room: d1Schema.chatRoom,
+				room: globalSchema.chatRoom,
 			})
-			.from(d1Schema.chatRoomMember)
+			.from(globalSchema.chatRoomMember)
 			.innerJoin(
-				d1Schema.chatRoom,
-				eq(d1Schema.chatRoomMember.roomId, d1Schema.chatRoom.id),
+				globalSchema.chatRoom,
+				eq(globalSchema.chatRoomMember.roomId, globalSchema.chatRoom.id),
 			)
-			.where(eq(d1Schema.chatRoomMember.memberId, user.id));
+			.where(eq(globalSchema.chatRoomMember.memberId, user.id));
 
 		const rooms: ChatRoom[] = userMemberRooms.map((member) => member.room);
 
@@ -132,12 +132,12 @@ const chatRoom = new Hono<HonoContextWithAuth>()
 		}
 
 		await db
-			.delete(d1Schema.chatRoom)
-			.where(eq(d1Schema.chatRoom.id, chatRoom.id));
+			.delete(globalSchema.chatRoom)
+			.where(eq(globalSchema.chatRoom.id, chatRoom.id));
 
 		await db
-			.delete(d1Schema.chatRoomMember)
-			.where(eq(d1Schema.chatRoomMember.roomId, chatRoom.id));
+			.delete(globalSchema.chatRoomMember)
+			.where(eq(globalSchema.chatRoomMember.roomId, chatRoom.id));
 
 		const chatRoomDoId = c.env.CHAT_DURABLE_OBJECT.idFromString(chatRoom.id);
 		const chatRoomDo = c.env.CHAT_DURABLE_OBJECT.get(chatRoomDoId);
