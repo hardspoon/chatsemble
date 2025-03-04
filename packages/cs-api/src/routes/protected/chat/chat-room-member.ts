@@ -3,7 +3,7 @@ import { Hono } from "hono";
 import {
 	createChatRoomMemberSchema,
 	globalSchema,
-	getChatRoom,
+	dbServices,
 } from "@/cs-shared";
 import { zValidator } from "@hono/zod-validator";
 import { and, eq } from "drizzle-orm";
@@ -22,7 +22,7 @@ const app = new Hono<HonoContextWithAuth>().post(
 
 		const { id, role, type } = c.req.valid("json");
 
-		const chatRoom = await getChatRoom(db, {
+		const chatRoom = await dbServices.room.getChatRoom(db, {
 			chatRoomId,
 			organizationId: activeOrganizationId,
 		});
