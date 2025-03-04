@@ -40,13 +40,13 @@ export function NewGroupChatDialog() {
 		resolver: zodResolver(createChatRoomSchema),
 		defaultValues: {
 			name: "",
-			type: "public_group",
+			type: "publicGroup",
 		},
 	});
 
 	const createChatMutation = useMutation({
 		mutationFn: async (values: FormValues) => {
-			const response = await client.protected["chat-room"].create.$post({
+			const response = await client.protected.chat["chat-room"].create.$post({
 				json: values,
 			});
 			const data = await response.json();
@@ -109,10 +109,10 @@ export function NewGroupChatDialog() {
 									</div>
 									<FormControl>
 										<Switch
-											checked={field.value === "private_group"}
+											checked={field.value === "privateGroup"}
 											onCheckedChange={(checked) => {
 												field.onChange(
-													checked ? "private_group" : "public_group",
+													checked ? "privateGroup" : "publicGroup",
 												);
 											}}
 										/>

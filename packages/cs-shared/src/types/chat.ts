@@ -48,11 +48,7 @@ export type ChatRoomMember = z.infer<typeof chatRoomMemberSchema>;
 
 // ChatRoom
 
-const CHAT_ROOM_TYPES = [
-	"public_group",
-	"private_group",
-	"one_to_one",
-] as const;
+const CHAT_ROOM_TYPES = ["publicGroup", "privateGroup", "oneToOne"] as const;
 
 const chatRoomTypesSchema = z.enum(CHAT_ROOM_TYPES);
 

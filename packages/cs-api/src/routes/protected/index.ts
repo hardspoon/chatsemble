@@ -7,7 +7,7 @@ import {
 } from "../../lib/hono/middleware";
 import type { HonoContext } from "../../types/hono";
 import agentRoutes from "./agent";
-import chatRoomRoutes from "./chat-room";
+import chatRoutes from "./chat";
 import organizationUserRoutes from "./organization-user";
 
 const app = new Hono<HonoContext>()
@@ -26,7 +26,7 @@ const app = new Hono<HonoContext>()
 	.use(honoDbMiddleware)
 	.use(honoAuthMiddleware)
 	.use(honoAuthCheckMiddleware)
-	.route("/chat-room", chatRoomRoutes)
+	.route("/chat", chatRoutes)
 	.route("/agent", agentRoutes)
 	.route("/organization-user", organizationUserRoutes);
 
