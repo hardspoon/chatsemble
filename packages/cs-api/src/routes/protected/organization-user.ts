@@ -1,9 +1,9 @@
 import { globalSchema } from "@/cs-shared";
-import { eq, and, not } from "drizzle-orm";
-import { Hono } from "hono";
-import type { HonoContextWithAuth } from "../../types/hono";
 import { zValidator } from "@hono/zod-validator";
+import { and, eq, not } from "drizzle-orm";
+import { Hono } from "hono";
 import { z } from "zod";
+import type { HonoContextWithAuth } from "../../types/hono";
 
 const app = new Hono<HonoContextWithAuth>().get(
 	"/users",
