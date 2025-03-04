@@ -1,4 +1,4 @@
-import type { ChatRoom, DrizzleDB } from "@/cs-shared";
+import type { DrizzleDB } from "@/cs-shared";
 import type { getAuth } from "../lib/auth";
 
 type Auth = ReturnType<typeof getAuth>;
@@ -10,7 +10,6 @@ export type HonoContext = {
 		session: Auth["$Infer"]["Session"]["session"] | null;
 		db: DrizzleDB;
 		auth: Auth | null;
-		chatRoom: ChatRoom | null;
 	};
 };
 
@@ -21,11 +20,5 @@ export type HonoContextWithAuth = HonoContext & {
 			activeOrganizationId: string;
 		};
 		auth: NonNullable<HonoContext["Variables"]["auth"]>;
-	};
-};
-
-export type HonoContextAuthWithChatRoom = HonoContextWithAuth & {
-	Variables: HonoContextWithAuth["Variables"] & {
-		chatRoom: NonNullable<HonoContextWithAuth["Variables"]["chatRoom"]>;
 	};
 };

@@ -55,10 +55,12 @@ export function AddMemberForm({
 
 	const addMemberMutation = useMutation({
 		mutationFn: async (values: FormValues) => {
-			const response = await client.protected.chat["chat-room-member"][
+			console.log("//////////////////////////////////// addMemberMutation");
+			console.log("roomId", values.roomId);
+			const response = await client.protected.chat["chat-room"][
 				":chatRoomId"
 			].members.$post({
-				param: { chatRoomId: roomId },
+				param: { chatRoomId: values.roomId },
 				json: values,
 			});
 			return response.json();

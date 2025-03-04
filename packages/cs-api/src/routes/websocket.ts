@@ -1,5 +1,4 @@
-import { schema as d1Schema } from "@/cs-shared";
-import { and, eq } from "drizzle-orm";
+import { getChatRoomMember } from "@/cs-shared";
 import { Hono } from "hono";
 import {
 	honoAuthCheckMiddleware,
@@ -12,7 +11,7 @@ const app = new Hono<HonoContextWithAuth>()
 	.use(honoDbMiddleware)
 	.use(honoAuthMiddleware)
 	.use(honoAuthCheckMiddleware)
-	.get("/chat-room/:roomId", async (c) => {
+	.get("/chat-room/:chatRoomId", async (c) => {
 		const upgradeHeader = c.req.header("Upgrade");
 		if (!upgradeHeader || upgradeHeader !== "websocket") {
 			return c.text("Expected Upgrade: websocket", 426);
@@ -20,25 +19,18 @@ const app = new Hono<HonoContextWithAuth>()
 
 		const user = c.get("user");
 
-		const { roomId } = c.req.param();
+		const { chatRoomId } = c.req.param();
 		const db = c.get("db");
 
-		const roomMember = await db
-			.select({
-				roomId: d1Schema.chatRoomMember.roomId,
-			})
-			.from(d1Schema.chatRoomMember)
-			.where(
-				and(
-					eq(d1Schema.chatRoomMember.memberId, user.id),
-					eq(d1Schema.chatRoomMember.roomId, roomId),
-				),
-			)
-			.limit(1)
-			.get();
+		const roomMember = await getChatRoomMember(db, {
+			chatRoomId,
+			memberId: user.id,
+		});
+
+		// TODO: Check org permissions to allow admins and owners to connect to any chat room
 
 		if (!roomMember) {
-			return c.text("Not authorized", 403);
+			throw new Error("Not authorized");
 		}
 
 		// Proceed with WebSocket connection

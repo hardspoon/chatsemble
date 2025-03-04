@@ -347,4 +347,8 @@ export class AgentDurableObject extends DurableObject<Env> {
 				},
 			});
 	}
+
+	async deleteChatRoom(id: string) {
+		await this.db.delete(agentChatRoom).where(eq(agentChatRoom.id, id));
+	}
 }

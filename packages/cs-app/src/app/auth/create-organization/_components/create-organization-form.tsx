@@ -75,6 +75,8 @@ export function CreateOrganizationForm({ user }: { user: User }) {
 				slug: values.slug,
 			});
 
+			// TODO: Check if slug is not already taken and show message to user
+
 			if (error) {
 				throw error;
 			}

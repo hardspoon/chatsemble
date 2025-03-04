@@ -41,6 +41,10 @@ export class ChatDurableObject extends DurableObject<Env> {
 		migrate(this.db, migrations);
 	}
 
+	async delete() {
+		this.storage.deleteAll();
+	}
+
 	async fetch(request: Request) {
 		const url = new URL(request.url);
 		const userId = url.searchParams.get("userId");

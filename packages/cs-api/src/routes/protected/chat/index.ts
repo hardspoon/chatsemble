@@ -5,6 +5,6 @@ import chatRoomMemberRoutes from "./chat-room-member";
 
 const app = new Hono<HonoContext>()
 	.route("/chat-room", chatRoomRoutes)
-	.route("/chat-room-member/:chatRoomId", chatRoomMemberRoutes);
+	.route("/chat-room", chatRoomMemberRoutes);
 
 export default app;

@@ -3,39 +3,16 @@ import { Hono } from "hono";
 import {
 	type ChatRoom,
 	type ChatRoomMember,
+	chatRoomMemberHasChatRoomPermission,
 	createChatRoomSchema,
 	schema as d1Schema,
+	getChatRoom,
 } from "@/cs-shared";
 import { zValidator } from "@hono/zod-validator";
 import { eq } from "drizzle-orm";
 import type { HonoContextWithAuth } from "../../../types/hono";
-import { METHOD_MAP } from "../../../lib/hono/helpers";
 
-const app = new Hono<HonoContextWithAuth>()
-	.use(async (c, next) => {
-		const method = c.req.method;
-		console.log("method", method);
-		const parsedMethod = METHOD_MAP[method as keyof typeof METHOD_MAP];
-		console.log("parsedMethod", parsedMethod);
-
-		if (method === "POST" || method === "PUT" || method === "DELETE") {
-			const auth = c.get("auth");
-			const response = await auth.api.hasPermission({
-				headers: c.req.raw.headers,
-				body: {
-					permission: {
-						chatRoom: [parsedMethod],
-					},
-				},
-			});
-
-			if (!response.success) {
-				return c.json({ error: "Unauthorized" }, 401);
-			}
-		}
-
-		await next();
-	})
+const chatRoom = new Hono<HonoContextWithAuth>()
 	.post("/create", zValidator("json", createChatRoomSchema), async (c) => {
 		const { CHAT_DURABLE_OBJECT } = c.env;
 		const db = c.get("db");
@@ -44,8 +21,17 @@ const app = new Hono<HonoContextWithAuth>()
 		const { activeOrganizationId } = session;
 		const { name, type } = c.req.valid("json");
 
-		if (!activeOrganizationId) {
-			throw new Error("Organization not set");
+		const hasChatRoomPermission = await chatRoomMemberHasChatRoomPermission({
+			headers: c.req.raw.headers,
+			db,
+			auth: c.get("auth"),
+			params: {
+				permission: "create",
+			},
+		});
+
+		if (!hasChatRoomPermission) {
+			throw new Error("Unauthorized");
 		}
 
 		// Create durable object
@@ -89,13 +75,7 @@ const app = new Hono<HonoContextWithAuth>()
 	})
 	.get("/", async (c) => {
 		const db = c.get("db");
-		const session = c.get("session");
 		const user = c.get("user");
-		const { activeOrganizationId } = session;
-
-		if (!activeOrganizationId) {
-			throw new Error("Organization not set");
-		}
 
 		const userMemberRooms = await db
 			.select({
@@ -111,6 +91,66 @@ const app = new Hono<HonoContextWithAuth>()
 		const rooms: ChatRoom[] = userMemberRooms.map((member) => member.room);
 
 		return c.json(rooms);
+	})
+	.delete("/:chatRoomId", async (c) => {
+		const db = c.get("db");
+		const user = c.get("user");
+		const chatRoomId = c.req.param("chatRoomId");
+		if (!chatRoomId) {
+			throw new Error("Chat room ID is required");
+		}
+
+		const chatRoom = await getChatRoom(db, {
+			chatRoomId,
+			organizationId: c.get("session").activeOrganizationId,
+		});
+
+		if (!chatRoom) {
+			throw new Error("Chat room not found");
+		}
+
+		const hasChatRoomPermission = await chatRoomMemberHasChatRoomPermission({
+			headers: c.req.raw.headers,
+			db,
+			auth: c.get("auth"),
+			params: {
+				permission: "create",
+				checkMemberPermission: {
+					userId: user.id,
+					chatRoomId,
+					chatRoomType: chatRoom.type,
+				},
+			},
+		});
+
+		if (!hasChatRoomPermission) {
+			throw new Error("Unauthorized");
+		}
+
+		await db
+			.delete(d1Schema.chatRoom)
+			.where(eq(d1Schema.chatRoom.id, chatRoom.id));
+
+		await db
+			.delete(d1Schema.chatRoomMember)
+			.where(eq(d1Schema.chatRoomMember.roomId, chatRoom.id));
+
+		const chatRoomDoId = c.env.CHAT_DURABLE_OBJECT.idFromString(chatRoom.id);
+		const chatRoomDo = c.env.CHAT_DURABLE_OBJECT.get(chatRoomDoId);
+		const members = await chatRoomDo.getMembers();
+		const agentMembers = members.filter((member) => member.type === "agent");
+
+		for (const member of agentMembers) {
+			const agentDoId = c.env.AGENT_DURABLE_OBJECT.idFromString(member.id);
+			const agentDo = c.env.AGENT_DURABLE_OBJECT.get(agentDoId);
+			await agentDo.deleteChatRoom(chatRoom.id);
+		}
+
+		await chatRoomDo.delete();
+
+		return c.json({
+			success: true,
+		});
 	});
 
-export default app;
+export default chatRoom;
