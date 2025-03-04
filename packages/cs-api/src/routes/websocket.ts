@@ -11,7 +11,7 @@ const app = new Hono<HonoContextWithAuth>()
 	.use(honoDbMiddleware)
 	.use(honoAuthMiddleware)
 	.use(honoAuthCheckMiddleware)
-	.get("/chat-room/:chatRoomId", async (c) => {
+	.get("/chat-rooms/:chatRoomId", async (c) => {
 		const upgradeHeader = c.req.header("Upgrade");
 		if (!upgradeHeader || upgradeHeader !== "websocket") {
 			return c.text("Expected Upgrade: websocket", 426);

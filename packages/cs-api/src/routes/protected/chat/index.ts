@@ -4,7 +4,7 @@ import chatRoomRoutes from "./chat-room";
 import chatRoomMemberRoutes from "./chat-room-member";
 
 const app = new Hono<HonoContext>()
-	.route("/chat-room", chatRoomRoutes)
-	.route("/chat-room", chatRoomMemberRoutes);
+	.route("/chat-rooms", chatRoomRoutes)
+	.route("/chat-rooms", chatRoomMemberRoutes);
 
 export default app;

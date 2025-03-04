@@ -36,7 +36,7 @@ export function AgentEditForm({ agentId }: AgentEditFormProps) {
 	const { data: agent, isLoading } = useQuery({
 		queryKey: ["agent", agentId],
 		queryFn: async () => {
-			const response = await client.protected.agent[":id"].$get({
+			const response = await client.protected.agents[":id"].$get({
 				param: { id: agentId },
 			});
 			return response.json();
@@ -61,7 +61,7 @@ export function AgentEditForm({ agentId }: AgentEditFormProps) {
 
 	const updateAgentMutation = useMutation({
 		mutationFn: async (values: FormValues) => {
-			const response = await client.protected.agent[":id"].$put({
+			const response = await client.protected.agents[":id"].$put({
 				param: { id: agentId },
 				json: values,
 			});

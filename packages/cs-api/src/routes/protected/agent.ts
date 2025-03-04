@@ -5,6 +5,8 @@ import { zValidator } from "@hono/zod-validator";
 import { eq } from "drizzle-orm";
 import type { HonoContextWithAuth } from "../../types/hono";
 
+// TODO: Add permissions check to agents routes
+
 const app = new Hono<HonoContextWithAuth>()
 	.post("/", zValidator("json", createAgentSchema), async (c) => {
 		const { AGENT_DURABLE_OBJECT } = c.env;

@@ -6,7 +6,7 @@ import { zValidator } from "@hono/zod-validator";
 import { z } from "zod";
 
 const app = new Hono<HonoContextWithAuth>().get(
-	"/",
+	"/users",
 	zValidator(
 		"query",
 		z.object({

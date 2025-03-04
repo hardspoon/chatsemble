@@ -22,7 +22,7 @@ export function AgentsSidebar() {
 	} = useQuery({
 		queryKey: ["agents"],
 		queryFn: async () => {
-			const response = await client.protected.agent.$get();
+			const response = await client.protected.agents.$get();
 
 			const data = await response.json();
 			return data;
