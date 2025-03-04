@@ -1,6 +1,8 @@
 import { readdirSync } from "node:fs";
 import { resolve } from "node:path";
 
+// TODO: Add nodejs compat to api and export this
+
 export function findSqliteFile(basePath: string) {
 	const d1Path = resolve(process.cwd(), basePath, "v3/d1");
 	const dbFile = readdirSync(d1Path, {

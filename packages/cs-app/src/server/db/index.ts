@@ -7,12 +7,12 @@ import type { BetterSQLite3Database } from "drizzle-orm/better-sqlite3";
 import { drizzle } from "drizzle-orm/d1";
 import type { DrizzleD1Database } from "drizzle-orm/d1";
 
-import { schema } from "@/cs-shared";
+import { globalSchema } from "@/cs-shared";
 
 // eslint-disable-next-line import/no-unused-modules
 export let db:
-	| DrizzleD1Database<typeof schema>
-	| BetterSQLite3Database<typeof schema>
+	| DrizzleD1Database<typeof globalSchema>
+	| BetterSQLite3Database<typeof globalSchema>
 	| null = null;
 
 export const getDB = () => {
@@ -30,7 +30,7 @@ export const getDB = () => {
 		}
 
 		const sqlite = new Database(dbPath);
-		db = drizzleSqlite(sqlite, { schema, logger: false });
+		db = drizzleSqlite(sqlite, { schema: globalSchema, logger: false });
 		return db;
 	}
 
@@ -39,7 +39,7 @@ export const getDB = () => {
 
 	// If we have the D1 binding and we're not explicitly using local DB, use D1
 	if (env.DB) {
-		db = drizzle(env.DB, { schema, logger: false });
+		db = drizzle(env.DB, { schema: globalSchema, logger: false });
 		return db;
 	}
 

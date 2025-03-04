@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 
-import { type Agent, createAgentSchema, schema as d1Schema } from "@/cs-shared";
+import { type Agent, createAgentSchema, globalSchema } from "@/cs-shared";
 import { zValidator } from "@hono/zod-validator";
 import { eq } from "drizzle-orm";
 import type { HonoContextWithAuth } from "../../types/hono";
@@ -32,7 +32,7 @@ const app = new Hono<HonoContextWithAuth>()
 			organizationId: activeOrganizationId,
 		});
 
-		await db.insert(d1Schema.agent).values({
+		await db.insert(globalSchema.agent).values({
 			id: agentDoId.toString(),
 			name,
 			image,
@@ -66,15 +66,15 @@ const app = new Hono<HonoContextWithAuth>()
 
 		// Update agent record in D1
 		await db
-			.update(d1Schema.agent)
+			.update(globalSchema.agent)
 			.set({
 				name,
 				image,
 				systemPrompt,
 			})
 			.where(
-				eq(d1Schema.agent.id, id) &&
-					eq(d1Schema.agent.organizationId, activeOrganizationId),
+				eq(globalSchema.agent.id, id) &&
+					eq(globalSchema.agent.organizationId, activeOrganizationId),
 			);
 
 		return c.json({ success: true });
@@ -90,8 +90,8 @@ const app = new Hono<HonoContextWithAuth>()
 
 		const agents: Agent[] = await db
 			.select()
-			.from(d1Schema.agent)
-			.where(eq(d1Schema.agent.organizationId, activeOrganizationId));
+			.from(globalSchema.agent)
+			.where(eq(globalSchema.agent.organizationId, activeOrganizationId));
 
 		return c.json(agents);
 	})
@@ -107,10 +107,10 @@ const app = new Hono<HonoContextWithAuth>()
 
 		const agent: Agent | undefined = await db
 			.select()
-			.from(d1Schema.agent)
+			.from(globalSchema.agent)
 			.where(
-				eq(d1Schema.agent.id, id) &&
-					eq(d1Schema.agent.organizationId, activeOrganizationId),
+				eq(globalSchema.agent.id, id) &&
+					eq(globalSchema.agent.organizationId, activeOrganizationId),
 			)
 			.get();
 

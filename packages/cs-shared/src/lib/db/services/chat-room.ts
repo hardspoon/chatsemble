@@ -1,5 +1,5 @@
 import type { DrizzleDB } from "../../../types/drizzle";
-import * as d1Schema from "../../../db/schema";
+import { globalSchema } from "../../../db/schema";
 import { and, eq } from "drizzle-orm";
 
 export async function getChatRoom(
@@ -11,11 +11,11 @@ export async function getChatRoom(
 ) {
 	const room = await db
 		.select()
-		.from(d1Schema.chatRoom)
+		.from(globalSchema.chatRoom)
 		.where(
 			and(
-				eq(d1Schema.chatRoom.id, params.chatRoomId),
-				eq(d1Schema.chatRoom.organizationId, params.organizationId),
+				eq(globalSchema.chatRoom.id, params.chatRoomId),
+				eq(globalSchema.chatRoom.organizationId, params.organizationId),
 			),
 		)
 		.get();

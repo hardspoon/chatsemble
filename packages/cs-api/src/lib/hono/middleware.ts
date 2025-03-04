@@ -1,11 +1,11 @@
-import { schema } from "@/cs-shared";
+import { globalSchema } from "@/cs-shared";
 import { drizzle } from "drizzle-orm/d1";
 import type { Context, Next } from "hono";
 import type { HonoContext } from "../../types/hono";
 import { getAuth } from "../auth";
 
 export const honoDbMiddleware = async (c: Context<HonoContext>, next: Next) => {
-	const db = drizzle(c.env.DB, { schema });
+	const db = drizzle(c.env.DB, { schema: globalSchema });
 	c.set("db", db);
 	await next();
 };
