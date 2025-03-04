@@ -2,7 +2,6 @@ import type { BetterAuthOptions } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { organization } from "better-auth/plugins";
 import type { DrizzleDB } from "../types/drizzle";
-// TODO: Add @ linking
 import { organizationPermissions } from "./organization-permissions";
 
 export interface AuthBaseConfig {
