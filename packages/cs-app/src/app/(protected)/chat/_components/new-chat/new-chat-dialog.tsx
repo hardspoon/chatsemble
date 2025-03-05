@@ -1,7 +1,5 @@
-import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
-import { useForm } from "react-hook-form";
 import type { z } from "zod";
 
 import {
@@ -11,7 +9,7 @@ import {
 	DialogHeader,
 	DialogTitle,
 } from "@/components/ui/dialog";
-import { type ChatRoomType, createChatRoomSchema } from "@/cs-shared";
+import type { ChatRoomType, createChatRoomSchema } from "@/cs-shared";
 import { client } from "@/lib/api-client";
 import type { Dispatch, SetStateAction } from "react";
 import { NewChatRoomGroupForm } from "./new-chat-room-group";
@@ -62,20 +60,6 @@ function NewChatRoomDialogContent({
 	const router = useRouter();
 	const queryClient = useQueryClient();
 
-	const form = useForm<CreateChatRoomFormValues>({
-		resolver: zodResolver(createChatRoomSchema),
-		values: {
-			name:
-				dialogState.type === "oneToOne"
-					? "New Direct Message"
-					: "New Group Chat",
-			type: dialogState.type,
-			members: [],
-		},
-	});
-
-	const formChatType = form.watch("type");
-
 	const createChatMutation = useMutation({
 		mutationFn: async (values: CreateChatRoomFormValues) => {
 			const response = await client.protected.chat["chat-rooms"].$post({
@@ -92,42 +76,34 @@ function NewChatRoomDialogContent({
 	});
 
 	const onSubmit = (values: CreateChatRoomFormValues) => {
-		console.log("Submitting chat room with values:", {
-			name: values.name,
-			type: values.type,
-			membersCount: values.members.length,
-			members: values.members,
-		});
 		createChatMutation.mutate(values);
 	};
 
 	const isGroupChat =
-		formChatType === "publicGroup" || formChatType === "privateGroup";
+		dialogState.type === "publicGroup" || dialogState.type === "privateGroup";
 
 	return (
 		<>
 			<DialogHeader>
 				<DialogTitle>
-					{formChatType === "oneToOne"
-						? "Create Direct Message"
-						: "Create New Chat Room"}
+					{isGroupChat ? "Create New Chat Room" : "Create Direct Message"}
 				</DialogTitle>
 				<DialogDescription>
-					{formChatType === "oneToOne"
-						? "Start a direct conversation with another user."
-						: "Create a new chat room to start conversations with your team."}
+					{isGroupChat
+						? "Create a new chat room to start conversations with your team."
+						: "Start a direct conversation with another user."}
 				</DialogDescription>
 			</DialogHeader>
 
-			{isGroupChat ? (
+			{dialogState.type === "publicGroup" ||
+			dialogState.type === "privateGroup" ? (
 				<NewChatRoomGroupForm
-					form={form}
 					onSubmit={onSubmit}
+					groupChatType={dialogState.type}
 					isPending={createChatMutation.isPending}
 				/>
 			) : (
 				<NewChatRoomOneToOneForm
-					form={form}
 					onSubmit={onSubmit}
 					isPending={createChatMutation.isPending}
 				/>

@@ -7,6 +7,7 @@ export const agent = sqliteTable("agent", {
 	name: text("name").notNull(),
 	image: text("image").notNull(),
 	systemPrompt: text("system_prompt").notNull(),
+	// TODO: Add email here and on the DO
 	organizationId: text("organization_id")
 		.notNull()
 		.references(() => organization.id),

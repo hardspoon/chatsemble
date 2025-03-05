@@ -1,4 +1,4 @@
-import type { UseFormReturn } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import type { z } from "zod";
 
 import { Button } from "@/components/ui/button";
@@ -15,21 +15,31 @@ import {
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import type { createChatRoomSchema } from "@/cs-shared";
+import { type ChatRoomType, createChatRoomSchema } from "@/cs-shared";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Settings, UserPlus } from "lucide-react";
 import { MultiSelectMembers } from "./multi-select-members";
 
 type CreateChatRoomFormValues = z.infer<typeof createChatRoomSchema>;
 
 export function NewChatRoomGroupForm({
-	form,
 	onSubmit,
+	groupChatType,
 	isPending,
 }: {
-	form: UseFormReturn<CreateChatRoomFormValues>;
 	onSubmit: (values: CreateChatRoomFormValues) => void;
+	groupChatType: Exclude<ChatRoomType, "oneToOne">;
 	isPending: boolean;
 }) {
+	const form = useForm<CreateChatRoomFormValues>({
+		resolver: zodResolver(createChatRoomSchema),
+		defaultValues: {
+			name: "",
+			type: groupChatType,
+			members: [],
+		},
+	});
+
 	return (
 		<Form {...form}>
 			<form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -93,7 +103,28 @@ export function NewChatRoomGroupForm({
 						</div>
 					</TabsContent>
 					<TabsContent value="members" className="space-y-6">
-						<MultiSelectMembers form={form} />
+						<FormField
+							control={form.control}
+							name="members"
+							render={({ field }) => (
+								<FormItem>
+									<FormLabel>Select Members</FormLabel>
+									<FormControl>
+										<MultiSelectMembers
+											selectedMembers={field.value}
+											setSelectedMembers={(members) => {
+												console.log("members", members);
+												field.onChange(members);
+											}}
+										/>
+									</FormControl>
+									<FormDescription>
+										Select members ({field.value.length})
+									</FormDescription>
+									<FormMessage />
+								</FormItem>
+							)}
+						/>
 					</TabsContent>
 				</Tabs>
 				<DialogFooter>
