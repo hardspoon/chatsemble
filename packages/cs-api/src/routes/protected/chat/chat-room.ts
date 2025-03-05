@@ -42,9 +42,13 @@ const chatRoom = new Hono<HonoContextWithAuth>()
 
 		await chatRoomDo.migrate();
 
+		if (type === "oneToOne" && members.length !== 1) {
+			throw new Error("One to one chat rooms must have exactly one member");
+		}
+
 		const newChatRoom: ChatRoom = {
 			id: chatRoomDoId.toString(),
-			name,
+			name: type === "oneToOne" ? members[0].name : name,
 			organizationId: activeOrganizationId,
 			type,
 			createdAt: Date.now(),

@@ -39,7 +39,6 @@ export const chatRoomMemberSchema = z.object({
 });
 
 export const createChatRoomMemberSchema = chatRoomMemberSchema.omit({
-	name: true,
 	email: true,
 	image: true,
 });

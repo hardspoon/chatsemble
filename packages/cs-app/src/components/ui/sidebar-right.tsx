@@ -136,7 +136,7 @@ const SidebarRightProvider = React.forwardRef<
 				<div
 					style={
 						{
-							"--sidebar-width": SIDEBAR_WIDTH,
+							"--sidebar-simple-width": SIDEBAR_WIDTH,
 							...style,
 						} as React.CSSProperties
 					}
