@@ -19,7 +19,7 @@ const chatRoom = new Hono<HonoContextWithAuth>()
 		const user = c.get("user");
 		const session = c.get("session");
 		const { activeOrganizationId } = session;
-		const { name, type } = c.req.valid("json");
+		const { name, type, members } = c.req.valid("json");
 
 		const hasChatRoomPermission = await chatRoomMemberHasChatRoomPermission({
 			headers: c.req.raw.headers,
@@ -74,6 +74,67 @@ const chatRoom = new Hono<HonoContextWithAuth>()
 			role: newChatRoomMember.role,
 			type: newChatRoomMember.type,
 		});
+
+		// Add additional members if provided
+		if (members && members.length > 0) {
+			// Filter out the current user if they're in the members array
+			const additionalMembers = members.filter(
+				(member) => member.id !== user.id,
+			);
+
+			for (const member of additionalMembers) {
+				const chatRoomMember = {
+					roomId: newChatRoom.id,
+					memberId: member.id,
+					role: member.role,
+					type: member.type,
+				};
+
+				// Add member to D1 database
+				await db.insert(globalSchema.chatRoomMember).values(chatRoomMember);
+
+				// Add member to Durable Object
+				// For Durable Object, we need more information about the member
+				// We'll need to fetch user/agent details based on the member type
+				const memberDetails: Partial<ChatRoomMember> = {
+					id: member.id,
+					roomId: newChatRoom.id,
+					role: member.role,
+					type: member.type,
+				};
+
+				if (member.type === "user") {
+					// Fetch user details
+					const userDetails = await db
+						.select()
+						.from(globalSchema.user)
+						.where(eq(globalSchema.user.id, member.id))
+						.get();
+
+					if (userDetails) {
+						memberDetails.name = userDetails.name;
+						memberDetails.email = userDetails.email;
+						memberDetails.image = userDetails.image;
+					}
+				} else if (member.type === "agent") {
+					// Fetch agent details
+					const agentDetails = await db
+						.select()
+						.from(globalSchema.agent)
+						.where(eq(globalSchema.agent.id, member.id))
+						.get();
+
+					if (agentDetails) {
+						memberDetails.name = agentDetails.name;
+						memberDetails.email = `agent-${agentDetails.id}@system.local`;
+						memberDetails.image = agentDetails.image;
+					}
+				}
+
+				// Add member to Durable Object
+				await chatRoomDo.addMember(memberDetails as ChatRoomMember);
+			}
+		}
 
 		return c.json({ roomId: chatRoomDoId.toString() });
 	})

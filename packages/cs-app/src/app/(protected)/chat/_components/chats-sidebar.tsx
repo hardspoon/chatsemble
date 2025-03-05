@@ -7,14 +7,37 @@ import {
 	useSidebar,
 } from "@/components/ui/sidebar";
 import { Skeleton } from "@/components/ui/skeleton";
-import type { ChatRoom } from "@/cs-shared";
+import type { ChatRoom, ChatRoomType } from "@/cs-shared";
 import { client } from "@/lib/api-client";
 import { useQuery } from "@tanstack/react-query";
-import { AlertCircle } from "lucide-react";
+import {
+	AlertCircle,
+	ChevronDown,
+	ChevronRight,
+	MessageSquareDot,
+	MessageSquareLock,
+	MessageSquarePlus,
+	Plus,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
-import { NewGroupChatDialog } from "./new-chat-dialog";
+import { NewChatRoomDialog, type DialogState } from "./new-chat-dialog";
+import { Button } from "@/components/ui/button";
+import {
+	Collapsible,
+	CollapsibleContent,
+	CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import { type SetStateAction, type Dispatch, useMemo, useState } from "react";
+import {
+	DropdownMenu,
+	DropdownMenuItem,
+	DropdownMenuContent,
+	DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export function ChatsSidebar() {
+	const [dialogState, setDialogState] = useState<DialogState>(null);
+
 	const {
 		data: chatRoomsData,
 		isLoading,
@@ -30,31 +53,186 @@ export function ChatsSidebar() {
 
 	return (
 		<>
+			<NewChatRoomDialog
+				dialogState={dialogState}
+				setDialogState={setDialogState}
+			/>
 			<SidebarHeader className="gap-3.5 border-b p-4">
 				<div className="flex w-full items-center justify-between">
 					<div className="text-base font-medium text-foreground">Chats</div>
-					<NewGroupChatDialog />
+					<DropdownMenu>
+						<DropdownMenuTrigger asChild>
+							<Button
+								variant="outline"
+								size="sm"
+								className="flex items-center gap-2"
+							>
+								<Plus className="h-4 w-4" />
+								New chat
+							</Button>
+						</DropdownMenuTrigger>
+						<DropdownMenuContent>
+							<DropdownMenuItem
+								onClick={() => {
+									setDialogState({ type: "publicGroup" });
+								}}
+							>
+								<MessageSquareDot className="h-4 w-4" />
+								New public group
+							</DropdownMenuItem>
+							<DropdownMenuItem
+								onClick={() => {
+									setDialogState({ type: "privateGroup" });
+								}}
+							>
+								<MessageSquareLock className="h-4 w-4" />
+								New private group
+							</DropdownMenuItem>
+							<DropdownMenuItem
+								onClick={() => {
+									setDialogState({ type: "oneToOne" });
+								}}
+							>
+								<MessageSquarePlus className="h-4 w-4" />
+								New direct message
+							</DropdownMenuItem>
+						</DropdownMenuContent>
+					</DropdownMenu>
 				</div>
 				<SidebarInput placeholder="Search chats..." />
 			</SidebarHeader>
 			<SidebarContent>
+				{isLoading ? (
+					<ChatRoomsSkeleton />
+				) : error ? (
+					<ChatRoomsError />
+				) : chatRoomsData && chatRoomsData.length > 0 ? (
+					<ChatRoomGroups
+						chatRooms={chatRoomsData}
+						setDialogState={setDialogState}
+					/>
+				) : (
+					<ChatRoomsEmpty />
+				)}
+			</SidebarContent>
+		</>
+	);
+}
+
+function ChatRoomGroups({
+	chatRooms,
+	setDialogState,
+}: {
+	chatRooms: ChatRoom[];
+	setDialogState: Dispatch<SetStateAction<DialogState>>;
+}) {
+	// Group chat rooms by type
+	const publicChats = useMemo(
+		() => chatRooms.filter((chat) => chat.type === "publicGroup"),
+		[chatRooms],
+	);
+	const privateChats = useMemo(
+		() => chatRooms.filter((chat) => chat.type === "privateGroup"),
+		[chatRooms],
+	);
+	const oneToOneChats = useMemo(
+		() => chatRooms.filter((chat) => chat.type === "oneToOne"),
+		[chatRooms],
+	);
+
+	return (
+		<div className="flex flex-col w-full">
+			<ChatRoomSection
+				title="Public Chats"
+				chatRooms={publicChats}
+				chatType="publicGroup"
+				setDialogState={setDialogState}
+			/>
+
+			<ChatRoomSection
+				title="Private Groups"
+				chatRooms={privateChats}
+				chatType="privateGroup"
+				setDialogState={setDialogState}
+			/>
+
+			<ChatRoomSection
+				title="Direct Messages"
+				chatRooms={oneToOneChats}
+				chatType="oneToOne"
+				setDialogState={setDialogState}
+			/>
+		</div>
+	);
+}
+
+function ChatRoomSection({
+	title,
+	chatRooms,
+	chatType,
+	setDialogState,
+}: {
+	title: string;
+	chatRooms: ChatRoom[];
+	chatType: ChatRoomType;
+	setDialogState: Dispatch<SetStateAction<DialogState>>;
+}) {
+	const [isOpen, setIsOpen] = useState(true);
+
+	return (
+		<Collapsible open={isOpen} onOpenChange={setIsOpen} className="w-full">
+			<div className="flex items-center justify-between px-4 py-2 border-b bg-sidebar-accent/30">
+				<CollapsibleTrigger asChild>
+					<Button variant="ghost" size="sm" className="p-0 h-auto">
+						<div className="flex items-center gap-1">
+							{isOpen ? (
+								<ChevronDown className="h-4 w-4" />
+							) : (
+								<ChevronRight className="h-4 w-4" />
+							)}
+							<span className="font-medium text-sm">{title}</span>
+							{chatRooms.length > 0 && (
+								<span className="text-xs text-muted-foreground ml-1">
+									({chatRooms.length})
+								</span>
+							)}
+						</div>
+					</Button>
+				</CollapsibleTrigger>
+				<Button
+					variant="ghost"
+					size="icon"
+					className="h-6 w-6"
+					title={`Create new ${chatType === "publicGroup" ? "public chat" : chatType === "privateGroup" ? "private group" : "direct message"}`}
+					onClick={() => {
+						setDialogState({ type: chatType });
+					}}
+				>
+					<Plus className="h-4 w-4" />
+				</Button>
+			</div>
+			<CollapsibleContent>
 				<SidebarGroup className="px-0 py-0">
 					<SidebarGroupContent>
-						{isLoading ? (
-							<ChatRoomsSkeleton />
-						) : error ? (
-							<ChatRoomsError />
-						) : chatRoomsData && chatRoomsData.length > 0 ? (
-							chatRoomsData.map((chat) => (
+						{chatRooms.length > 0 ? (
+							chatRooms.map((chat) => (
 								<ChatRoomSidebarItem key={chat.id} chat={chat} />
 							))
 						) : (
-							<ChatRoomsEmpty />
+							<div className="flex items-center justify-center py-3 text-sm text-muted-foreground">
+								No{" "}
+								{chatType === "publicGroup"
+									? "public chats"
+									: chatType === "privateGroup"
+										? "private groups"
+										: "direct messages"}{" "}
+								found
+							</div>
 						)}
 					</SidebarGroupContent>
 				</SidebarGroup>
-			</SidebarContent>
-		</>
+			</CollapsibleContent>
+		</Collapsible>
 	);
 }
 
@@ -74,7 +252,11 @@ function ChatRoomSidebarItem({ chat }: { chat: ChatRoom }) {
 			<div className="w-full flex items-center justify-between">
 				<span className="font-medium">{chat.name}</span>
 				<span className="text-xs text-muted-foreground">
-					{chat.type === "privateGroup" ? "Private" : "Public"}
+					{chat.type === "privateGroup"
+						? "Private"
+						: chat.type === "oneToOne"
+							? "DM"
+							: "Public"}
 				</span>
 			</div>
 		</button>
@@ -100,27 +282,49 @@ function ChatRoomsError() {
 
 function ChatRoomsSkeleton() {
 	return (
-		<div>
-			<div className="flex flex-col gap-1 border-b px-4 py-3">
-				<div className="flex items-center justify-between">
-					<Skeleton className="h-4 w-24" />
-					<Skeleton className="h-3 w-12" />
+		<div className="flex flex-col w-full">
+			{/* Public Chats Section Skeleton */}
+			<div className="w-full">
+				<div className="flex items-center justify-between px-4 py-2 border-b bg-sidebar-accent/30">
+					<div className="flex items-center gap-1">
+						<Skeleton className="h-4 w-4" />
+						<Skeleton className="h-4 w-24" />
+					</div>
+					<Skeleton className="h-6 w-6 rounded-md" />
 				</div>
-				<Skeleton className="h-3 w-16" />
+				<div>
+					<div className="flex flex-col gap-1 border-b px-4 py-3">
+						<div className="flex items-center justify-between">
+							<Skeleton className="h-4 w-24" />
+							<Skeleton className="h-3 w-12" />
+						</div>
+					</div>
+					<div className="flex flex-col gap-1 border-b px-4 py-3">
+						<div className="flex items-center justify-between">
+							<Skeleton className="h-4 w-24" />
+							<Skeleton className="h-3 w-12" />
+						</div>
+					</div>
+				</div>
 			</div>
-			<div className="flex flex-col gap-1 border-b px-4 py-3">
-				<div className="flex items-center justify-between">
-					<Skeleton className="h-4 w-24" />
-					<Skeleton className="h-3 w-12" />
+
+			{/* Private Groups Section Skeleton */}
+			<div className="w-full">
+				<div className="flex items-center justify-between px-4 py-2 border-b bg-sidebar-accent/30">
+					<div className="flex items-center gap-1">
+						<Skeleton className="h-4 w-4" />
+						<Skeleton className="h-4 w-24" />
+					</div>
+					<Skeleton className="h-6 w-6 rounded-md" />
 				</div>
-				<Skeleton className="h-3 w-16" />
-			</div>
-			<div className="flex flex-col gap-1 border-b px-4 py-3">
-				<div className="flex items-center justify-between">
-					<Skeleton className="h-4 w-24" />
-					<Skeleton className="h-3 w-12" />
+				<div>
+					<div className="flex flex-col gap-1 border-b px-4 py-3">
+						<div className="flex items-center justify-between">
+							<Skeleton className="h-4 w-24" />
+							<Skeleton className="h-3 w-12" />
+						</div>
+					</div>
 				</div>
-				<Skeleton className="h-3 w-16" />
 			</div>
 		</div>
 	);
