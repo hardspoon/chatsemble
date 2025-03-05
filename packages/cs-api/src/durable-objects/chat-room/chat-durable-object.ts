@@ -91,7 +91,7 @@ export class ChatDurableObject extends DurableObject<Env> {
 					this.sendWebSocketMessageToUser(
 						{
 							type: "chat-ready",
-							messages: await this.selectChatRoomMessages(),
+							messages: await this.selectMessages(),
 							members: await this.getMembers(),
 						},
 						session.userId,
@@ -145,7 +145,7 @@ export class ChatDurableObject extends DurableObject<Env> {
 			notifyAgents: boolean;
 		},
 	) {
-		const chatRoomMessage = await this.insertChatRoomMessage({
+		const chatRoomMessage = await this.insertMessage({
 			memberId,
 			id: message.id,
 			content: message.content,
@@ -176,7 +176,7 @@ export class ChatDurableObject extends DurableObject<Env> {
 		}
 	}
 
-	async insertChatRoomMessage(
+	async insertMessage(
 		message: typeof chatMessage.$inferInsert,
 	): Promise<ChatRoomMessage> {
 		// First insert the message
@@ -218,7 +218,7 @@ export class ChatDurableObject extends DurableObject<Env> {
 		return messageWithMember;
 	}
 
-	async selectChatRoomMessages(limit?: number): Promise<ChatRoomMessage[]> {
+	async selectMessages(limit?: number): Promise<ChatRoomMessage[]> {
 		const query = this.db
 			.select({
 				id: chatMessage.id,
@@ -248,20 +248,8 @@ export class ChatDurableObject extends DurableObject<Env> {
 		return result.reverse();
 	}
 
-	async addMember(member: typeof chatRoomMember.$inferInsert) {
-		await this.db
-			.insert(chatRoomMember)
-			.values(member)
-			.onConflictDoUpdate({
-				target: [chatRoomMember.id],
-				set: {
-					role: member.role,
-					type: member.type,
-					name: member.name,
-					email: member.email,
-					image: member.image,
-				},
-			});
+	async addMembers(members: (typeof chatRoomMember.$inferInsert)[]) {
+		await this.db.insert(chatRoomMember).values(members).onConflictDoNothing();
 
 		this.broadcastWebSocketMessage({
 			type: "member-sync",
@@ -289,7 +277,7 @@ export class ChatDurableObject extends DurableObject<Env> {
 		return await query.all();
 	}
 
-	async upsertChatRoomConfig(config: typeof chatRoomConfig.$inferInsert) {
+	async upsertConfig(config: typeof chatRoomConfig.$inferInsert) {
 		await this.db
 			.insert(chatRoomConfig)
 			.values(config)
@@ -302,7 +290,7 @@ export class ChatDurableObject extends DurableObject<Env> {
 			});
 	}
 
-	async getChatRoomConfig() {
+	async getConfig() {
 		const config = await this.db
 			.select()
 			.from(chatRoomConfig)

@@ -303,7 +303,7 @@ export class AgentDurableObject extends DurableObject<Env> {
 
 		const chatRoomDO = this.env.CHAT_DURABLE_OBJECT.get(chatRoomDoId);
 
-		const messages = await chatRoomDO.selectChatRoomMessages(limit);
+		const messages = await chatRoomDO.selectMessages(limit);
 
 		return messages;
 	}
