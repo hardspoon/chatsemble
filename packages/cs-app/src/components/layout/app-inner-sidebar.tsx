@@ -1,7 +1,7 @@
 "use client";
 
 import { AgentsSidebar } from "@/app/(protected)/agents/_components/agents-sidebar";
-import { ChatsSidebar } from "@/app/(protected)/chat/_components/chats-sidebar";
+import { ChatRoomsList } from "@/app/(protected)/chat/_components/chat-sidebar/chat-rooms-list";
 import { SettingsSidebar } from "@/app/(protected)/settings/_components/settings-sidebar";
 import { usePathname } from "next/navigation";
 
@@ -10,7 +10,7 @@ export function AppInnerSidebarContent() {
 	const pathname = usePathname();
 
 	if (pathname.startsWith("/chat")) {
-		return <ChatsSidebar />;
+		return <ChatRoomsList />;
 	}
 
 	if (pathname.startsWith("/settings")) {

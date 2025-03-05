@@ -1,3 +1,15 @@
+import { Button } from "@/components/ui/button";
+import {
+	Collapsible,
+	CollapsibleContent,
+	CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
 	SidebarContent,
 	SidebarGroup,
@@ -20,22 +32,13 @@ import {
 	Plus,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { NewChatRoomDialog, type DialogState } from "./new-chat-dialog";
-import { Button } from "@/components/ui/button";
+import { type Dispatch, type SetStateAction, useMemo, useState } from "react";
 import {
-	Collapsible,
-	CollapsibleContent,
-	CollapsibleTrigger,
-} from "@/components/ui/collapsible";
-import { type SetStateAction, type Dispatch, useMemo, useState } from "react";
-import {
-	DropdownMenu,
-	DropdownMenuItem,
-	DropdownMenuContent,
-	DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+	type DialogState,
+	NewChatRoomDialog,
+} from "../new-chat/new-chat-dialog";
 
-export function ChatsSidebar() {
+export function ChatRoomsList() {
 	const [dialogState, setDialogState] = useState<DialogState>(null);
 
 	const {
@@ -106,20 +109,20 @@ export function ChatsSidebar() {
 					<ChatRoomsSkeleton />
 				) : error ? (
 					<ChatRoomsError />
-				) : chatRoomsData && chatRoomsData.length > 0 ? (
-					<ChatRoomGroups
-						chatRooms={chatRoomsData}
-						setDialogState={setDialogState}
-					/>
 				) : (
-					<ChatRoomsEmpty />
+					chatRoomsData && (
+						<ChatRoomsGroups
+							chatRooms={chatRoomsData}
+							setDialogState={setDialogState}
+						/>
+					)
 				)}
 			</SidebarContent>
 		</>
 	);
 }
 
-function ChatRoomGroups({
+function ChatRoomsGroups({
 	chatRooms,
 	setDialogState,
 }: {
@@ -142,21 +145,21 @@ function ChatRoomGroups({
 
 	return (
 		<div className="flex flex-col w-full">
-			<ChatRoomSection
+			<ChatRoomsGroup
 				title="Public Chats"
 				chatRooms={publicChats}
 				chatType="publicGroup"
 				setDialogState={setDialogState}
 			/>
 
-			<ChatRoomSection
+			<ChatRoomsGroup
 				title="Private Groups"
 				chatRooms={privateChats}
 				chatType="privateGroup"
 				setDialogState={setDialogState}
 			/>
 
-			<ChatRoomSection
+			<ChatRoomsGroup
 				title="Direct Messages"
 				chatRooms={oneToOneChats}
 				chatType="oneToOne"
@@ -166,7 +169,7 @@ function ChatRoomGroups({
 	);
 }
 
-function ChatRoomSection({
+function ChatRoomsGroup({
 	title,
 	chatRooms,
 	chatType,
@@ -216,7 +219,7 @@ function ChatRoomSection({
 					<SidebarGroupContent>
 						{chatRooms.length > 0 ? (
 							chatRooms.map((chat) => (
-								<ChatRoomSidebarItem key={chat.id} chat={chat} />
+								<ChatRoomItem key={chat.id} chat={chat} />
 							))
 						) : (
 							<div className="flex items-center justify-center py-3 text-sm text-muted-foreground">
@@ -236,7 +239,7 @@ function ChatRoomSection({
 	);
 }
 
-function ChatRoomSidebarItem({ chat }: { chat: ChatRoom }) {
+function ChatRoomItem({ chat }: { chat: ChatRoom }) {
 	const router = useRouter();
 	const { setOpenMobile } = useSidebar();
 
@@ -260,14 +263,6 @@ function ChatRoomSidebarItem({ chat }: { chat: ChatRoom }) {
 				</span>
 			</div>
 		</button>
-	);
-}
-
-function ChatRoomsEmpty() {
-	return (
-		<div className="flex items-center justify-center py-10 text-sm text-muted-foreground">
-			No chats found
-		</div>
 	);
 }
 
