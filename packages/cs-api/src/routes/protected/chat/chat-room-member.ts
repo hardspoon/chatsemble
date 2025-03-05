@@ -134,15 +134,17 @@ const app = new Hono<HonoContextWithAuth>().post(
 			throw new Error("Member not found");
 		}
 
-		await chatRoomDo.addMember({
-			id: member.memberId,
-			roomId: room.id,
-			role,
-			type,
-			name: member.name,
-			email: member.email ?? "agent@chatsemble.com",
-			image: member.image,
-		});
+		await chatRoomDo.addMembers([
+			{
+				id: member.memberId,
+				roomId: room.id,
+				role,
+				type,
+				name: member.name,
+				email: member.email ?? "agent@chatsemble.com",
+				image: member.image,
+			},
+		]);
 
 		const [newMember] = await db
 			.insert(globalSchema.chatRoomMember)

@@ -4,8 +4,8 @@ import {
 	honoAuthCheckMiddleware,
 	honoAuthMiddleware,
 	honoDbMiddleware,
-} from "../lib/hono/middleware";
-import type { HonoContextWithAuth } from "../types/hono";
+} from "../../lib/hono/middleware";
+import type { HonoContextWithAuth } from "../../types/hono";
 
 const app = new Hono<HonoContextWithAuth>()
 	.use(honoDbMiddleware)

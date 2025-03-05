@@ -3,7 +3,7 @@ export { AgentDurableObject } from "./durable-objects/agent/agent-durable-object
 
 import { Hono } from "hono";
 import protectedRoutes from "./routes/protected";
-import websocketRoutes from "./routes/websocket";
+import websocketRoutes from "./routes/websocket/chat-room";
 import type { HonoContext } from "./types/hono";
 
 const app = new Hono<HonoContext>();
