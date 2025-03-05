@@ -62,10 +62,14 @@ export const chatRoomSchema = z.object({
 	createdAt: z.number(),
 });
 
-export const createChatRoomSchema = chatRoomSchema.omit({
-	id: true,
-	createdAt: true,
-	organizationId: true,
-});
+export const createChatRoomSchema = chatRoomSchema
+	.omit({
+		id: true,
+		createdAt: true,
+		organizationId: true,
+	})
+	.extend({
+		members: z.array(createChatRoomMemberSchema.omit({ roomId: true })),
+	});
 
 export type ChatRoom = z.infer<typeof chatRoomSchema>;
