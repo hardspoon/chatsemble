@@ -39,11 +39,14 @@ export const chatRoomMemberSchema = z.object({
 });
 
 export const createChatRoomMemberSchema = chatRoomMemberSchema.omit({
+	name: true,
 	email: true,
 	image: true,
 });
 
 export type ChatRoomMember = z.infer<typeof chatRoomMemberSchema>;
+
+export type CreateChatRoomMember = z.infer<typeof createChatRoomMemberSchema>;
 
 // ChatRoom
 

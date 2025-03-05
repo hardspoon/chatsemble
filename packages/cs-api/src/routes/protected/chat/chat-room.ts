@@ -42,70 +42,9 @@ const chatRoom = new Hono<HonoContextWithAuth>()
 
 		await chatRoomDo.migrate();
 
-		if (type === "oneToOne" && members.length !== 1) {
-			throw new Error("One to one chat rooms must have exactly one member");
-		}
-
-		const newChatRoom: ChatRoom = {
-			id: chatRoomDoId.toString(),
-			name: type === "oneToOne" ? members[0].name : name,
-			organizationId: activeOrganizationId,
-			type,
-			createdAt: Date.now(),
-		};
-
-		const newChatRoomMember: ChatRoomMember = {
-			id: user.id,
-			roomId: newChatRoom.id,
-			role: "owner",
-			type: "user",
-			name: user.name,
-			email: user.email,
-			image: user.image,
-		};
-
-		await chatRoomDo.upsertChatRoomConfig(newChatRoom);
-		await chatRoomDo.addMember(newChatRoomMember);
-
-		// TODO: Apply transactions or someway to rollback if one of the operations fails for this and other operations
-
-		// Create room record in D1
-		await db.insert(globalSchema.chatRoom).values(newChatRoom);
-
-		await db.insert(globalSchema.chatRoomMember).values({
-			roomId: newChatRoom.id,
-			memberId: newChatRoomMember.id,
-			role: newChatRoomMember.role,
-			type: newChatRoomMember.type,
-		});
-
-		// Add additional members if provided
-		if (members && members.length > 0) {
-			// Filter out the current user if they're in the members array
-			const additionalMembers = members.filter(
-				(member) => member.id !== user.id,
-			);
-
-			for (const member of additionalMembers) {
-				const chatRoomMember = {
-					roomId: newChatRoom.id,
-					memberId: member.id,
-					role: member.role,
-					type: member.type,
-				};
-
-				// Add member to D1 database
-				await db.insert(globalSchema.chatRoomMember).values(chatRoomMember);
-
-				// Add member to Durable Object
-				// For Durable Object, we need more information about the member
-				// We'll need to fetch user/agent details based on the member type
-				const memberDetails: Partial<ChatRoomMember> = {
-					id: member.id,
-					roomId: newChatRoom.id,
-					role: member.role,
-					type: member.type,
-				};
+		const parsedMembers = await Promise.all(
+			members.map(async (member) => {
+				let chatRoomMember: Omit<ChatRoomMember, "roomId"> | null = null;
 
 				if (member.type === "user") {
 					// Fetch user details
@@ -116,9 +55,14 @@ const chatRoom = new Hono<HonoContextWithAuth>()
 						.get();
 
 					if (userDetails) {
-						memberDetails.name = userDetails.name;
-						memberDetails.email = userDetails.email;
-						memberDetails.image = userDetails.image;
+						chatRoomMember = {
+							id: userDetails.id,
+							name: userDetails.name,
+							email: userDetails.email,
+							image: userDetails.image,
+							type: member.type,
+							role: "member",
+						};
 					}
 				} else if (member.type === "agent") {
 					// Fetch agent details
@@ -129,14 +73,88 @@ const chatRoom = new Hono<HonoContextWithAuth>()
 						.get();
 
 					if (agentDetails) {
-						memberDetails.name = agentDetails.name;
-						memberDetails.email = `agent-${agentDetails.id}@system.local`;
-						memberDetails.image = agentDetails.image;
+						chatRoomMember = {
+							id: agentDetails.id,
+							name: agentDetails.name,
+							email: `agent-${agentDetails.id}@system.local`,
+							image: agentDetails.image,
+							type: member.type,
+							role: "member",
+						};
 					}
 				}
 
+				return chatRoomMember;
+			}),
+		);
+
+		const filteredMembers = parsedMembers.filter(
+			(member) => member && member.id !== user.id,
+		) as Omit<ChatRoomMember, "roomId">[];
+
+		if (type === "oneToOne" && filteredMembers.length !== 1) {
+			throw new Error("One to one chat rooms must have exactly one member");
+		}
+
+		const newChatRoom: ChatRoom = {
+			id: chatRoomDoId.toString(),
+			name: type === "oneToOne" ? filteredMembers[0].name : name,
+			organizationId: activeOrganizationId,
+			type,
+			createdAt: Date.now(),
+		};
+
+		const newOwnerChatRoomMember: ChatRoomMember = {
+			id: user.id,
+			roomId: newChatRoom.id,
+			role: "owner",
+			type: "user",
+			name: user.name,
+			email: user.email,
+			image: user.image,
+		};
+
+		await chatRoomDo.upsertChatRoomConfig(newChatRoom);
+		await chatRoomDo.addMember(newOwnerChatRoomMember);
+
+		// TODO: Apply transactions or someway to rollback if one of the operations fails for this and other operations
+
+		// Create room record in D1
+		await db.insert(globalSchema.chatRoom).values(newChatRoom);
+
+		await db.insert(globalSchema.chatRoomMember).values({
+			roomId: newChatRoom.id,
+			memberId: newOwnerChatRoomMember.id,
+			role: newOwnerChatRoomMember.role,
+			type: newOwnerChatRoomMember.type,
+		});
+
+		if (filteredMembers.length > 0) {
+			for (const member of filteredMembers) {
+				// Add member to D1 database
+				await db.insert(globalSchema.chatRoomMember).values({
+					memberId: member.id,
+					roomId: newChatRoom.id,
+					role: member.role,
+					type: member.type,
+				});
+
 				// Add member to Durable Object
-				await chatRoomDo.addMember(memberDetails as ChatRoomMember);
+				await chatRoomDo.addMember({
+					...member,
+					roomId: newChatRoom.id,
+				});
+
+				if (member.type === "agent") {
+					const agentId = c.env.AGENT_DURABLE_OBJECT.idFromString(member.id);
+					const agent = c.env.AGENT_DURABLE_OBJECT.get(agentId);
+
+					await agent.addChatRoom({
+						id: newChatRoom.id,
+						name: newChatRoom.name,
+						organizationId: activeOrganizationId,
+					});
+				}
 			}
 		}
 

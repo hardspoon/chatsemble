@@ -1,27 +1,62 @@
-import type { UseFormReturn } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import type { z } from "zod";
 
 import { Button } from "@/components/ui/button";
 import { DialogFooter } from "@/components/ui/dialog";
-import { Form } from "@/components/ui/form";
-import type { createChatRoomSchema } from "@/cs-shared";
+import {
+	Form,
+	FormControl,
+	FormField,
+	FormItem,
+	FormLabel,
+	FormMessage,
+} from "@/components/ui/form";
+import { createChatRoomSchema } from "@/cs-shared";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { MultiSelectMembers } from "./multi-select-members";
+
 type CreateChatRoomFormValues = z.infer<typeof createChatRoomSchema>;
 
 export function NewChatRoomOneToOneForm({
-	form,
 	onSubmit,
 	isPending,
 }: {
-	form: UseFormReturn<CreateChatRoomFormValues>;
 	onSubmit: (values: CreateChatRoomFormValues) => void;
 	isPending: boolean;
 }) {
+	const form = useForm<CreateChatRoomFormValues>({
+		resolver: zodResolver(createChatRoomSchema),
+		defaultValues: {
+			name: "TEMP-TITLE",
+			type: "oneToOne",
+			members: [],
+		},
+	});
+
 	return (
 		<>
 			<Form {...form}>
 				<form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-					<MultiSelectMembers form={form} limit={1} />
+					<FormField
+						control={form.control}
+						name="members"
+						render={({ field }) => (
+							<FormItem>
+								<FormLabel>Select who you want to chat with</FormLabel>
+								<FormControl>
+									<MultiSelectMembers
+										selectedMembers={field.value}
+										setSelectedMembers={(members) => {
+											console.log("members", members);
+											field.onChange(members);
+										}}
+										limit={1}
+									/>
+								</FormControl>
+								<FormMessage />
+							</FormItem>
+						)}
+					/>
 
 					<DialogFooter>
 						<Button
