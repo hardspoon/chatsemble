@@ -3,9 +3,7 @@
 import { type UseChatWSProps, useChatWS } from "@/hooks/use-chat-ws";
 import { type ReactNode, createContext, useContext } from "react";
 
-const ChatWsContext = createContext<
-	(ReturnType<typeof useChatWS> & { roomId: string }) | null
->(null);
+const ChatWsContext = createContext<ReturnType<typeof useChatWS> | null>(null);
 
 interface ChatProviderProps extends UseChatWSProps {
 	children: ReactNode;
@@ -19,9 +17,7 @@ export function ChatWsProvider({
 	const chat = useChatWS({ roomId, ...props });
 
 	return (
-		<ChatWsContext.Provider value={{ ...chat, roomId }}>
-			{children}
-		</ChatWsContext.Provider>
+		<ChatWsContext.Provider value={chat}>{children}</ChatWsContext.Provider>
 	);
 }
 

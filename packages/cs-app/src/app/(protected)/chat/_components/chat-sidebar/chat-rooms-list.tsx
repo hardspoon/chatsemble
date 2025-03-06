@@ -36,7 +36,7 @@ import { type Dispatch, type SetStateAction, useMemo, useState } from "react";
 import {
 	type DialogState,
 	NewChatRoomDialog,
-} from "../new-chat/new-chat-dialog";
+} from "./new-chat/new-chat-dialog";
 
 export function ChatRoomsList() {
 	const [dialogState, setDialogState] = useState<DialogState>(null);

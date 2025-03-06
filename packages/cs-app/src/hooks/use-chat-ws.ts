@@ -1,4 +1,5 @@
 import type {
+	ChatRoom,
 	ChatRoomMember,
 	ChatRoomMessage,
 	ChatRoomMessagePartial,
@@ -23,6 +24,8 @@ export function useChatWS({ roomId, user }: UseChatWSProps) {
 
 	const [messages, setMessages] = useState<ChatRoomMessage[]>([]);
 	const [members, setMembers] = useState<ChatRoomMember[]>([]);
+	const [room, setRoom] = useState<ChatRoom | null>(null);
+
 	const [input, setInput] = useState("");
 	const [connectionStatus, setConnectionStatus] = useState<
 		"disconnected" | "connecting" | "connected" | "ready"
@@ -72,6 +75,7 @@ export function useChatWS({ roomId, user }: UseChatWSProps) {
 						setConnectionStatus("ready");
 						setMessages(wsMessage.messages);
 						setMembers(wsMessage.members);
+						setRoom(wsMessage.room);
 						break;
 					}
 				}
@@ -157,8 +161,8 @@ export function useChatWS({ roomId, user }: UseChatWSProps) {
 	return {
 		messages,
 		members,
+		room,
 		input,
-		setInput,
 		handleInputChange,
 		handleSubmit,
 		connectionStatus,

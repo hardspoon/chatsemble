@@ -18,7 +18,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { type ChatRoomType, createChatRoomSchema } from "@/cs-shared";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Settings, UserPlus } from "lucide-react";
-import { MultiSelectMembers } from "./multi-select-members";
+import { MultiSelectMembers } from "../../../../../../components/members/multi-select-members";
 
 type CreateChatRoomFormValues = z.infer<typeof createChatRoomSchema>;
 
