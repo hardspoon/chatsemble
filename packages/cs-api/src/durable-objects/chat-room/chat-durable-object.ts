@@ -93,6 +93,7 @@ export class ChatDurableObject extends DurableObject<Env> {
 							type: "chat-ready",
 							messages: await this.selectMessages(),
 							members: await this.getMembers(),
+							room: await this.getConfig(),
 						},
 						session.userId,
 					);

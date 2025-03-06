@@ -1,6 +1,6 @@
 "use client";
 
-import { useChatWsContext } from "@/app/(protected)/chat/_components/chat-ws-provider";
+import { useChatWsContext } from "@/app/(protected)/chat/_components/chat-main/chat-ws-provider";
 import {
 	ChatInput,
 	ChatInputSubmit,

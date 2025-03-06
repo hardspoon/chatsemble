@@ -5,8 +5,7 @@ import type { ChatRoomMember, CreateChatRoomMember } from "@/cs-shared";
 import { client } from "@/lib/api-client";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
-
-// TODO: Reuse this component in the chat room members list, add a prop userIdsNotAllowedToBeAdded to disable users
+import { MemberBadge } from "./member-badge";
 
 function MultiSelectMembersSkeleton() {
 	return (
@@ -144,11 +143,7 @@ export function MultiSelectMembers({
 									</AvatarFallback>
 								</Avatar>
 								<span>{item.name}</span>
-								<span
-									className={`text-xs px-2 py-0.5 rounded-full ${item.type === "user" ? "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300" : "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300"}`}
-								>
-									{item.type === "user" ? "User" : "Agent"}
-								</span>
+								<MemberBadge type={item.type} />
 							</label>
 						</div>
 					);

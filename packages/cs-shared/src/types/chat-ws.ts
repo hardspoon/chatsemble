@@ -2,6 +2,7 @@ import type {
 	ChatRoomMessage,
 	ChatRoomMessagePartial,
 	ChatRoomMember,
+	ChatRoom,
 } from "./chat";
 
 export type WsMessageChatInit = {
@@ -23,6 +24,7 @@ export type WsMessageChatReady = {
 	type: "chat-ready";
 	messages: ChatRoomMessage[];
 	members: ChatRoomMember[];
+	room: ChatRoom;
 };
 
 export type WsMessagesSync = {
