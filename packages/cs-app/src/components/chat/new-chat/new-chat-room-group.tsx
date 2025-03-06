@@ -18,7 +18,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { type ChatRoomType, createChatRoomSchema } from "@/cs-shared";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Settings, UserPlus } from "lucide-react";
-import { MultiSelectMembers } from "../../../../../../components/members/multi-select-members";
+import { ChatMemberMultiSelect } from "../../chat-member/chat-member-multi-select";
 
 type CreateChatRoomFormValues = z.infer<typeof createChatRoomSchema>;
 
@@ -110,7 +110,7 @@ export function NewChatRoomGroupForm({
 								<FormItem>
 									<FormLabel>Select Members</FormLabel>
 									<FormControl>
-										<MultiSelectMembers
+										<ChatMemberMultiSelect
 											selectedMembers={field.value}
 											setSelectedMembers={(members) => {
 												console.log("members", members);

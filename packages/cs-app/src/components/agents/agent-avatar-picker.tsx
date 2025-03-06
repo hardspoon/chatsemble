@@ -1,4 +1,4 @@
-import type { FormValues } from "@/app/(protected)/agents/_components/new-agent-dialog";
+import type { FormValues } from "@/components/agents/new-agent-dialog";
 import {
 	FormControl,
 	FormField,

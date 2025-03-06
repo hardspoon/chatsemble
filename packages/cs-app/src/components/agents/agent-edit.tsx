@@ -1,6 +1,6 @@
 "use client";
 
-import { AgentPlaceholderNoAgentSelected } from "@/app/(protected)/agents/_components/agent-placeholder";
+import { AgentPlaceholderNoAgentSelected } from "@/components/agents/agent-placeholder";
 import { useSearchParams } from "next/navigation";
 import { AgentEditForm } from "./agent-edit-form";
 

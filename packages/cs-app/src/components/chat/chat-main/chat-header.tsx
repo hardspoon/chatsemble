@@ -1,4 +1,4 @@
-import { useChatWsContext } from "@/app/(protected)/chat/_components/chat-main/chat-ws-provider";
+import { useChatWsContext } from "@/components/chat/chat-main/chat-ws-provider";
 
 import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
@@ -8,8 +8,8 @@ import {
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
-import { ChatDetailsDialog } from "./chat-details/chat-details-dialog";
-import type { ChatDetailsDialogOpen } from "./chat-details/chat-details-dialog";
+import { ChatDetailsDialog } from "../chat-details/chat-details-dialog";
+import type { ChatDetailsDialogOpen } from "../chat-details/chat-details-dialog";
 import { type SetStateAction, type Dispatch, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Users } from "lucide-react";

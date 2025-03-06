@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import {
+	DialogDescription,
 	DialogFooter,
 	DialogHeader,
 	DialogTitle,
@@ -24,24 +25,21 @@ import { createChatRoomMemberSchema } from "@/cs-shared";
 import { client } from "@/lib/api-client";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft } from "lucide-react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
-import { SelectMember } from "./select-member";
+import { ChatMemberSelect } from "@/components/chat-member/chat-member-select";
 
 export type FormValues = z.infer<typeof createChatRoomMemberSchema>;
 
-interface AddMemberFormProps {
+interface ChatMemberAddFormProps {
 	roomId: string;
-	onBack: () => void;
 	onSuccess: () => void;
 }
 
-export function AddMemberForm({
+export function ChatMemberAddForm({
 	roomId,
-	onBack,
 	onSuccess,
-}: AddMemberFormProps) {
+}: ChatMemberAddFormProps) {
 	const queryClient = useQueryClient();
 	const form = useForm<FormValues>({
 		resolver: zodResolver(createChatRoomMemberSchema),
@@ -65,8 +63,8 @@ export function AddMemberForm({
 		},
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["chat-room", roomId] });
-			onSuccess();
 			form.reset();
+			onSuccess();
 		},
 	});
 
@@ -77,17 +75,8 @@ export function AddMemberForm({
 	return (
 		<>
 			<DialogHeader>
-				<div className="flex items-center gap-2">
-					<Button
-						variant="ghost"
-						size="sm"
-						className="h-8 w-8 p-0"
-						onClick={onBack}
-					>
-						<ArrowLeft className="h-4 w-4" />
-					</Button>
-					<DialogTitle>Add Member</DialogTitle>
-				</div>
+				<DialogTitle>Add Member</DialogTitle>
+				<DialogDescription>Add a new member to the chat room</DialogDescription>
 			</DialogHeader>
 			<Form {...form}>
 				<form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
@@ -122,7 +111,7 @@ export function AddMemberForm({
 						)}
 					/>
 
-					<SelectMember form={form} />
+					<ChatMemberSelect form={form} />
 
 					<FormField
 						control={form.control}
