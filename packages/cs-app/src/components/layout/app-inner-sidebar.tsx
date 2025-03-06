@@ -1,7 +1,7 @@
 "use client";
 
-import { AgentsSidebar } from "@/app/(protected)/agents/_components/agents-sidebar";
-import { ChatRoomsList } from "@/app/(protected)/chat/_components/chat-sidebar/chat-rooms-list";
+import { AgentsSidebar } from "@/components/agents/agents-sidebar";
+import { ChatRoomsList } from "@/components/chat/chat-sidebar/chat-rooms-list";
 import { SettingsSidebar } from "@/app/(protected)/settings/_components/settings-sidebar";
 import { usePathname } from "next/navigation";
 

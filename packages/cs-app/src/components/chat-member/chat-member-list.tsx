@@ -1,32 +1,14 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Skeleton } from "@/components/ui/skeleton";
-import { MemberBadge } from "@/components/members/member-badge";
+import { ChatMemberBadge } from "@/components/chat-member/chat-member-badge";
 import type { ChatRoomMember } from "@/cs-shared";
-import { useChatWsContext } from "../chat-ws-provider";
 
-function ChatDetailsDialogMembersSkeleton() {
-	return (
-		<div className="space-y-2">
-			<Skeleton className="h-4 w-full" />
-			<Skeleton className="h-10 w-full" />
-			<Skeleton className="h-10 w-full" />
-		</div>
-	);
-}
-
-export function ChatMembers() {
-	const { members, connectionStatus } = useChatWsContext();
-
-	if (connectionStatus !== "ready") {
-		return <ChatDetailsDialogMembersSkeleton />;
-	}
-
+export function ChatMemberList({ members }: { members: ChatRoomMember[] }) {
 	if (!members || members.length === 0) {
-		return <ChatDetailsDialogMembersEmpty />;
+		return <ChatMemberListEmpty />;
 	}
 
 	return (
-		<div className="max-h-60 overflow-y-auto border rounded-md p-2">
+		<div className="w-full overflow-y-auto border rounded-md p-2">
 			{members.map((member: ChatRoomMember) => (
 				<div
 					key={member.id}
@@ -40,7 +22,7 @@ export function ChatMembers() {
 							</AvatarFallback>
 						</Avatar>
 						<span>{member.name}</span>
-						<MemberBadge type={member.type} />
+						<ChatMemberBadge type={member.type} />
 					</div>
 				</div>
 			))}
@@ -48,7 +30,7 @@ export function ChatMembers() {
 	);
 }
 
-function ChatDetailsDialogMembersEmpty() {
+function ChatMemberListEmpty() {
 	return (
 		<div className="p-4 text-sm text-muted-foreground text-center">
 			No members in this chat room

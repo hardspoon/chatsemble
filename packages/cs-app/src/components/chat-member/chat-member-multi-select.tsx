@@ -5,9 +5,9 @@ import type { ChatRoomMember, CreateChatRoomMember } from "@/cs-shared";
 import { client } from "@/lib/api-client";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
-import { MemberBadge } from "./member-badge";
+import { ChatMemberBadge } from "./chat-member-badge";
 
-function MultiSelectMembersSkeleton() {
+function ChatMemberMultiSelectSkeleton() {
 	return (
 		<div className="space-y-2">
 			<Skeleton className="h-4 w-20" />
@@ -16,9 +16,17 @@ function MultiSelectMembersSkeleton() {
 	);
 }
 
+function ChatMemberMultiSelectNoMembers() {
+	return (
+		<div className="p-2 text-sm text-muted-foreground text-center">
+			No members available
+		</div>
+	);
+}
+
 type CreateChatRoomMemberWithoutRoomId = Omit<CreateChatRoomMember, "roomId">;
 
-export function MultiSelectMembers({
+export function ChatMemberMultiSelect({
 	selectedMembers,
 	setSelectedMembers,
 	limit,
@@ -75,7 +83,7 @@ export function MultiSelectMembers({
 	}, [users, agents]);
 
 	if (isLoading) {
-		return <MultiSelectMembersSkeleton />;
+		return <ChatMemberMultiSelectSkeleton />;
 	}
 
 	const handleToggleMember = (
@@ -143,22 +151,14 @@ export function MultiSelectMembers({
 									</AvatarFallback>
 								</Avatar>
 								<span>{item.name}</span>
-								<MemberBadge type={item.type} />
+								<ChatMemberBadge type={item.type} />
 							</label>
 						</div>
 					);
 				})
 			) : (
-				<MultiSelectMembersNoMembers />
+				<ChatMemberMultiSelectNoMembers />
 			)}
-		</div>
-	);
-}
-
-function MultiSelectMembersNoMembers() {
-	return (
-		<div className="p-2 text-sm text-muted-foreground text-center">
-			No members available
 		</div>
 	);
 }

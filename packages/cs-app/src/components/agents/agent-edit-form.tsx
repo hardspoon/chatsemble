@@ -5,8 +5,8 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
 
-import { AgentPlaceholderNotFound } from "@/app/(protected)/agents/_components/agent-placeholder";
-import { AgentSkeleton } from "@/app/(protected)/agents/_components/agent-skeleton";
+import { AgentPlaceholderNotFound } from "@/components/agents/agent-placeholder";
+import { AgentSkeleton } from "@/components/agents/agent-skeleton";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {

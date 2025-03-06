@@ -7,8 +7,8 @@ import {
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Info, UserPlus } from "lucide-react";
-import { ChatMembers } from "./chat-members";
 import { ChatDetailsSection } from "./chat-details-section";
+import { ChatDetailsMembersSection } from "./chat-details-members-section";
 
 type ChatDetailsDialogView = "details" | "configuration" | "members";
 
@@ -70,7 +70,7 @@ function ChatDetailsDialogContent({
 				<ChatDetailsSection />
 			</TabsContent>
 			<TabsContent value="members">
-				<ChatMembers />
+				<ChatDetailsMembersSection />
 			</TabsContent>
 		</Tabs>
 	);

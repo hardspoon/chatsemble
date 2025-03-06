@@ -1,4 +1,4 @@
-import { Chat } from "@/app/(protected)/chat/_components/chat-main/chat";
+import { Chat } from "@/components/chat/chat-main/chat";
 import { getAuth } from "@/auth";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";

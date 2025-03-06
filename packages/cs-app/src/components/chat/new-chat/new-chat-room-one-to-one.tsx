@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/form";
 import { createChatRoomSchema } from "@/cs-shared";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { MultiSelectMembers } from "../../../../../../components/members/multi-select-members";
+import { ChatMemberMultiSelect } from "../../chat-member/chat-member-multi-select";
 
 type CreateChatRoomFormValues = z.infer<typeof createChatRoomSchema>;
 
@@ -44,7 +44,7 @@ export function NewChatRoomOneToOneForm({
 							<FormItem>
 								<FormLabel>Select who you want to chat with</FormLabel>
 								<FormControl>
-									<MultiSelectMembers
+									<ChatMemberMultiSelect
 										selectedMembers={field.value}
 										setSelectedMembers={(members) => {
 											console.log("members", members);

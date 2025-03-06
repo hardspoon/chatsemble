@@ -1,8 +1,8 @@
 "use client";
 
-import { ChatContent } from "@/app/(protected)/chat/_components/chat-main/chat-content";
-import { ChatHeader } from "@/app/(protected)/chat/_components/chat-main/chat-header";
-import { ChatWsProvider } from "@/app/(protected)/chat/_components/chat-main/chat-ws-provider";
+import { ChatContent } from "@/components/chat/chat-main/chat-content";
+import { ChatHeader } from "@/components/chat/chat-main/chat-header";
+import { ChatWsProvider } from "@/components/chat/chat-main/chat-ws-provider";
 import type { User } from "better-auth";
 import { useSearchParams } from "next/navigation";
 

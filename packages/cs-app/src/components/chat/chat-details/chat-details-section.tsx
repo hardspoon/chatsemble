@@ -1,7 +1,7 @@
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { CalendarIcon } from "lucide-react";
-import { useChatWsContext } from "../chat-ws-provider";
+import { useChatWsContext } from "../chat-main/chat-ws-provider";
 import type { ChatRoomType } from "@/cs-shared";
 
 function ChatTypeLabel({ type }: { type: ChatRoomType }) {
@@ -48,6 +48,8 @@ export function ChatDetailsSection() {
 	if (!room) {
 		return <ChatDetailsSectionEmpty />;
 	}
+
+	// TODO: Add a way to edit the channel details or delete the channel
 
 	return (
 		<div className="space-y-4">

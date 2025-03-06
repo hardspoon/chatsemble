@@ -17,13 +17,13 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { client } from "@/lib/api-client";
 import { useQuery } from "@tanstack/react-query";
 import type { UseFormReturn } from "react-hook-form";
-import type { FormValues } from "./add-member-form";
+import type { FormValues } from "./chat-member-add/chat-member-add-form";
 
-interface SelectMemberProps {
+interface ChatMemberSelectProps {
 	form: UseFormReturn<FormValues>;
 }
 
-function SelectSkeleton() {
+function ChatMemberSelectSkeleton() {
 	return (
 		<div className="space-y-2">
 			<Skeleton className="h-4 w-20" />
@@ -32,7 +32,7 @@ function SelectSkeleton() {
 	);
 }
 
-function SelectUser({ form }: SelectMemberProps) {
+function ChatMemberSelectUser({ form }: ChatMemberSelectProps) {
 	const { data: users, isLoading } = useQuery({
 		queryKey: ["organization-users"],
 		queryFn: async () => {
@@ -46,7 +46,7 @@ function SelectUser({ form }: SelectMemberProps) {
 	});
 
 	if (isLoading) {
-		return <SelectSkeleton />;
+		return <ChatMemberSelectSkeleton />;
 	}
 
 	return (
@@ -94,7 +94,7 @@ function SelectUser({ form }: SelectMemberProps) {
 	);
 }
 
-function SelectAgent({ form }: SelectMemberProps) {
+function ChatMemberSelectAgent({ form }: ChatMemberSelectProps) {
 	const { data: agents, isLoading } = useQuery({
 		queryKey: ["agents"],
 		queryFn: async () => {
@@ -104,7 +104,7 @@ function SelectAgent({ form }: SelectMemberProps) {
 	});
 
 	if (isLoading) {
-		return <SelectSkeleton />;
+		return <ChatMemberSelectSkeleton />;
 	}
 
 	return (
@@ -149,12 +149,12 @@ function SelectAgent({ form }: SelectMemberProps) {
 	);
 }
 
-export function SelectMember({ form }: SelectMemberProps) {
+export function ChatMemberSelect({ form }: ChatMemberSelectProps) {
 	const selectedType = form.watch("type");
 
 	return selectedType === "user" ? (
-		<SelectUser form={form} />
+		<ChatMemberSelectUser form={form} />
 	) : (
-		<SelectAgent form={form} />
+		<ChatMemberSelectAgent form={form} />
 	);
 }

@@ -1,5 +1,5 @@
 import { AppHeader } from "@/components/layout/app-header";
-import { AgentEdit } from "./_components/agent-edit";
+import { AgentEdit } from "@/components/agents/agent-edit";
 
 const SettingsProfilePage = () => {
 	return (
