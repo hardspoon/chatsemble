@@ -7,7 +7,7 @@ import type {
 	WsChatIncomingMessage,
 	WsChatOutgoingMessage,
 } from "@/cs-shared";
-import { desc, eq } from "drizzle-orm";
+import { desc, eq, inArray } from "drizzle-orm";
 /// <reference types="@cloudflare/workers-types" />
 /// <reference types="../../../worker-configuration" />
 import {
@@ -251,6 +251,17 @@ export class ChatDurableObject extends DurableObject<Env> {
 
 	async addMembers(members: (typeof chatRoomMember.$inferInsert)[]) {
 		await this.db.insert(chatRoomMember).values(members).onConflictDoNothing();
+
+		this.broadcastWebSocketMessage({
+			type: "member-sync",
+			members: await this.getMembers(),
+		});
+	}
+
+	async removeMembers(memberIds: string[]) {
+		await this.db
+			.delete(chatRoomMember)
+			.where(inArray(chatRoomMember.id, memberIds));
 
 		this.broadcastWebSocketMessage({
 			type: "member-sync",

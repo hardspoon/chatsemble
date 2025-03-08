@@ -3,6 +3,7 @@ import { useChatWsContext } from "@/components/chat/chat-main/chat-ws-provider";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
+import { Plus } from "lucide-react";
 
 export function ChatMemberAddDialog() {
 	const [open, setOpen] = useState(false);
@@ -10,7 +11,10 @@ export function ChatMemberAddDialog() {
 	return (
 		<Dialog open={open} onOpenChange={setOpen}>
 			<DialogTrigger asChild>
-				<Button variant="outline">Add Member</Button>
+				<Button variant="ghost" className="w-full flex justify-start gap-2">
+					<Plus className="w-4 h-4" />
+					Add Member
+				</Button>
 			</DialogTrigger>
 			<DialogContent className="sm:max-w-[500px]">
 				<ChatMemberAddDialogContent onSuccess={() => setOpen(false)} />
