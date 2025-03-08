@@ -1,5 +1,6 @@
 import { useChatWsContext } from "@/components/chat/chat-main/chat-ws-provider";
 
+import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import {
@@ -8,11 +9,10 @@ import {
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
+import { Users } from "lucide-react";
+import { type Dispatch, type SetStateAction, useState } from "react";
 import { ChatDetailsDialog } from "../chat-details/chat-details-dialog";
 import type { ChatDetailsDialogOpen } from "../chat-details/chat-details-dialog";
-import { type SetStateAction, type Dispatch, useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Users } from "lucide-react";
 
 export function ChatHeader() {
 	const [openChatDetailsDialog, setOpenChatDetailsDialog] =

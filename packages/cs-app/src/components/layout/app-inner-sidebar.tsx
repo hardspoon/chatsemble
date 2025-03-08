@@ -1,8 +1,8 @@
 "use client";
 
+import { SettingsSidebar } from "@/app/(protected)/settings/_components/settings-sidebar";
 import { AgentsSidebar } from "@/components/agents/agents-sidebar";
 import { ChatRoomsList } from "@/components/chat/chat-sidebar/chat-rooms-list";
-import { SettingsSidebar } from "@/app/(protected)/settings/_components/settings-sidebar";
 import { usePathname } from "next/navigation";
 
 // Export this separately so it can be used in both desktop and mobile layouts
