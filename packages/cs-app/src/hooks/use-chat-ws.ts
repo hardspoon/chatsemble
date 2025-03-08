@@ -205,7 +205,7 @@ export function useChatWS({ roomId, user }: UseChatWSProps) {
 				...newMessagePartial,
 				user: {
 					id: user.id,
-					roomId: roomId, // This fixes the type error - roomId is guaranteed to be string here
+					roomId: roomId,
 					role: "member",
 					type: "user",
 					name: user.name,
