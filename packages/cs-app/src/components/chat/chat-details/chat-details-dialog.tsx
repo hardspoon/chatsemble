@@ -34,7 +34,7 @@ export function ChatDetailsDialog({
 				}
 			}}
 		>
-			<DialogContent className="sm:max-w-[500px]">
+			<DialogContent className="max-w-[94vw] max-h-[95vh] rounded-lg sm:max-w-lg 2xl:max-w-2xl h-full sm:max-h-[70vh] flex flex-col">
 				<DialogHeader>
 					<DialogTitle>Chat Details</DialogTitle>
 					<DialogDescription>
@@ -55,7 +55,7 @@ function ChatDetailsDialogContent({
 	open: NonNullable<ChatDetailsDialogProps["open"]>;
 }) {
 	return (
-		<Tabs defaultValue={open.view} className="w-full">
+		<Tabs defaultValue={open.view} className="w-full flex-1 flex flex-col">
 			<TabsList className="grid w-full grid-cols-2">
 				<TabsTrigger value="details" className="flex items-center gap-2">
 					<Info className="h-4 w-4" />
@@ -66,10 +66,10 @@ function ChatDetailsDialogContent({
 					Members
 				</TabsTrigger>
 			</TabsList>
-			<TabsContent value="details">
+			<TabsContent value="details" className="flex-1">
 				<ChatDetailsSection />
 			</TabsContent>
-			<TabsContent value="members">
+			<TabsContent value="members" className="flex-1">
 				<ChatDetailsMembersSection />
 			</TabsContent>
 		</Tabs>

@@ -1,14 +1,32 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ChatMemberBadge } from "@/components/chat-member/chat-member-badge";
+import { ChatMemberRemoveButton } from "@/components/chat-member/chat-member-remove-button";
 import type { ChatRoomMember } from "@/cs-shared";
+import { useChatWsContext } from "@/components/chat/chat-main/chat-ws-provider";
+import { ChatMemberAddDialog } from "@/components/chat-member/chat-member-add/chat-member-add-dialog";
+import { authClient } from "@/lib/auth-client";
 
-export function ChatMemberList({ members }: { members: ChatRoomMember[] }) {
+interface ChatMemberListProps {
+	members: ChatRoomMember[];
+	showRemoveButton?: boolean;
+}
+
+export function ChatMemberList({
+	members,
+	showRemoveButton = false,
+}: ChatMemberListProps) {
+	const { room } = useChatWsContext();
+
+	const { data: session, isPending: isSessionPending } =
+		authClient.useSession();
+
 	if (!members || members.length === 0) {
 		return <ChatMemberListEmpty />;
 	}
 
 	return (
-		<div className="w-full overflow-y-auto border rounded-md p-2">
+		<div className="w-full h-full overflow-y-auto border rounded-md p-2 flex flex-col gap-1">
+			<ChatMemberAddDialog />
 			{members.map((member: ChatRoomMember) => (
 				<div
 					key={member.id}
@@ -21,9 +39,15 @@ export function ChatMemberList({ members }: { members: ChatRoomMember[] }) {
 								{member.name[0]?.toUpperCase() ?? "?"}
 							</AvatarFallback>
 						</Avatar>
-						<span>{member.name}</span>
+						<span className="text-sm font-medium">{member.name}</span>
 						<ChatMemberBadge type={member.type} />
 					</div>
+					{showRemoveButton &&
+						room &&
+						!isSessionPending &&
+						session?.user.id !== member.id && (
+							<ChatMemberRemoveButton member={member} roomId={room.id} />
+						)}
 				</div>
 			))}
 		</div>
