@@ -1,9 +1,9 @@
 import { ChatMemberAddForm } from "@/components/chat-member/chat-member-add/chat-member-add-form";
 import { useChatWsContext } from "@/components/chat/chat-main/chat-ws-provider";
-import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { Plus } from "lucide-react";
+import { useState } from "react";
 
 export function ChatMemberAddDialog() {
 	const [open, setOpen] = useState(false);

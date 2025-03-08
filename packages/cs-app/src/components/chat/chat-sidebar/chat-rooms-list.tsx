@@ -1,3 +1,8 @@
+import { ChatRoomTypeBadge } from "@/components/chat/chat-room-type-badge";
+import {
+	type DialogState,
+	NewChatRoomDialog,
+} from "@/components/chat/new-chat/new-chat-dialog";
 import { Button } from "@/components/ui/button";
 import {
 	Collapsible,
@@ -33,10 +38,6 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { type Dispatch, type SetStateAction, useMemo, useState } from "react";
-import {
-	type DialogState,
-	NewChatRoomDialog,
-} from "../new-chat/new-chat-dialog";
 
 export function ChatRoomsList() {
 	const [dialogState, setDialogState] = useState<DialogState>(null);
@@ -182,6 +183,8 @@ function ChatRoomsGroup({
 }) {
 	const [isOpen, setIsOpen] = useState(true);
 
+	// TODO: highlight the selected chat room
+
 	return (
 		<Collapsible open={isOpen} onOpenChange={setIsOpen} className="w-full">
 			<div className="flex items-center justify-between px-4 py-2 border-b bg-sidebar-accent/30">
@@ -193,7 +196,7 @@ function ChatRoomsGroup({
 							) : (
 								<ChevronRight className="h-4 w-4" />
 							)}
-							<span className="font-medium text-sm">{title}</span>
+							<ChatRoomTypeBadge type={chatType} label={title} />
 							{chatRooms.length > 0 && (
 								<span className="text-xs text-muted-foreground ml-1">
 									({chatRooms.length})
@@ -254,13 +257,6 @@ function ChatRoomItem({ chat }: { chat: ChatRoom }) {
 		>
 			<div className="w-full flex items-center justify-between">
 				<span className="font-medium">{chat.name}</span>
-				<span className="text-xs text-muted-foreground">
-					{chat.type === "privateGroup"
-						? "Private"
-						: chat.type === "oneToOne"
-							? "DM"
-							: "Public"}
-				</span>
 			</div>
 		</button>
 	);

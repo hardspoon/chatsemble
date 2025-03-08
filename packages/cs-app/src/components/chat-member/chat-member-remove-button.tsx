@@ -10,11 +10,11 @@ import {
 	DialogTitle,
 	DialogTrigger,
 } from "@/components/ui/dialog";
+import type { ChatRoomMember } from "@/cs-shared";
 import { client } from "@/lib/api-client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Trash2 } from "lucide-react";
 import { useState } from "react";
-import type { ChatRoomMember } from "@/cs-shared";
 
 interface ChatMemberRemoveButtonProps {
 	member: ChatRoomMember;

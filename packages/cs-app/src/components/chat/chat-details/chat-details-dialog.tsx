@@ -5,10 +5,12 @@ import {
 	DialogHeader,
 	DialogTitle,
 } from "@/components/ui/dialog";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Info, UserPlus } from "lucide-react";
-import { ChatDetailsSection } from "./chat-details-section";
+import { useChatWsContext } from "../chat-main/chat-ws-provider";
 import { ChatDetailsMembersSection } from "./chat-details-members-section";
+import { ChatDetailsSection } from "./chat-details-section";
 
 type ChatDetailsDialogView = "details" | "configuration" | "members";
 
@@ -25,6 +27,7 @@ export function ChatDetailsDialog({
 	open,
 	onOpenChange,
 }: ChatDetailsDialogProps) {
+	const { connectionStatus } = useChatWsContext();
 	return (
 		<Dialog
 			open={!!open}
@@ -41,11 +44,24 @@ export function ChatDetailsDialog({
 						Manage your chat room settings and members
 					</DialogDescription>
 				</DialogHeader>
-				{open && (
+				{open && connectionStatus === "ready" ? (
 					<ChatDetailsDialogContent open={open} onOpenChange={onOpenChange} />
+				) : (
+					<ChatDetailsDialogContentSkeleton />
 				)}
 			</DialogContent>
 		</Dialog>
+	);
+}
+
+function ChatDetailsDialogContentSkeleton() {
+	return (
+		<div className="w-full h-full flex flex-col gap-4">
+			<Skeleton className="h-10 w-full" />
+			<Skeleton className="h-10 w-full" />
+			<Skeleton className="h-10 w-full" />
+			<Skeleton className="h-36 w-full" />
+		</div>
 	);
 }
 

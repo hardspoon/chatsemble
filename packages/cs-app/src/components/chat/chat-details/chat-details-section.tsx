@@ -1,69 +1,50 @@
-import { Skeleton } from "@/components/ui/skeleton";
-import { Badge } from "@/components/ui/badge";
+import { ChatRoomTypeBadge } from "@/components/chat/chat-room-type-badge";
+import { Separator } from "@/components/ui/separator";
 import { CalendarIcon } from "lucide-react";
+import { UsersIcon } from "lucide-react";
 import { useChatWsContext } from "../chat-main/chat-ws-provider";
-import type { ChatRoomType } from "@/cs-shared";
-
-function ChatTypeLabel({ type }: { type: ChatRoomType }) {
-	const labels: Record<
-		ChatRoomType,
-		{ label: string; variant: "default" | "secondary" | "outline" }
-	> = {
-		publicGroup: { label: "Public Group", variant: "default" },
-		privateGroup: { label: "Private Group", variant: "secondary" },
-		oneToOne: { label: "Direct Message", variant: "outline" },
-	};
-
-	const { label, variant } = labels[type];
-
-	return <Badge variant={variant}>{label}</Badge>;
-}
-
-function ChatDetailsSkeleton() {
-	return (
-		<div className="space-y-4">
-			<Skeleton className="h-6 w-3/4" />
-			<Skeleton className="h-4 w-1/2" />
-			<Skeleton className="h-4 w-1/3" />
-			<Skeleton className="h-4 w-2/3" />
-		</div>
-	);
-}
-
-function ChatDetailsSectionEmpty() {
-	return (
-		<div className="p-4 text-sm text-muted-foreground text-center">
-			No chat details available
-		</div>
-	);
-}
 
 export function ChatDetailsSection() {
-	const { room, connectionStatus } = useChatWsContext();
-
-	if (connectionStatus !== "ready") {
-		return <ChatDetailsSkeleton />;
-	}
+	const { room, members } = useChatWsContext();
 
 	if (!room) {
-		return <ChatDetailsSectionEmpty />;
+		return null;
 	}
 
-	// TODO: Add a way to edit the channel details or delete the channel
-
 	return (
-		<div className="space-y-4">
-			<div>
-				<h3 className="text-lg font-semibold">{room.name}</h3>
-				<div className="flex items-center gap-2 mt-1">
-					<ChatTypeLabel type={room.type} />
-				</div>
+		<div className="h-full border rounded-lg p-4 space-y-4">
+			<div className="space-y-2">
+				<h3 className="text-2xl font-semibold tracking-tight">{room.name}</h3>
+				<ChatRoomTypeBadge type={room.type} />
 			</div>
 
-			<div className="space-y-2 text-sm">
-				<div className="flex items-center gap-2 text-muted-foreground">
-					<CalendarIcon className="h-4 w-4" />
-					<span>Created {new Date(room.createdAt).toLocaleDateString()}</span>
+			<Separator />
+
+			<div className="space-y-3 text-sm">
+				<div className="flex items-center gap-3">
+					<div className="bg-muted/50 rounded-lg p-2">
+						<CalendarIcon className="h-5 w-5" />
+					</div>
+					<div>
+						<p className="text-muted-foreground">Created</p>
+						<p className="font-medium">
+							{new Date(room.createdAt).toLocaleDateString("en-US", {
+								year: "numeric",
+								month: "long",
+								day: "numeric",
+							})}
+						</p>
+					</div>
+				</div>
+
+				<div className="flex items-center gap-3">
+					<div className="bg-muted/50 rounded-lg p-2">
+						<UsersIcon className="h-5 w-5" />
+					</div>
+					<div>
+						<p className="text-muted-foreground">Members</p>
+						<p className="font-medium">{members.length || 0}</p>
+					</div>
 				</div>
 			</div>
 		</div>

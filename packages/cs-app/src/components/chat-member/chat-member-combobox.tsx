@@ -16,12 +16,12 @@ import {
 	PopoverTrigger,
 } from "@/components/ui/popover";
 import { Skeleton } from "@/components/ui/skeleton";
+import type { ChatRoomMember } from "@/cs-shared";
 import { client } from "@/lib/api-client";
 import { cn } from "@/lib/utils";
 import { useQuery } from "@tanstack/react-query";
 import { Check, ChevronsUpDown } from "lucide-react";
 import { useState } from "react";
-import type { ChatRoomMember } from "@/cs-shared";
 import { ChatMemberBadge } from "./chat-member-badge";
 
 type PartialCreateChatRoomMember = {
