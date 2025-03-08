@@ -1,4 +1,3 @@
-import { ChatRoomTypeBadge } from "@/components/chat/chat-room-type-badge";
 import {
 	type DialogState,
 	NewChatRoomDialog,
@@ -26,6 +25,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import type { ChatRoom, ChatRoomType } from "@/cs-shared";
 import { client } from "@/lib/api-client";
+import { cn } from "@/lib/utils";
 import { useQuery } from "@tanstack/react-query";
 import {
 	AlertCircle,
@@ -36,7 +36,7 @@ import {
 	MessageSquarePlus,
 	Plus,
 } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { type Dispatch, type SetStateAction, useMemo, useState } from "react";
 
 export function ChatRoomsList() {
@@ -130,6 +130,9 @@ function ChatRoomsGroups({
 	chatRooms: ChatRoom[];
 	setDialogState: Dispatch<SetStateAction<DialogState>>;
 }) {
+	const queryParams = useSearchParams();
+	const selectedChatRoomId = queryParams.get("roomId");
+
 	// Group chat rooms by type
 	const publicChats = useMemo(
 		() => chatRooms.filter((chat) => chat.type === "publicGroup"),
@@ -151,6 +154,7 @@ function ChatRoomsGroups({
 				chatRooms={publicChats}
 				chatType="publicGroup"
 				setDialogState={setDialogState}
+				selectedChatRoomId={selectedChatRoomId}
 			/>
 
 			<ChatRoomsGroup
@@ -158,6 +162,7 @@ function ChatRoomsGroups({
 				chatRooms={privateChats}
 				chatType="privateGroup"
 				setDialogState={setDialogState}
+				selectedChatRoomId={selectedChatRoomId}
 			/>
 
 			<ChatRoomsGroup
@@ -165,6 +170,7 @@ function ChatRoomsGroups({
 				chatRooms={oneToOneChats}
 				chatType="oneToOne"
 				setDialogState={setDialogState}
+				selectedChatRoomId={selectedChatRoomId}
 			/>
 		</div>
 	);
@@ -175,11 +181,13 @@ function ChatRoomsGroup({
 	chatRooms,
 	chatType,
 	setDialogState,
+	selectedChatRoomId,
 }: {
 	title: string;
 	chatRooms: ChatRoom[];
 	chatType: ChatRoomType;
 	setDialogState: Dispatch<SetStateAction<DialogState>>;
+	selectedChatRoomId: string | null;
 }) {
 	const [isOpen, setIsOpen] = useState(true);
 
@@ -187,18 +195,22 @@ function ChatRoomsGroup({
 
 	return (
 		<Collapsible open={isOpen} onOpenChange={setIsOpen} className="w-full">
-			<div className="flex items-center justify-between px-4 py-2 border-b bg-sidebar-accent/30">
+			<div className="flex items-center justify-between px-2 py-1 border-b bg-sidebar-accent/30">
 				<CollapsibleTrigger asChild>
-					<Button variant="ghost" size="sm" className="p-0 h-auto">
+					<Button
+						variant="link"
+						size="sm"
+						className="w-full flex justify-start"
+					>
 						<div className="flex items-center gap-1">
 							{isOpen ? (
 								<ChevronDown className="h-4 w-4" />
 							) : (
 								<ChevronRight className="h-4 w-4" />
 							)}
-							<ChatRoomTypeBadge type={chatType} label={title} />
+							<span className="text-sm ml-1">{title}</span>
 							{chatRooms.length > 0 && (
-								<span className="text-xs text-muted-foreground ml-1">
+								<span className="text-sm text-muted-foreground ml-1">
 									({chatRooms.length})
 								</span>
 							)}
@@ -208,7 +220,6 @@ function ChatRoomsGroup({
 				<Button
 					variant="ghost"
 					size="icon"
-					className="h-6 w-6"
 					title={`Create new ${chatType === "publicGroup" ? "public chat" : chatType === "privateGroup" ? "private group" : "direct message"}`}
 					onClick={() => {
 						setDialogState({ type: chatType });
@@ -222,7 +233,11 @@ function ChatRoomsGroup({
 					<SidebarGroupContent>
 						{chatRooms.length > 0 ? (
 							chatRooms.map((chat) => (
-								<ChatRoomItem key={chat.id} chat={chat} />
+								<ChatRoomItem
+									key={chat.id}
+									chat={chat}
+									selectedChatRoomId={selectedChatRoomId}
+								/>
 							))
 						) : (
 							<div className="flex items-center justify-center py-3 text-sm text-muted-foreground">
@@ -242,7 +257,13 @@ function ChatRoomsGroup({
 	);
 }
 
-function ChatRoomItem({ chat }: { chat: ChatRoom }) {
+function ChatRoomItem({
+	chat,
+	selectedChatRoomId,
+}: {
+	chat: ChatRoom;
+	selectedChatRoomId: string | null;
+}) {
 	const router = useRouter();
 	const { setOpenMobile } = useSidebar();
 
@@ -253,7 +274,11 @@ function ChatRoomItem({ chat }: { chat: ChatRoom }) {
 				router.push(`/chat?roomId=${chat.id}`);
 				setOpenMobile(false);
 			}}
-			className="flex w-full flex-col gap-1 border-b px-4 py-3 text-sm hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+			className={cn(
+				"flex w-full flex-col gap-1 border-b px-4 py-3 text-sm hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+				selectedChatRoomId === chat.id &&
+					"bg-accent text-accent-foreground font-bold",
+			)}
 		>
 			<div className="w-full flex items-center justify-between">
 				<span className="font-medium">{chat.name}</span>

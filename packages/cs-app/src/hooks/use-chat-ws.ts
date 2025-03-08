@@ -10,29 +10,75 @@ import type {
 } from "@/cs-shared";
 import type { User } from "better-auth";
 import { nanoid } from "nanoid";
-import { useCallback, useEffect, useRef, useState } from "react";
-
-//const RETRY_DELAYS = [1000, 2000, 5000, 10000]; // Increasing delays between retries in ms
+import { useCallback, useEffect, useReducer, useRef } from "react";
 
 export interface UseChatWSProps {
-	roomId: string;
+	roomId: string | null;
 	user: User;
+}
+
+// Define the chat state interface
+interface ChatState {
+	messages: ChatRoomMessage[];
+	members: ChatRoomMember[];
+	room: ChatRoom | null;
+	input: string;
+	connectionStatus: "disconnected" | "connecting" | "connected" | "ready";
+}
+
+// Initial state for the chat reducer
+const initialChatState: ChatState = {
+	messages: [],
+	members: [],
+	room: null,
+	input: "",
+	connectionStatus: "disconnected",
+};
+
+// Define action types
+type ChatAction =
+	| { type: "SET_CONNECTION_STATUS"; status: ChatState["connectionStatus"] }
+	| { type: "SET_INPUT"; input: string }
+	| { type: "ADD_MESSAGE"; message: ChatRoomMessage }
+	| { type: "SET_MESSAGES"; messages: ChatRoomMessage[] }
+	| { type: "SET_MEMBERS"; members: ChatRoomMember[] }
+	| { type: "SET_ROOM"; room: ChatRoom }
+	| { type: "RESET_STATE" };
+
+// Chat reducer function
+function chatReducer(state: ChatState, action: ChatAction): ChatState {
+	switch (action.type) {
+		case "SET_CONNECTION_STATUS":
+			return { ...state, connectionStatus: action.status };
+		case "SET_INPUT":
+			return { ...state, input: action.input };
+		case "ADD_MESSAGE":
+			return { ...state, messages: [...state.messages, action.message] };
+		case "SET_MESSAGES":
+			return { ...state, messages: action.messages };
+		case "SET_MEMBERS":
+			return { ...state, members: action.members };
+		case "SET_ROOM":
+			return { ...state, room: action.room };
+		case "RESET_STATE":
+			return initialChatState;
+		default:
+			return state;
+	}
 }
 
 export function useChatWS({ roomId, user }: UseChatWSProps) {
 	const wsRef = useRef<WebSocket | null>(null);
-
-	const [messages, setMessages] = useState<ChatRoomMessage[]>([]);
-	const [members, setMembers] = useState<ChatRoomMember[]>([]);
-	const [room, setRoom] = useState<ChatRoom | null>(null);
-
-	const [input, setInput] = useState("");
-	const [connectionStatus, setConnectionStatus] = useState<
-		"disconnected" | "connecting" | "connected" | "ready"
-	>("disconnected");
+	const [state, dispatch] = useReducer(chatReducer, initialChatState);
 
 	const startWebSocket = useCallback(() => {
-		// Get the host from env and remove http:// or https://
+		if (!roomId) {
+			dispatch({ type: "SET_CONNECTION_STATUS", status: "disconnected" });
+			return;
+		}
+
+		dispatch({ type: "SET_CONNECTION_STATUS", status: "connecting" });
+
 		const apiHost =
 			process.env.NEXT_PUBLIC_DO_CHAT_API_HOST?.replace(/^https?:\/\//, "") ??
 			"";
@@ -40,7 +86,6 @@ export function useChatWS({ roomId, user }: UseChatWSProps) {
 		const ws = new WebSocket(
 			`${wsProtocol}://${apiHost}/websocket/chat-rooms/${roomId}`,
 		);
-		// TODO: Allow receiving url as a prop
 
 		ws.onopen = () => {
 			console.log("WebSocket connected");
@@ -48,7 +93,7 @@ export function useChatWS({ roomId, user }: UseChatWSProps) {
 				type: "chat-init",
 			};
 			sendMessage(wsMessage);
-			setConnectionStatus("connected");
+			dispatch({ type: "SET_CONNECTION_STATUS", status: "connected" });
 		};
 
 		ws.onmessage = (event) => {
@@ -58,24 +103,24 @@ export function useChatWS({ roomId, user }: UseChatWSProps) {
 				switch (wsMessage.type) {
 					case "message-broadcast": {
 						const newMessage = wsMessage.message;
-						setMessages((prev) => [...prev, newMessage]);
+						dispatch({ type: "ADD_MESSAGE", message: newMessage });
 						break;
 					}
 					case "messages-sync": {
 						const newMessages = wsMessage.messages;
-						setMessages(newMessages);
+						dispatch({ type: "SET_MESSAGES", messages: newMessages });
 						break;
 					}
 					case "member-sync": {
 						const newMembers = wsMessage.members;
-						setMembers(newMembers);
+						dispatch({ type: "SET_MEMBERS", members: newMembers });
 						break;
 					}
 					case "chat-ready": {
-						setConnectionStatus("ready");
-						setMessages(wsMessage.messages);
-						setMembers(wsMessage.members);
-						setRoom(wsMessage.room);
+						dispatch({ type: "SET_CONNECTION_STATUS", status: "ready" });
+						dispatch({ type: "SET_MESSAGES", messages: wsMessage.messages });
+						dispatch({ type: "SET_MEMBERS", members: wsMessage.members });
+						dispatch({ type: "SET_ROOM", room: wsMessage.room });
 						break;
 					}
 				}
@@ -86,11 +131,11 @@ export function useChatWS({ roomId, user }: UseChatWSProps) {
 
 		ws.onerror = (error) => {
 			console.error("WebSocket error:", error);
-			setConnectionStatus("disconnected");
+			dispatch({ type: "SET_CONNECTION_STATUS", status: "disconnected" });
 		};
 
 		ws.onclose = () => {
-			setConnectionStatus("disconnected");
+			dispatch({ type: "SET_CONNECTION_STATUS", status: "disconnected" });
 			console.log("WebSocket closed");
 		};
 
@@ -101,15 +146,33 @@ export function useChatWS({ roomId, user }: UseChatWSProps) {
 		wsRef.current?.send(JSON.stringify(message));
 	}, []);
 
-	// Initialize WebSocket connection
+	// Initialize WebSocket connection when roomId changes
 	useEffect(() => {
-		startWebSocket();
-		return () => wsRef.current?.close();
-	}, [startWebSocket]);
+		// Close any existing connection
+		if (wsRef.current) {
+			wsRef.current.close();
+			wsRef.current = null;
+		}
+
+		// Reset state when roomId changes
+		dispatch({ type: "RESET_STATE" });
+
+		// Start new connection if we have a roomId
+		if (roomId) {
+			startWebSocket();
+		}
+
+		return () => {
+			if (wsRef.current) {
+				wsRef.current.close();
+				wsRef.current = null;
+			}
+		};
+	}, [roomId, startWebSocket]);
 
 	const handleInputChange = useCallback(
 		(e: React.ChangeEvent<HTMLTextAreaElement>) => {
-			setInput(e.target.value);
+			dispatch({ type: "SET_INPUT", input: e.target.value });
 		},
 		[],
 	);
@@ -118,7 +181,7 @@ export function useChatWS({ roomId, user }: UseChatWSProps) {
 		async (e?: { preventDefault?: () => void }) => {
 			e?.preventDefault?.();
 
-			if (!input.trim()) {
+			if (!state.input.trim() || !roomId) {
 				return;
 			}
 
@@ -129,7 +192,7 @@ export function useChatWS({ roomId, user }: UseChatWSProps) {
 
 			const newMessagePartial: ChatRoomMessagePartial = {
 				id: nanoid(),
-				content: input.trim(),
+				content: state.input.trim(),
 				createdAt: Date.now(),
 			};
 
@@ -142,7 +205,7 @@ export function useChatWS({ roomId, user }: UseChatWSProps) {
 				...newMessagePartial,
 				user: {
 					id: user.id,
-					roomId,
+					roomId: roomId, // This fixes the type error - roomId is guaranteed to be string here
 					role: "member",
 					type: "user",
 					name: user.name,
@@ -152,19 +215,15 @@ export function useChatWS({ roomId, user }: UseChatWSProps) {
 			};
 
 			sendMessage(wsMessage);
-			setMessages((prev) => [...prev, newMessage]);
-			setInput("");
+			dispatch({ type: "ADD_MESSAGE", message: newMessage });
+			dispatch({ type: "SET_INPUT", input: "" });
 		},
-		[input, user, roomId, sendMessage],
+		[state.input, user, roomId, sendMessage],
 	);
 
 	return {
-		messages,
-		members,
-		room,
-		input,
+		...state,
 		handleInputChange,
 		handleSubmit,
-		connectionStatus,
 	};
 }

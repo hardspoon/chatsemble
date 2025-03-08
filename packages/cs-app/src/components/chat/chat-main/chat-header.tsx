@@ -3,6 +3,7 @@ import { useChatWsContext } from "@/components/chat/chat-main/chat-ws-provider";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
 	Tooltip,
 	TooltipContent,
@@ -18,19 +19,30 @@ export function ChatHeader() {
 	const [openChatDetailsDialog, setOpenChatDetailsDialog] =
 		useState<ChatDetailsDialogOpen>(null);
 
+	const { connectionStatus } = useChatWsContext();
+
 	return (
 		<header className="sticky top-0 flex shrink-0 items-center gap-2 border-b bg-background p-4">
-			<SidebarTrigger className="-ml-1" />
+			<SidebarTrigger />
 			<Separator orientation="vertical" className="-mr-1 ml-1 h-4" />
-			<ChatName setOpenChatDetailsDialog={setOpenChatDetailsDialog} />
-			<div className="ml-auto flex items-center gap-2">
-				<ChatMembers setOpenChatDetailsDialog={setOpenChatDetailsDialog} />
-				<WsConnectionStatus />
-			</div>
-			<ChatDetailsDialog
-				open={openChatDetailsDialog}
-				onOpenChange={setOpenChatDetailsDialog}
-			/>
+			{connectionStatus === "ready" ? (
+				<>
+					<ChatName setOpenChatDetailsDialog={setOpenChatDetailsDialog} />
+					<div className="ml-auto flex items-center gap-2">
+						<ChatMembers setOpenChatDetailsDialog={setOpenChatDetailsDialog} />
+						<WsConnectionStatus />
+					</div>
+					<ChatDetailsDialog
+						open={openChatDetailsDialog}
+						onOpenChange={setOpenChatDetailsDialog}
+					/>
+				</>
+			) : (
+				<>
+					<Skeleton className="ml-2 h-4 w-28" />
+					<Skeleton className="ml-auto h-4 w-28" />
+				</>
+			)}
 		</header>
 	);
 }

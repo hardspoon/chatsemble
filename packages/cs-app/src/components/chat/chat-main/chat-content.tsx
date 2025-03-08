@@ -58,8 +58,11 @@ export function ChatContent() {
 					onChange={handleInputChange}
 					onSubmit={handleSubmit}
 				>
-					<ChatInputTextArea placeholder="Type a message..." />
-					<ChatInputSubmit />
+					<ChatInputTextArea
+						placeholder="Type a message..."
+						disabled={isLoading}
+					/>
+					<ChatInputSubmit disabled={isLoading} />
 				</ChatInput>
 			</div>
 		</div>

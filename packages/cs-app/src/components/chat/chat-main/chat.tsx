@@ -3,6 +3,7 @@
 import { ChatContent } from "@/components/chat/chat-main/chat-content";
 import { ChatHeader } from "@/components/chat/chat-main/chat-header";
 import { ChatWsProvider } from "@/components/chat/chat-main/chat-ws-provider";
+import { SidebarTrigger } from "@/components/ui/sidebar";
 import type { User } from "better-auth";
 import { useSearchParams } from "next/navigation";
 
@@ -10,25 +11,36 @@ export function Chat({ user }: { user: User }) {
 	const queryParams = useSearchParams();
 	const roomId = queryParams.get("roomId");
 
-	if (!roomId) {
-		return <ChatPlaceholderNoRoomSelected />;
-	}
-
 	return (
 		<ChatWsProvider roomId={roomId} user={user}>
-			<ChatHeader />
-			<ChatContent />
+			{roomId ? <ChatRoomUI /> : <ChatNoRoomSelected />}
 		</ChatWsProvider>
 	);
 }
 
-function ChatPlaceholderNoRoomSelected() {
+function ChatRoomUI() {
 	return (
-		<div className="flex flex-1 flex-col items-center justify-center">
-			<span className="text-lg font-bold">No room selected</span>
-			<p className="text-sm text-muted-foreground">
-				Please select a room from the sidebar
-			</p>
-		</div>
+		<>
+			<ChatHeader />
+			<ChatContent />
+		</>
+	);
+}
+
+function ChatNoRoomSelected() {
+	return (
+		<>
+			<header className="sticky top-0 flex shrink-0 items-center gap-2 border-b bg-background p-4">
+				<SidebarTrigger />
+			</header>
+			<div className="flex flex-1 flex-col items-center justify-center">
+				<div className="max-w-md text-center">
+					<h2 className="mb-2 text-xl font-bold">No chat room selected</h2>
+					<p className="text-muted-foreground">
+						Select a chat room from the sidebar to start chatting
+					</p>
+				</div>
+			</div>
+		</>
 	);
 }
