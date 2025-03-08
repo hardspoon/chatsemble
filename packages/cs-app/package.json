@@ -33,6 +33,10 @@
 		"@radix-ui/react-tooltip": "^1.1.8",
 		"@react-email/components": "^0.0.33",
 		"@tanstack/react-query": "^5.66.0",
+		"@tiptap/extension-mention": "^2.11.5",
+		"@tiptap/pm": "^2.11.5",
+		"@tiptap/react": "^2.11.5",
+		"@tiptap/starter-kit": "^2.11.5",
 		"ai": "^4.1.40",
 		"better-auth": "^1.2.2",
 		"better-sqlite3": "^11.8.1",
@@ -56,6 +60,8 @@
 		"shiki": "^2.3.2",
 		"tailwind-merge": "^3.0.1",
 		"tailwindcss-animate": "^1.0.7",
+		"tippy.js": "^6.3.7",
+		"tiptap-markdown": "^0.8.10",
 		"zod": "^3.24.1"
 	},
 	"devDependencies": {
