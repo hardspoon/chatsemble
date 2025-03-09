@@ -38,7 +38,7 @@ export function ChatContent({ user }: { user: User }) {
 					) : messages.length > 0 ? (
 						messages.map((message) => {
 							return (
-								<ChatMessage key={message.id} id={message.id}>
+								<ChatMessage key={String(message.id)} id={String(message.id)}>
 									<ChatMessageAvatar
 										imageSrc={message.user.image ?? undefined}
 									/>

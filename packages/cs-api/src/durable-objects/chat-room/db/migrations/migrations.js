@@ -1,9 +1,10 @@
-import m0000 from "./0000_dry_violations.sql";
-import journal from "./meta/_journal.json";
+import journal from './meta/_journal.json';
+import m0000 from './0000_faithful_butterfly.sql';
 
-export default {
-	journal,
-	migrations: {
-		m0000,
-	},
-};
+  export default {
+    journal,
+    migrations: {
+      m0000
+    }
+  }
+  

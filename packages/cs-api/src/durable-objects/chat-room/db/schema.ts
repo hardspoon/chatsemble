@@ -6,7 +6,6 @@ import type {
 } from "@/cs-shared";
 import { sql } from "drizzle-orm";
 import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
-import { nanoid } from "nanoid";
 
 export const chatRoomConfig = sqliteTable("chat_room_config", {
 	id: text("id").primaryKey(),
@@ -19,9 +18,7 @@ export const chatRoomConfig = sqliteTable("chat_room_config", {
 });
 
 export const chatMessage = sqliteTable("chat_message", {
-	id: text("id")
-		.primaryKey()
-		.$defaultFn(() => nanoid()), // TODO: Should be sequential id
+	id: integer("id").primaryKey({ autoIncrement: true }),
 	content: text("content").notNull(),
 	mentions: text("mentions", { mode: "json" }).$type<ChatMentions>().notNull(),
 	memberId: text("member_id")

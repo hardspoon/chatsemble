@@ -1,5 +1,5 @@
 CREATE TABLE `chat_message` (
-	`id` text PRIMARY KEY NOT NULL,
+	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
 	`content` text NOT NULL,
 	`mentions` text NOT NULL,
 	`member_id` text NOT NULL,

@@ -141,14 +141,13 @@ export class ChatDurableObject extends DurableObject<Env> {
 
 	async receiveChatRoomMessage(
 		memberId: string,
-		message: ChatRoomMessagePartial,
+		message: Omit<ChatRoomMessagePartial, "id">,
 		config: {
 			notifyAgents: boolean;
 		},
 	) {
 		const chatRoomMessage = await this.insertMessage({
 			memberId,
-			id: message.id,
 			content: message.content,
 			mentions: message.mentions,
 		});
@@ -158,7 +157,7 @@ export class ChatDurableObject extends DurableObject<Env> {
 				type: "message-broadcast",
 				message: chatRoomMessage,
 			},
-			memberId,
+			//memberId,
 		);
 
 		if (config?.notifyAgents) {
@@ -241,7 +240,7 @@ export class ChatDurableObject extends DurableObject<Env> {
 			})
 			.from(chatMessage)
 			.innerJoin(chatRoomMember, eq(chatMessage.memberId, chatRoomMember.id))
-			.orderBy(desc(chatMessage.createdAt));
+			.orderBy(desc(chatMessage.id));
 
 		if (limit) {
 			query.limit(limit);
