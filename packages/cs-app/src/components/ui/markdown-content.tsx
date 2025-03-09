@@ -4,6 +4,7 @@ import type * as React from "react";
 import { Suspense, isValidElement, memo, useMemo } from "react";
 import ReactMarkdown, { type Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
+import rehypeRaw from "rehype-raw";
 
 const DEFAULT_PRE_BLOCK_CLASS =
 	"my-4 overflow-x-auto w-fit rounded-xl bg-zinc-950 text-zinc-50 dark:bg-zinc-900 border border-border p-4";
@@ -163,6 +164,42 @@ const components: Partial<Components> = {
 			{children}
 		</p>
 	),
+	span: ({
+		children,
+		className,
+		...props
+	}: {
+		"data-type"?: string;
+		"data-id"?: string;
+		"data-label"?: string;
+	} & React.HTMLAttributes<HTMLSpanElement>) => {
+		const dataType = props["data-type"];
+		const dataId = props["data-id"];
+		const dataLabel = props["data-label"];
+
+		if (dataType === "mention") {
+			return (
+				<span
+					className={cn(
+						"bg-accent text-accent-foreground rounded-sm px-2 py-0.5",
+						className,
+					)}
+					data-type={dataType}
+					data-id={dataId}
+					data-label={dataLabel}
+					title={dataLabel}
+					{...props}
+				>
+					{children}
+				</span>
+			);
+		}
+		return (
+			<span className={className} {...props}>
+				{children}
+			</span>
+		);
+	},
 	strong: ({ children, ...props }: React.HTMLAttributes<HTMLElement>) => (
 		<span className="font-semibold" {...props}>
 			{children}
@@ -284,6 +321,7 @@ const MemoizedMarkdownBlock = memo(
 		return (
 			<ReactMarkdown
 				remarkPlugins={[remarkGfm]}
+				rehypePlugins={[rehypeRaw]}
 				components={components}
 				className={className}
 			>

@@ -15,11 +15,16 @@ import {
 } from "@/components/ui/chat-message";
 import { ChatMessageArea } from "@/components/ui/chat-message-area";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useEffect } from "react";
 
 export function ChatContent() {
 	const { messages, handleSubmit, connectionStatus, members } =
 		useChatWsContext();
 	const isLoading = connectionStatus !== "ready";
+
+	useEffect(() => {
+		console.log("messages", messages);
+	}, [messages]);
 
 	return (
 		<div className="flex-1 flex flex-col h-full overflow-y-auto">
