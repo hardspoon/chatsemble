@@ -13,16 +13,16 @@ export function Chat({ user }: { user: User }) {
 
 	return (
 		<ChatWsProvider roomId={roomId} user={user}>
-			{roomId ? <ChatRoomUI /> : <ChatNoRoomSelected />}
+			{roomId ? <ChatRoomUI user={user} /> : <ChatNoRoomSelected />}
 		</ChatWsProvider>
 	);
 }
 
-function ChatRoomUI() {
+function ChatRoomUI({ user }: { user: User }) {
 	return (
 		<>
 			<ChatHeader />
-			<ChatContent />
+			<ChatContent user={user} />
 		</>
 	);
 }

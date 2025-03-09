@@ -15,16 +15,19 @@ import {
 	ChatInputSubmit,
 	ChatInputTiptap,
 } from "@/components/ui/tiptap-chat-input";
-import { useEffect } from "react";
+import type { User } from "better-auth";
+import { useMemo } from "react";
 
-export function ChatContent() {
+export function ChatContent({ user }: { user: User }) {
 	const { messages, handleSubmit, connectionStatus, members } =
 		useChatWsContext();
+
 	const isLoading = connectionStatus !== "ready";
 
-	useEffect(() => {
-		console.log("messages", messages);
-	}, [messages]);
+	const membersWithoutCurrentUser = useMemo(
+		() => members.filter((member) => member.id !== user.id),
+		[members, user.id],
+	);
 
 	return (
 		<div className="flex-1 flex flex-col h-full overflow-y-auto">
@@ -59,7 +62,7 @@ export function ChatContent() {
 			<div className="px-2 py-4 max-w-2xl mx-auto w-full">
 				<ChatInput
 					onSubmit={handleSubmit}
-					chatMembers={members}
+					chatMembers={membersWithoutCurrentUser}
 					disabled={isLoading}
 				>
 					<ChatInputTiptap />
