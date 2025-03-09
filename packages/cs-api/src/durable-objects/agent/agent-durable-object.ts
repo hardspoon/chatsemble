@@ -43,7 +43,6 @@ export class AgentDurableObject extends DurableObject<Env> {
 	}
 
 	async alarm() {
-		console.log("alarm");
 		const chatRooms = await this.getChatRooms();
 
 		const processingPromises = chatRooms.map(
@@ -53,7 +52,6 @@ export class AgentDurableObject extends DurableObject<Env> {
 					lastNotificationAt,
 				);
 
-				console.log("shouldTriggerGeneration", id, shouldTriggerGeneration);
 				if (shouldTriggerGeneration) {
 					await this.triggerGeneration(id, notifications);
 				}
@@ -83,8 +81,6 @@ export class AgentDurableObject extends DurableObject<Env> {
 			notifications: newNotifications,
 			lastNotificationAt: Date.now(),
 		});
-
-		console.log("receivedNotification", chatRoomId, newNotifications);
 
 		this.setChatRoomCheckAlarm();
 	}
@@ -150,8 +146,6 @@ export class AgentDurableObject extends DurableObject<Env> {
 			return messages;
 		});
 
-		console.log("messages", messages);
-
 		const aiMessage = await this.generateChatRoomMessagePartial(messages);
 
 		if (aiMessage) {
@@ -178,8 +172,6 @@ export class AgentDurableObject extends DurableObject<Env> {
 		});
 
 		const toolResult = result.toolResults;
-
-		console.log("toolResult", toolResult);
 
 		const shouldRespond = toolResult.some(
 			(toolResult) =>
@@ -212,15 +204,27 @@ export class AgentDurableObject extends DurableObject<Env> {
 	private async generateChatRoomMessagePartial(
 		messages: ChatRoomMessage[],
 	): Promise<ChatRoomMessagePartial | null> {
-		const aiMessages = chatRoomMessagesToAiMessages(messages);
-		console.log("aiMessages", aiMessages);
-		const shouldRespond = await this.shouldAiRespond(aiMessages);
+		const agentConfig = await this.getAgentConfig();
 
-		console.log("shouldRespond", shouldRespond);
-
-		if (!shouldRespond) {
-			return null;
+		if (!agentConfig) {
+			throw new Error("Agent config not found");
 		}
+		const aiMessages = chatRoomMessagesToAiMessages(messages);
+
+		const hasMentionsOfAgent = messages.some((message) =>
+			message.mentions.some((mention) => mention.id === agentConfig.id),
+		);
+
+		if (!hasMentionsOfAgent) {
+			const shouldRespond = await this.shouldAiRespond(aiMessages);
+
+			if (!shouldRespond) {
+				console.log("shouldRespond", false);
+				return null;
+			}
+		}
+
+		console.log("shouldRespond", true);
 
 		const result = await this.generateAiResponse(aiMessages);
 
@@ -228,15 +232,10 @@ export class AgentDurableObject extends DurableObject<Env> {
 			return null;
 		}
 
-		const agentConfig = await this.getAgentConfig();
-
-		if (!agentConfig) {
-			throw new Error("Agent config not found");
-		}
-
 		return {
-			id: nanoid(),
+			id: nanoid(), // TODO: Should be sequential
 			content: result,
+			mentions: [],
 			createdAt: Date.now(),
 		};
 	}
@@ -245,11 +244,6 @@ export class AgentDurableObject extends DurableObject<Env> {
 		agentConfigData: Omit<typeof agentConfig.$inferSelect, "id" | "createdAt">,
 	) {
 		const doId = this.ctx.id.toString();
-		console.log({
-			reason: "Upserting agent config",
-			agentConfigData,
-			doId,
-		});
 		await this.db
 			.insert(agentConfig)
 			.values({
@@ -272,11 +266,6 @@ export class AgentDurableObject extends DurableObject<Env> {
 			.from(agentConfig)
 			.where(eq(agentConfig.id, this.ctx.id.toString()))
 			.get();
-
-		console.log({
-			reason: "Getting agent config",
-			config,
-		});
 
 		if (!config) {
 			throw new Error("Agent config not found");

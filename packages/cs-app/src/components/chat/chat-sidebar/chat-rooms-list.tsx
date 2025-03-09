@@ -191,8 +191,6 @@ function ChatRoomsGroup({
 }) {
 	const [isOpen, setIsOpen] = useState(true);
 
-	// TODO: highlight the selected chat room
-
 	return (
 		<Collapsible open={isOpen} onOpenChange={setIsOpen} className="w-full">
 			<div className="flex items-center justify-between px-2 py-1 border-b bg-sidebar-accent/30">
