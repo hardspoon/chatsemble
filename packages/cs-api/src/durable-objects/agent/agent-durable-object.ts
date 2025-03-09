@@ -23,9 +23,6 @@ import migrations from "./db/migrations/migrations";
 import { agentChatRoom, agentConfig } from "./db/schema";
 
 const ALARM_TIME_IN_MS = 5 * 1000;
-const MAX_NOTIFICATION_TO_WAIT_FOR_CHECK = 3;
-const MAX_CHECK_TIME_IN_MS = 6 * 1000; //  Should be bigger than ALARM_TIME_IN_MS
-const MIN_CHECK_TIME_IN_MS = 1 * 1000;
 
 export class AgentDurableObject extends DurableObject<Env> {
 	storage: DurableObjectStorage;
@@ -44,33 +41,13 @@ export class AgentDurableObject extends DurableObject<Env> {
 
 	async alarm() {
 		const chatRooms = await this.getChatRooms();
+		const processingPromises = chatRooms
+			.filter(({ notifications }) => notifications > 0)
+			.map(async ({ id, notifications }) => {
+				await this.triggerGeneration(id, notifications);
+			});
 
-		const processingPromises = chatRooms.map(
-			async ({ id, notifications, lastNotificationAt }) => {
-				const shouldTriggerGeneration = await this.shouldTriggerGeneration(
-					notifications,
-					lastNotificationAt,
-				);
-
-				if (shouldTriggerGeneration) {
-					await this.triggerGeneration(id, notifications);
-				}
-				//await this.triggerGeneration(id, notifications);
-			},
-		);
-
-		// Process all chat rooms in parallel
 		await Promise.all(processingPromises);
-
-		// Check if we have pending notifications
-		const chatRoomsToVerify = await this.getChatRooms();
-		const chatRoomHasNotifications = chatRoomsToVerify.some(
-			({ notifications }) => notifications > 0,
-		);
-
-		if (chatRoomHasNotifications) {
-			this.setChatRoomCheckAlarm();
-		}
 	}
 
 	async receiveNotification({ chatRoomId }: { chatRoomId: string }) {
@@ -91,44 +68,6 @@ export class AgentDurableObject extends DurableObject<Env> {
 			const alarmTime = Date.now() + ALARM_TIME_IN_MS;
 			this.storage.setAlarm(alarmTime);
 		}
-	}
-
-	private async shouldTriggerGeneration(
-		notifications: number,
-		lastNotificationAt: number,
-	) {
-		let triggerGeneration = false;
-		if (notifications === 0) {
-			return triggerGeneration;
-		}
-
-		// TODO: Check if this is the best approach to trigger generation
-		// NOTE: We can probably simplify it a lot
-		if (notifications > MAX_NOTIFICATION_TO_WAIT_FOR_CHECK) {
-			triggerGeneration = true;
-		} else {
-			const timeStep =
-				(MAX_CHECK_TIME_IN_MS - MIN_CHECK_TIME_IN_MS) /
-				MAX_NOTIFICATION_TO_WAIT_FOR_CHECK;
-
-			const notificationTimeStep =
-				(MAX_NOTIFICATION_TO_WAIT_FOR_CHECK - notifications + 1) * timeStep;
-
-			const timeToCheck = MIN_CHECK_TIME_IN_MS + notificationTimeStep;
-
-			const timeAgo = Date.now() - timeToCheck;
-
-			const lastNotificationIsNewerThanTimeToCheck =
-				lastNotificationAt > timeAgo;
-
-			if (lastNotificationIsNewerThanTimeToCheck) {
-				triggerGeneration = false;
-			} else {
-				triggerGeneration = true;
-			}
-		}
-
-		return triggerGeneration;
 	}
 
 	private async triggerGeneration(chatRoomId: string, notifications: number) {
@@ -216,6 +155,7 @@ export class AgentDurableObject extends DurableObject<Env> {
 		);
 
 		if (!hasMentionsOfAgent) {
+			// TODO: The prompt for this should be better it currently answers when it shouldn't
 			const shouldRespond = await this.shouldAiRespond(aiMessages);
 
 			if (!shouldRespond) {
