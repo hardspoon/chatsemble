@@ -14,63 +14,58 @@ import { Tiptap } from "@/components/ui/tiptap/tiptap";
 import type { ChatInputValue, ChatRoomMember } from "@/cs-shared";
 
 interface ChatInputContextValue {
-	value?: ChatInputValue;
-	setValue?: (value: ChatInputValue) => void;
-	onSubmit?: (value: ChatInputValue) => void;
-	loading?: boolean;
-	onStop?: () => void;
-	variant?: "default" | "unstyled";
-	rows?: number;
+	internalValue: ChatInputValue;
+	setInternalValue: (value: ChatInputValue) => void;
+	onSubmitInternal: () => void;
 	disabled?: boolean;
-	chatMembers?: ChatRoomMember[];
+	chatMembers: ChatRoomMember[];
 }
 
-const ChatInputContext = createContext<ChatInputContextValue>({});
+const ChatInputContext = createContext<ChatInputContextValue>({
+	internalValue: { content: "", mentions: [] },
+	setInternalValue: () => {},
+	onSubmitInternal: () => {},
+	chatMembers: [],
+});
 
-interface ChatInputProps
-	extends Omit<ChatInputContextValue, "variant" | "value" | "setValue"> {
+interface ChatInputProps {
 	children: React.ReactNode;
 	className?: string;
-	variant?: "default" | "unstyled";
-	rows?: number;
-	chatMembers?: ChatRoomMember[];
+	onSubmit: (value: ChatInputValue) => void;
 	disabled?: boolean;
+	chatMembers: ChatRoomMember[];
 }
 
 function ChatInput({
 	children,
 	className,
-	variant = "default",
 	onSubmit,
-	loading,
-	onStop,
-	rows = 1,
 	chatMembers = [],
 	disabled,
 }: ChatInputProps) {
-	const [value, setValue] = useState<ChatInputValue>({
+	const [internalValue, setInternalValue] = useState<ChatInputValue>({
 		content: "",
 		mentions: [],
 	});
-	const editorRef = useRef<{ clear: () => void }>(null);
+	const editorRef = useRef<{
+		clear: () => void;
+		getValue: () => ChatInputValue;
+	}>(null);
 
 	const handleSubmitInternal = () => {
-		if (onSubmit) {
-			if (!value.content.trim() || disabled) {
+		if (editorRef.current) {
+			const currentValue = editorRef.current.getValue();
+			if (!currentValue.content.trim()) {
 				return;
 			}
-			onSubmit(value);
-			editorRef.current?.clear(); // Clear the editor after submission
+			onSubmit(currentValue);
+			editorRef.current.clear();
 		}
 	};
 	const contextValue: ChatInputContextValue = {
-		value,
-		setValue,
-		onSubmit: handleSubmitInternal,
-		loading,
-		onStop,
-		variant,
-		rows,
+		internalValue,
+		setInternalValue,
+		onSubmitInternal: handleSubmitInternal,
 		chatMembers,
 		disabled,
 	};
@@ -79,9 +74,7 @@ function ChatInput({
 		<ChatInputContext.Provider value={contextValue}>
 			<div
 				className={cn(
-					variant === "default" &&
-						"flex flex-col items-end w-full p-2 rounded-2xl border border-input bg-transparent focus-within:ring-1 focus-within:ring-ring focus-within:outline-none",
-					variant === "unstyled" && "flex items-start gap-2 w-full",
+					"flex flex-col items-end w-full p-2 rounded-2xl border border-input bg-transparent focus-within:ring-1 focus-within:ring-ring focus-within:outline-none",
 					className,
 				)}
 			>
@@ -104,95 +97,37 @@ function ChatInput({
 
 ChatInput.displayName = "ChatInput";
 
-interface ChatInputTiptapProps {
-	members?: ChatRoomMember[];
-	disabled?: boolean;
-	setValue?: (output: ChatInputValue) => void;
-	//onEnter?: () => void;
-}
+const ChatInputTiptap = forwardRef((_, ref) => {
+	const context = useContext(ChatInputContext);
+	const members = context.chatMembers ?? [];
+	const setInternalValue = context.setInternalValue;
+	const onSubmitInternal = context.onSubmitInternal;
+	//const disabled = disabledProp ?? context.disabled;
 
-const ChatInputTiptap = forwardRef(
-	(
-		{
-			members: membersProp,
-			//disabled: disabledProp,
-			//onEnter,
-			setValue: setValueProp,
-		}: ChatInputTiptapProps,
-		ref,
-	) => {
-		const context = useContext(ChatInputContext);
-		const members = membersProp ?? context.chatMembers ?? [];
-		const setValue = setValueProp ?? context.setValue;
-		//const disabled = disabledProp ?? context.disabled;
-
-		return (
-			<Tiptap
-				ref={ref}
-				members={members}
-				onChange={setValue ?? (() => {})}
-				//disabled={disabled}
-				//onEnter={onEnter}
-			/>
-		);
-	},
-);
+	return (
+		<Tiptap
+			ref={ref}
+			members={members}
+			onChange={setInternalValue}
+			//disabled={disabled}
+			onEnter={onSubmitInternal}
+		/>
+	);
+});
 
 ChatInputTiptap.displayName = "ChatInputTiptap";
 
-interface ChatInputSubmitProps extends React.ComponentProps<typeof Button> {
-	onSubmit?: () => void;
-	loading?: boolean;
-	onStop?: () => void;
-}
-
 function ChatInputSubmit({
-	onSubmit: onSubmitProp,
-	loading: loadingProp,
-	onStop: onStopProp,
 	className,
-	disabled: disabledProp,
 	...props
-}: ChatInputSubmitProps) {
+}: React.ComponentProps<typeof Button>) {
 	const context = useContext(ChatInputContext);
-	const loading = loadingProp ?? context.loading;
-	const onStop = onStopProp ?? context.onStop;
-	const onSubmit = onSubmitProp ?? context.onSubmit;
-	const disabled = disabledProp ?? context.disabled;
-	const value = context.value;
+	const onSubmitInternal = context.onSubmitInternal;
+	const disabled = context.disabled;
+	const internalValue = context.internalValue;
 
-	if (loading && onStop) {
-		return (
-			<Button
-				onClick={onStop}
-				className={cn(
-					"shrink-0 rounded-full p-1.5 h-fit border dark:border-zinc-600",
-					className,
-				)}
-				{...props}
-			>
-				<svg
-					xmlns="http://www.w3.org/2000/svg"
-					width="24"
-					height="24"
-					viewBox="0 0 24 24"
-					fill="currentColor"
-					stroke="currentColor"
-					strokeWidth="2"
-					strokeLinecap="round"
-					strokeLinejoin="round"
-					aria-label="Stop"
-				>
-					<title>Stop</title>
-					<rect x="6" y="6" width="12" height="12" />
-				</svg>
-			</Button>
-		);
-	}
-
-	// For Tiptap, we check if there's content in the tiptapValue
-	const isDisabled =
-		disabled || !value || !value.content || value.content.trim().length === 0;
+	const isDisabled = disabled || !internalValue;
+	internalValue?.content.trim().length === 0;
 
 	return (
 		<Button
@@ -204,7 +139,7 @@ function ChatInputSubmit({
 			onClick={(event) => {
 				event.preventDefault();
 				if (!isDisabled) {
-					onSubmit?.(value);
+					onSubmitInternal();
 				}
 			}}
 			{...props}
