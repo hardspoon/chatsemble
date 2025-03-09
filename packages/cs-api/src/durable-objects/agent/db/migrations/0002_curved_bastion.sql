@@ -1,1 +1,0 @@
-ALTER TABLE `agent_chat_room` ADD `last_notification_at` integer DEFAULT (unixepoch() * 1000) NOT NULL;

@@ -1,6 +1,7 @@
 CREATE TABLE `chat_message` (
 	`id` text PRIMARY KEY NOT NULL,
 	`content` text NOT NULL,
+	`mentions` text NOT NULL,
 	`member_id` text NOT NULL,
 	`created_at` integer DEFAULT (unixepoch() * 1000) NOT NULL,
 	FOREIGN KEY (`member_id`) REFERENCES `chat_room_member`(`id`) ON UPDATE no action ON DELETE no action
