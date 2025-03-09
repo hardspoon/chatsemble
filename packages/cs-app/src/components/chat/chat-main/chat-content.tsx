@@ -4,8 +4,8 @@ import { useChatWsContext } from "@/components/chat/chat-main/chat-ws-provider";
 import {
 	ChatInput,
 	ChatInputSubmit,
-	ChatInputTextArea,
-} from "@/components/ui/chat-input";
+	ChatInputTiptap,
+} from "@/components/ui/tiptap-chat-input";
 import {
 	ChatMessage,
 	ChatMessageAvatar,
@@ -17,9 +17,8 @@ import { ChatMessageArea } from "@/components/ui/chat-message-area";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export function ChatContent() {
-	const { messages, input, handleInputChange, handleSubmit, connectionStatus } =
+	const { messages, handleSubmit, connectionStatus, members } =
 		useChatWsContext();
-
 	const isLoading = connectionStatus !== "ready";
 
 	return (
@@ -54,15 +53,12 @@ export function ChatContent() {
 			</ChatMessageArea>
 			<div className="px-2 py-4 max-w-2xl mx-auto w-full">
 				<ChatInput
-					value={input}
-					onChange={handleInputChange}
 					onSubmit={handleSubmit}
+					chatMembers={members}
+					disabled={isLoading}
 				>
-					<ChatInputTextArea
-						placeholder="Type a message..."
-						disabled={isLoading}
-					/>
-					<ChatInputSubmit disabled={isLoading} />
+					<ChatInputTiptap />
+					<ChatInputSubmit />
 				</ChatInput>
 			</div>
 		</div>

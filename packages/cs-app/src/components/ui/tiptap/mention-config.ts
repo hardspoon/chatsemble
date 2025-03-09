@@ -4,11 +4,15 @@ import { ReactRenderer } from "@tiptap/react";
 import tippy from "tippy.js";
 import MentionList from "./mention-list";
 import type { SuggestionProps } from "@tiptap/suggestion";
-import type { MentionItem } from "./tiptap";
+import type { TiptapMentionItem } from "./tiptap";
 
-export function getMentionSuggestion(members: ChatRoomMember[]) {
+export function getMentionSuggestion(
+	membersRef: React.RefObject<ChatRoomMember[]>,
+) {
 	return {
 		items: ({ query }: { query: string }) => {
+			// Access the latest members from the ref, default to empty array if undefined
+			const members = membersRef.current || [];
 			return members
 				.filter((item) =>
 					item.name.toLowerCase().startsWith(query.toLowerCase()),
@@ -21,7 +25,7 @@ export function getMentionSuggestion(members: ChatRoomMember[]) {
 			let popup: ReturnType<typeof tippy>;
 
 			return {
-				onStart: (props: SuggestionProps<MentionItem>) => {
+				onStart: (props: SuggestionProps<TiptapMentionItem>) => {
 					component = new ReactRenderer(MentionList, {
 						props: {
 							items: props.items,
@@ -45,7 +49,7 @@ export function getMentionSuggestion(members: ChatRoomMember[]) {
 					});
 				},
 
-				onUpdate: (props: SuggestionProps<MentionItem>) => {
+				onUpdate: (props: SuggestionProps<TiptapMentionItem>) => {
 					component.updateProps(props);
 
 					if (!props.clientRect) {

@@ -1,54 +1,42 @@
-:root {
-	--tiptap-black: #000000;
-	--tiptap-white: #ffffff;
-	--tiptap-purple-light: #e9d5ff;
-	--tiptap-gray-2: #e5e7eb;
-	--tiptap-gray-3: #d1d5db;
-	--tiptap-gray-4: #9ca3af;
+.tiptap {
+	@apply text-foreground p-2 max-h-[500px] overflow-y-auto;
 }
 
-.tiptap {
-	color: var(--tiptap-black);
-	padding: 1rem;
+/* Add this focus state rule */
+.tiptap:focus {
+	@apply outline-none;
 }
 
 .tiptap :first-child {
-	margin-top: 0;
+	@apply mt-0;
 }
 
 /* List styles */
 .tiptap ul,
 .tiptap ol {
-	padding: 0 1rem;
-	margin: 1.25rem 1rem 1.25rem 0.4rem;
+	@apply px-4 my-5 mx-4;
 }
 
 .tiptap ul {
-	list-style-type: disc;
+	@apply list-disc;
 }
 
 .tiptap ol {
-	list-style-type: decimal;
+	@apply list-decimal;
 }
 
 .tiptap li {
-	margin: 0.5rem 0;
-	line-height: 1.5;
+	@apply my-2 leading-6;
 }
 
 .tiptap ul li p,
 .tiptap ol li p {
-	margin-top: 0.25em;
-	margin-bottom: 0.25em;
+	@apply my-1;
 }
 
-.tiptap ul li::marker {
-	color: var(--tiptap-gray-4);
-}
-
+.tiptap ul li::marker,
 .tiptap ol li::marker {
-	color: var(--tiptap-gray-4);
-	font-weight: 500;
+	@apply text-muted-foreground;
 }
 
 /* Heading styles */
@@ -58,76 +46,53 @@
 .tiptap h4,
 .tiptap h5,
 .tiptap h6 {
-	line-height: 1.1;
-	margin-top: 2.5rem;
-	text-wrap: pretty;
+	@apply leading-tight mt-10 text-pretty;
 }
 
 .tiptap h1,
 .tiptap h2 {
-	margin-top: 3.5rem;
-	margin-bottom: 1.5rem;
+	@apply mt-14 mb-6;
 }
 
 .tiptap h1 {
-	font-size: 1.4rem;
+	@apply text-2xl;
 }
 
 .tiptap h2 {
-	font-size: 1.2rem;
+	@apply text-xl;
 }
 
 .tiptap h3 {
-	font-size: 1.1rem;
+	@apply text-lg;
 }
 
 .tiptap h4,
 .tiptap h5,
 .tiptap h6 {
-	font-size: 1rem;
+	@apply text-base;
 }
 
 /* Code and preformatted text styles */
 .tiptap code {
-	background-color: var(--tiptap-purple-light);
-	border-radius: 0.4rem;
-	color: var(--tiptap-black);
-	font-size: 0.85rem;
-	padding: 0.25em 0.3em;
+	@apply bg-accent text-accent-foreground rounded-sm text-sm px-1.5 py-1;
 }
 
 .tiptap pre {
-	background: var(--tiptap-black);
-	border-radius: 0.5rem;
-	color: var(--tiptap-white);
-	font-family: "JetBrainsMono", monospace;
-	margin: 1.5rem 0;
-	padding: 0.75rem 1rem;
+	@apply bg-background text-foreground rounded-lg border my-6 px-4 py-3 font-mono;
 }
 
 .tiptap pre code {
-	background: none;
-	color: inherit;
-	font-size: 0.8rem;
-	padding: 0;
+	@apply bg-transparent text-sm p-0;
 }
 
 .tiptap blockquote {
-	border-left: 3px solid var(--tiptap-gray-3);
-	margin: 1.5rem 0;
-	padding-left: 1rem;
+	@apply border-l-4 border-border my-6 pl-4;
 }
 
 .tiptap hr {
-	border: none;
-	border-top: 1px solid var(--tiptap-gray-2);
-	margin: 2rem 0;
+	@apply border-t border-border my-8;
 }
 
 .tiptap .mention {
-	background-color: var(--tiptap-purple-light);
-	border-radius: 0.4rem;
-	box-decoration-break: clone;
-	color: var(--tiptap-purple);
-	padding: 0.1rem 0.3rem;
+	@apply bg-accent text-accent-foreground rounded-sm px-2 py-0.5;
 }

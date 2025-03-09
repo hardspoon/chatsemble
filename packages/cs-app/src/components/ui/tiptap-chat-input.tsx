@@ -1,51 +1,78 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { useTextareaResize } from "@/hooks/use-textarea-resize";
 import { cn } from "@/lib/utils";
 import { ArrowUpIcon } from "lucide-react";
-import type React from "react";
-import { createContext, useContext } from "react";
+import React, {
+	createContext,
+	forwardRef,
+	useContext,
+	useRef,
+	useState,
+} from "react";
+import { Tiptap } from "@/components/ui/tiptap/tiptap";
+import type { ChatInputValue, ChatRoomMember } from "@/cs-shared";
 
 interface ChatInputContextValue {
-	value?: string;
-	onChange?: React.ChangeEventHandler<HTMLTextAreaElement>;
-	onSubmit?: () => void;
+	value?: ChatInputValue;
+	setValue?: (value: ChatInputValue) => void;
+	onSubmit?: (value: ChatInputValue) => void;
 	loading?: boolean;
 	onStop?: () => void;
 	variant?: "default" | "unstyled";
 	rows?: number;
+	disabled?: boolean;
+	chatMembers?: ChatRoomMember[];
 }
 
 const ChatInputContext = createContext<ChatInputContextValue>({});
 
-interface ChatInputProps extends Omit<ChatInputContextValue, "variant"> {
+interface ChatInputProps
+	extends Omit<ChatInputContextValue, "variant" | "value" | "setValue"> {
 	children: React.ReactNode;
 	className?: string;
 	variant?: "default" | "unstyled";
 	rows?: number;
+	chatMembers?: ChatRoomMember[];
+	disabled?: boolean;
 }
 
 function ChatInput({
 	children,
 	className,
 	variant = "default",
-	value,
-	onChange,
 	onSubmit,
 	loading,
 	onStop,
 	rows = 1,
+	chatMembers = [],
+	disabled,
 }: ChatInputProps) {
+	const [value, setValue] = useState<ChatInputValue>({
+		content: "",
+		mentions: [],
+	});
+	const editorRef = useRef<{ clear: () => void }>(null);
+
+	const handleSubmitInternal = () => {
+		if (onSubmit) {
+			if (!value.content.trim() || disabled) {
+				return;
+			}
+			onSubmit(value);
+			editorRef.current?.clear(); // Clear the editor after submission
+		}
+	};
 	const contextValue: ChatInputContextValue = {
 		value,
-		onChange,
-		onSubmit,
+		setValue,
+		onSubmit: handleSubmitInternal,
 		loading,
 		onStop,
 		variant,
 		rows,
+		chatMembers,
+		disabled,
 	};
 
 	return (
@@ -58,7 +85,18 @@ function ChatInput({
 					className,
 				)}
 			>
-				{children}
+				{React.Children.map(children, (child) => {
+					if (React.isValidElement(child)) {
+						if (child.type === ChatInputTiptap) {
+							return React.cloneElement(child, {
+								ref: editorRef,
+								...child.props,
+							});
+						}
+						return child;
+					}
+					return child;
+				})}
 			</div>
 		</ChatInputContext.Provider>
 	);
@@ -66,64 +104,41 @@ function ChatInput({
 
 ChatInput.displayName = "ChatInput";
 
-interface ChatInputTextAreaProps extends React.ComponentProps<typeof Textarea> {
-	value?: string;
-	onChange?: React.ChangeEventHandler<HTMLTextAreaElement>;
-	onSubmit?: () => void;
-	variant?: "default" | "unstyled";
+interface ChatInputTiptapProps {
+	members?: ChatRoomMember[];
+	disabled?: boolean;
+	setValue?: (output: ChatInputValue) => void;
+	//onEnter?: () => void;
 }
 
-function ChatInputTextArea({
-	onSubmit: onSubmitProp,
-	value: valueProp,
-	onChange: onChangeProp,
-	className,
-	variant: variantProp,
-	...props
-}: ChatInputTextAreaProps) {
-	const context = useContext(ChatInputContext);
-	const value = valueProp ?? context.value ?? "";
-	const onChange = onChangeProp ?? context.onChange;
-	const onSubmit = onSubmitProp ?? context.onSubmit;
-	const rows = context.rows ?? 1;
+const ChatInputTiptap = forwardRef(
+	(
+		{
+			members: membersProp,
+			//disabled: disabledProp,
+			//onEnter,
+			setValue: setValueProp,
+		}: ChatInputTiptapProps,
+		ref,
+	) => {
+		const context = useContext(ChatInputContext);
+		const members = membersProp ?? context.chatMembers ?? [];
+		const setValue = setValueProp ?? context.setValue;
+		//const disabled = disabledProp ?? context.disabled;
 
-	// Convert parent variant to textarea variant unless explicitly overridden
-	const variant =
-		variantProp ?? (context.variant === "default" ? "unstyled" : "default");
+		return (
+			<Tiptap
+				ref={ref}
+				members={members}
+				onChange={setValue ?? (() => {})}
+				//disabled={disabled}
+				//onEnter={onEnter}
+			/>
+		);
+	},
+);
 
-	const textareaRef = useTextareaResize(value, rows);
-	const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-		if (!onSubmit) {
-			return;
-		}
-		if (e.key === "Enter" && !e.shiftKey) {
-			if (typeof value !== "string" || value.trim().length === 0) {
-				return;
-			}
-			e.preventDefault();
-			onSubmit();
-		}
-	};
-
-	return (
-		<Textarea
-			ref={textareaRef}
-			{...props}
-			value={value}
-			onChange={onChange}
-			onKeyDown={handleKeyDown}
-			className={cn(
-				"max-h-[400px] min-h-0 resize-none overflow-x-hidden",
-				variant === "unstyled" &&
-					"border-none focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none",
-				className,
-			)}
-			rows={rows}
-		/>
-	);
-}
-
-ChatInputTextArea.displayName = "ChatInputTextArea";
+ChatInputTiptap.displayName = "ChatInputTiptap";
 
 interface ChatInputSubmitProps extends React.ComponentProps<typeof Button> {
 	onSubmit?: () => void;
@@ -136,12 +151,15 @@ function ChatInputSubmit({
 	loading: loadingProp,
 	onStop: onStopProp,
 	className,
+	disabled: disabledProp,
 	...props
 }: ChatInputSubmitProps) {
 	const context = useContext(ChatInputContext);
 	const loading = loadingProp ?? context.loading;
 	const onStop = onStopProp ?? context.onStop;
 	const onSubmit = onSubmitProp ?? context.onSubmit;
+	const disabled = disabledProp ?? context.disabled;
+	const value = context.value;
 
 	if (loading && onStop) {
 		return (
@@ -172,8 +190,9 @@ function ChatInputSubmit({
 		);
 	}
 
+	// For Tiptap, we check if there's content in the tiptapValue
 	const isDisabled =
-		typeof context.value !== "string" || context.value.trim().length === 0;
+		disabled || !value || !value.content || value.content.trim().length === 0;
 
 	return (
 		<Button
@@ -185,7 +204,7 @@ function ChatInputSubmit({
 			onClick={(event) => {
 				event.preventDefault();
 				if (!isDisabled) {
-					onSubmit?.();
+					onSubmit?.(value);
 				}
 			}}
 			{...props}
@@ -197,4 +216,4 @@ function ChatInputSubmit({
 
 ChatInputSubmit.displayName = "ChatInputSubmit";
 
-export { ChatInput, ChatInputTextArea, ChatInputSubmit };
+export { ChatInput, ChatInputTiptap, ChatInputSubmit };
