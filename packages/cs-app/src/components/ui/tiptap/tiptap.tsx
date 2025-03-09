@@ -1,5 +1,7 @@
 "use client";
 
+import { EditorContent, useEditor } from "@tiptap/react";
+import StarterKit from "@tiptap/starter-kit";
 import {
 	forwardRef,
 	useCallback,
@@ -7,16 +9,14 @@ import {
 	useImperativeHandle,
 	useRef,
 } from "react";
-import { useEditor, EditorContent } from "@tiptap/react";
-import StarterKit from "@tiptap/starter-kit";
 import { Markdown } from "tiptap-markdown";
 import "./style.css";
 import type { ChatInputValue, ChatRoomMember } from "@/cs-shared";
-import { getMentionSuggestion } from "./mention-config";
-import { MentioPlugin } from "./metion-plugin";
+import { Extension } from "@tiptap/core";
 import type { Transaction } from "@tiptap/pm/state";
 import type { Editor, JSONContent } from "@tiptap/react";
-import { Extension } from "@tiptap/core";
+import { getMentionSuggestion } from "./mention-config";
+import { MentioPlugin } from "./metion-plugin";
 
 export interface TiptapMentionItem {
 	id: string;

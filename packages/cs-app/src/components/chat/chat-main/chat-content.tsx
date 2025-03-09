@@ -2,11 +2,6 @@
 
 import { useChatWsContext } from "@/components/chat/chat-main/chat-ws-provider";
 import {
-	ChatInput,
-	ChatInputSubmit,
-	ChatInputTiptap,
-} from "@/components/ui/tiptap-chat-input";
-import {
 	ChatMessage,
 	ChatMessageAvatar,
 	ChatMessageContent,
@@ -15,6 +10,11 @@ import {
 } from "@/components/ui/chat-message";
 import { ChatMessageArea } from "@/components/ui/chat-message-area";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+	ChatInput,
+	ChatInputSubmit,
+	ChatInputTiptap,
+} from "@/components/ui/tiptap-chat-input";
 import { useEffect } from "react";
 
 export function ChatContent() {

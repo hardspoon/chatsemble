@@ -1,9 +1,9 @@
 // packages/cs-app/src/components/ui/tiptap/mentionConfig.ts
 import type { ChatRoomMember } from "@/cs-shared";
 import { ReactRenderer } from "@tiptap/react";
+import type { SuggestionProps } from "@tiptap/suggestion";
 import tippy from "tippy.js";
 import MentionList from "./mention-list";
-import type { SuggestionProps } from "@tiptap/suggestion";
 import type { TiptapMentionItem } from "./tiptap";
 
 export function getMentionSuggestion(
