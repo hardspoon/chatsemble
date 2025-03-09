@@ -10,7 +10,6 @@ import type {
 	WsMessageReceive,
 } from "@/cs-shared";
 import type { User } from "better-auth";
-import { nanoid } from "nanoid";
 import { useCallback, useEffect, useReducer, useRef } from "react";
 
 // Define the chat state interface
@@ -178,7 +177,6 @@ export function useChatWS({ roomId, user }: UseChatWSProps) {
 			}
 
 			const newMessagePartial: ChatRoomMessagePartial = {
-				id: nanoid(),
 				content: value.content,
 				mentions: value.mentions,
 				createdAt: Date.now(),
@@ -186,26 +184,14 @@ export function useChatWS({ roomId, user }: UseChatWSProps) {
 
 			const wsMessage: WsMessageReceive = {
 				type: "message-receive",
-				message: newMessagePartial,
-			};
-
-			const newMessage: ChatRoomMessage = {
-				...newMessagePartial,
-				user: {
-					id: user.id,
-					roomId: roomId,
-					role: "member",
-					type: "user",
-					name: user.name,
-					email: user.email,
-					image: user.image ?? null,
-				},
+				message: newMessagePartial, // Cast to satisfy type, server will assign ID
 			};
 
 			sendMessage(wsMessage);
-			dispatch({ type: "ADD_MESSAGE", message: newMessage });
+			// No longer adding a temporary message to the UI
+			// The message will be added when the server sends it back
 		},
-		[user, roomId, sendMessage],
+		[roomId, sendMessage],
 	);
 
 	return {

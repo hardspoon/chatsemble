@@ -25,7 +25,6 @@ export type ChatInputValue = z.infer<typeof chatInputValueSchema>;
 // ChatRoomMessage
 
 export const chatMessagePartialSchema = z.object({
-	id: z.string().min(1),
 	content: z.string().min(1),
 	mentions: chatMentionsSchema,
 	createdAt: z.number(),
@@ -34,6 +33,7 @@ export const chatMessagePartialSchema = z.object({
 export type ChatRoomMessagePartial = z.infer<typeof chatMessagePartialSchema>;
 
 export interface ChatRoomMessage extends ChatRoomMessagePartial {
+	id: number;
 	user: ChatRoomMember;
 }
 
