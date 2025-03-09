@@ -1,7 +1,7 @@
 {
 	"version": "6",
 	"dialect": "sqlite",
-	"id": "efe46b9f-69e6-468f-aac7-d7836c785645",
+	"id": "f5a2a92e-7bc8-4ccc-ba1e-66fc3e5ab0ee",
 	"prevId": "00000000-0000-0000-0000-000000000000",
 	"tables": {
 		"chat_message": {
@@ -16,6 +16,13 @@
 				},
 				"content": {
 					"name": "content",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true,
+					"autoincrement": false
+				},
+				"mentions": {
+					"name": "mentions",
 					"type": "text",
 					"primaryKey": false,
 					"notNull": true,

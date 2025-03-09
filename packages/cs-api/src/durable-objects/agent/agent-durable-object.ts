@@ -6,7 +6,7 @@ import type { ChatRoomMessage, ChatRoomMessagePartial } from "@/cs-shared";
 //import { createOpenAI } from "@ai-sdk/openai";
 import { createGroq } from "@ai-sdk/groq";
 import { type CoreMessage, generateText } from "ai";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import {
 	type DrizzleSqliteDODatabase,
 	drizzle,
@@ -22,7 +22,27 @@ import {
 import migrations from "./db/migrations/migrations";
 import { agentChatRoom, agentConfig } from "./db/schema";
 
-const ALARM_TIME_IN_MS = 5 * 1000;
+/**
+ * Agent message batching strategy:
+ *
+ * 1. When a notification arrives, we set a processAt time (current time + 5 seconds)
+ *    if one of these conditions is met:
+ *    - This is the first notification (notifications = 0)
+ *    - There is no existing processAt time
+ *    - The existing processAt time is too far in the future (> 15 seconds from now)
+ *
+ * 2. If there's already a processAt time set and none of the above conditions are met,
+ *    we keep the existing processAt time. This prevents indefinite delays when
+ *    messages continuously arrive.
+ *
+ * 3. Each chatroom has its own independent processAt time, allowing for
+ *    separate batching per conversation.
+ *
+ * This approach balances message batching with guaranteed response times.
+ */
+
+const ALARM_TIME_IN_MS = 5 * 1000; // Standard wait time for batching messages
+const MAX_ALARM_TIME_IN_MS = 15 * 1000; // Maximum time a message can wait before processing
 
 export class AgentDurableObject extends DurableObject<Env> {
 	storage: DurableObjectStorage;
@@ -39,35 +59,76 @@ export class AgentDurableObject extends DurableObject<Env> {
 		migrate(this.db, migrations);
 	}
 
-	async alarm() {
-		const chatRooms = await this.getChatRooms();
-		const processingPromises = chatRooms
-			.filter(({ notifications }) => notifications > 0)
-			.map(async ({ id, notifications }) => {
-				await this.triggerGeneration(id, notifications);
-			});
-
-		await Promise.all(processingPromises);
-	}
-
 	async receiveNotification({ chatRoomId }: { chatRoomId: string }) {
 		const chatRoom = await this.getChatRoom(chatRoomId);
 		const newNotifications = chatRoom.notifications + 1;
+		const now = Date.now();
+
+		// Only update processAt time if:
+		// 1. This is the first notification (notifications = 0)
+		// 2. There is no existing processAt time
+		// 3. The existing processAt time is more than MAX_ALARM_TIME_IN_MS from now
+		//    (meaning it was set a long time ago and should be updated)
+
+		let processAt = chatRoom.processAt;
+
+		if (
+			chatRoom.notifications === 0 ||
+			!processAt ||
+			processAt > now + MAX_ALARM_TIME_IN_MS
+		) {
+			// Set standard delay for new notification sequences
+			processAt = now + ALARM_TIME_IN_MS;
+		}
+		// Otherwise keep the existing processAt time to prevent indefinite delays
 
 		await this.updateChatRoom(chatRoomId, {
 			notifications: newNotifications,
-			lastNotificationAt: Date.now(),
+			processAt: processAt,
 		});
 
-		this.setChatRoomCheckAlarm();
+		await this.setChatRoomCheckAlarm();
 	}
 
 	private async setChatRoomCheckAlarm() {
-		const currentAlarm = await this.storage.getAlarm();
-		if (!currentAlarm) {
-			const alarmTime = Date.now() + ALARM_TIME_IN_MS;
-			this.storage.setAlarm(alarmTime);
+		const nextProcessingResult = await this.db
+			.select({
+				minProcessAt: sql<number>`MIN(${agentChatRoom.processAt})`,
+			})
+			.from(agentChatRoom)
+			.where(sql`${agentChatRoom.processAt} IS NOT NULL`)
+			.get();
+
+		// Cancel any existing alarm
+		await this.storage.deleteAlarm();
+
+		// Set new alarm if there are rooms to process
+		if (nextProcessingResult?.minProcessAt) {
+			this.storage.setAlarm(nextProcessingResult.minProcessAt);
 		}
+	}
+
+	async alarm() {
+		const currentTime = Date.now();
+
+		// Get chat rooms that are ready to be processed
+		const chatRoomsToProcess = await this.db
+			.select()
+			.from(agentChatRoom)
+			.where(
+				sql`${agentChatRoom.processAt} <= ${currentTime} AND ${agentChatRoom.processAt} IS NOT NULL AND ${agentChatRoom.notifications} > 0`,
+			)
+			.all();
+
+		// Process each chat room that's ready
+		const processingPromises = chatRoomsToProcess.map(async (chatRoom) => {
+			await this.triggerGeneration(chatRoom.id, chatRoom.notifications);
+		});
+
+		await Promise.all(processingPromises);
+
+		// Set up the next alarm for any remaining chat rooms
+		await this.setChatRoomCheckAlarm();
 	}
 
 	private async triggerGeneration(chatRoomId: string, notifications: number) {
@@ -78,7 +139,9 @@ export class AgentDurableObject extends DurableObject<Env> {
 				messagesToGet,
 			);
 
+			// Reset the processAt and notifications count after fetching messages
 			await this.updateChatRoom(chatRoomId, {
+				processAt: null,
 				notifications: 0,
 			});
 

@@ -16,12 +16,8 @@ export const agentChatRoom = sqliteTable("agent_chat_room", {
 	id: text("id").primaryKey(),
 	name: text("name").notNull(),
 	notifications: integer("notifications").notNull().default(0),
-	// TODO: Add index to lastNotificationAt?
-	lastNotificationAt: integer("last_notification_at", {
-		mode: "number",
-	})
-		.notNull()
-		.default(sql`(unixepoch() * 1000)`),
+	// Time when the chat room should be processed by the agent
+	processAt: integer("process_at", { mode: "number" }),
 	organizationId: text("organization_id").notNull(),
 	createdAt: integer("created_at", { mode: "number" })
 		.notNull()
