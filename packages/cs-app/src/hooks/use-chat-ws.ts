@@ -180,6 +180,7 @@ export function useChatWS({ roomId, user }: UseChatWSProps) {
 			const newMessagePartial: ChatRoomMessagePartial = {
 				id: nanoid(),
 				content: value.content,
+				mentions: value.mentions,
 				createdAt: Date.now(),
 			};
 

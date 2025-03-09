@@ -71,13 +71,13 @@ const chatRoom = new Hono<HonoContextWithAuth>()
 				),
 		]);
 
-		const membersToAddDetails = [
+		const membersToAddDetailsPartial = [
 			...newUserMemberDetails.map((member) => ({
 				id: member.id,
 				name: member.name,
 				email: member.email,
 				image: member.image,
-				roomId: newChatRoom.id,
+				//roomId: newChatRoom.id,
 				role: "member" as const,
 				type: "user" as const,
 			})),
@@ -86,13 +86,13 @@ const chatRoom = new Hono<HonoContextWithAuth>()
 				name: member.name,
 				email: `agent-${member.name}@${member.organizationId}.com`,
 				image: member.image,
-				roomId: newChatRoom.id,
+				//roomId: newChatRoom.id,
 				role: "member" as const,
 				type: "agent" as const,
 			})),
 		];
 
-		if (type === "oneToOne" && membersToAddDetails.length !== 1) {
+		if (type === "oneToOne" && membersToAddDetailsPartial.length !== 1) {
 			throw new Error("One to one chat rooms must have exactly one member");
 		}
 
@@ -105,7 +105,7 @@ const chatRoom = new Hono<HonoContextWithAuth>()
 
 		const newChatRoom: ChatRoom = {
 			id: chatRoomDoId.toString(),
-			name: type === "oneToOne" ? membersToAddDetails[0].name : name,
+			name: type === "oneToOne" ? membersToAddDetailsPartial[0].name : name,
 			organizationId: activeOrganizationId,
 			type,
 			createdAt: Date.now(),
@@ -138,6 +138,11 @@ const chatRoom = new Hono<HonoContextWithAuth>()
 		// TODO: Apply transactions or someway to rollback if one of the operations fails for this and other operations
 
 		// Create other members
+
+		const membersToAddDetails = membersToAddDetailsPartial.map((member) => ({
+			...member,
+			roomId: newChatRoom.id,
+		}));
 
 		if (membersToAddDetails.length > 0) {
 			await db.insert(globalSchema.chatRoomMember).values(

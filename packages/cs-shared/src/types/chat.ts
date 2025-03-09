@@ -1,15 +1,23 @@
 import { z } from "zod";
 
+// ChatMention
+
+export const chatMentionSchema = z.object({
+	id: z.string().min(1),
+	name: z.string().min(1),
+});
+
+export type ChatMention = z.infer<typeof chatMentionSchema>;
+
+export const chatMentionsSchema = z.array(chatMentionSchema);
+
+export type ChatMentions = z.infer<typeof chatMentionsSchema>;
+
 // ChatInputValue
 
 export const chatInputValueSchema = z.object({
 	content: z.string().min(1),
-	mentions: z.array(
-		z.object({
-			id: z.string().min(1),
-			name: z.string().min(1),
-		}),
-	),
+	mentions: chatMentionsSchema,
 });
 
 export type ChatInputValue = z.infer<typeof chatInputValueSchema>;
@@ -19,6 +27,7 @@ export type ChatInputValue = z.infer<typeof chatInputValueSchema>;
 export const chatMessagePartialSchema = z.object({
 	id: z.string().min(1),
 	content: z.string().min(1),
+	mentions: chatMentionsSchema,
 	createdAt: z.number(),
 });
 

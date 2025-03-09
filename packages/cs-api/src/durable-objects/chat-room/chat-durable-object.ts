@@ -150,6 +150,7 @@ export class ChatDurableObject extends DurableObject<Env> {
 			memberId,
 			id: message.id,
 			content: message.content,
+			mentions: message.mentions,
 		});
 
 		this.broadcastWebSocketMessage(
@@ -195,6 +196,7 @@ export class ChatDurableObject extends DurableObject<Env> {
 			.select({
 				id: chatMessage.id,
 				content: chatMessage.content,
+				mentions: chatMessage.mentions,
 				memberId: chatMessage.memberId,
 				createdAt: chatMessage.createdAt,
 				user: {
@@ -224,6 +226,7 @@ export class ChatDurableObject extends DurableObject<Env> {
 			.select({
 				id: chatMessage.id,
 				content: chatMessage.content,
+				mentions: chatMessage.mentions,
 				memberId: chatMessage.memberId,
 				createdAt: chatMessage.createdAt,
 				user: {

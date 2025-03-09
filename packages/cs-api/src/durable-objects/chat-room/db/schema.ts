@@ -2,6 +2,7 @@ import type {
 	ChatRoomMemberRole,
 	ChatRoomMemberType,
 	ChatRoomType,
+	ChatMentions,
 } from "@/cs-shared";
 import { sql } from "drizzle-orm";
 import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
@@ -22,6 +23,7 @@ export const chatMessage = sqliteTable("chat_message", {
 		.primaryKey()
 		.$defaultFn(() => nanoid()), // TODO: Should be sequential id
 	content: text("content").notNull(),
+	mentions: text("mentions", { mode: "json" }).$type<ChatMentions>().notNull(),
 	memberId: text("member_id")
 		.notNull()
 		.references(() => chatRoomMember.id),
