@@ -1,9 +1,9 @@
-import type { ChatRoomMember } from "@/cs-shared";
-import { forwardRef, useEffect, useImperativeHandle, useState } from "react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ChatMemberBadge } from "@/components/chat-member/chat-member-badge";
-import { cn } from "@/lib/utils";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import type { ChatRoomMember } from "@/cs-shared";
+import { cn } from "@/lib/utils";
+import { forwardRef, useEffect, useImperativeHandle, useState } from "react";
 import type { TiptapMentionItem } from "./tiptap";
 
 interface MentionListProps {
@@ -88,8 +88,8 @@ export default forwardRef<MentionListRef, MentionListProps>((props, ref) => {
 									{item.name[0]?.toUpperCase() ?? "?"}
 								</AvatarFallback>
 							</Avatar>
-							<span 
-								className="text-sm font-medium truncate max-w-[120px]" 
+							<span
+								className="text-sm font-medium truncate max-w-[120px]"
 								title={item.name}
 							>
 								{item.name}

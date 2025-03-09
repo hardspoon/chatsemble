@@ -1,6 +1,8 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { Tiptap } from "@/components/ui/tiptap/tiptap";
+import type { ChatInputValue, ChatRoomMember } from "@/cs-shared";
 import { cn } from "@/lib/utils";
 import { ArrowUpIcon } from "lucide-react";
 import React, {
@@ -10,8 +12,6 @@ import React, {
 	useRef,
 	useState,
 } from "react";
-import { Tiptap } from "@/components/ui/tiptap/tiptap";
-import type { ChatInputValue, ChatRoomMember } from "@/cs-shared";
 
 interface ChatInputContextValue {
 	internalValue: ChatInputValue;

@@ -1,7 +1,7 @@
 "use client";
 
-import { Tiptap } from "@/components/ui/tiptap/tiptap";
 import { Card } from "@/components/ui/card";
+import { Tiptap } from "@/components/ui/tiptap/tiptap";
 
 export default function TestPage() {
 	return (

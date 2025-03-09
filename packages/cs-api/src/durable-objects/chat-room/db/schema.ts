@@ -1,8 +1,8 @@
 import type {
+	ChatMentions,
 	ChatRoomMemberRole,
 	ChatRoomMemberType,
 	ChatRoomType,
-	ChatMentions,
 } from "@/cs-shared";
 import { sql } from "drizzle-orm";
 import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
