@@ -1,0 +1,12 @@
+
+AI_GATEWAY_OPENAI_URL=https://gateway.ai.cloudflare.com/v1/43242523476576575675/chatsemble/openai
+AI_GATEWAY_GROQ_URL=https://gateway.ai.cloudflare.com/v1/43242523476576575675/chatsemble/groq
+
+OPENAI_API_KEY=sk-proj-uhBP234242
+GROQ_API_KEY=gsk_34243232
+
+BETTER_AUTH_URL=http://localhost:3000
+BETTER_AUTH_SECRET=YOUR_SECRET
+BETTER_AUTH_DOMAIN=.localhost
+DO_CHAT_API_URL=http://localhost:8787
+
