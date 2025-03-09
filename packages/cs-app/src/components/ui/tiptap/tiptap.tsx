@@ -16,11 +16,48 @@ import { getMentionSuggestion } from "./mention-config";
 import { MentioPlugin } from "./metion-plugin";
 import type { Transaction } from "@tiptap/pm/state";
 import type { Editor, JSONContent } from "@tiptap/react";
+import { Extension } from "@tiptap/core";
 
 export interface TiptapMentionItem {
 	id: string;
 	label: string;
 }
+
+function extractMentionsFromJSONContent(
+	content: JSONContent[],
+): ChatInputValue["mentions"] {
+	let mentions: ChatInputValue["mentions"] = [];
+	for (const item of content) {
+		if (item.type === "mention") {
+			mentions.push({
+				id: item.attrs?.id,
+				name: item.attrs?.label,
+			});
+		}
+		if (item.content) {
+			mentions = mentions.concat(extractMentionsFromJSONContent(item.content));
+		}
+	}
+	return mentions;
+}
+
+const KeyboardShortcuts = Extension.create({
+	addKeyboardShortcuts() {
+		return {
+			Enter: () => {
+				if (this.options.onEnter) {
+					this.options.onEnter();
+				}
+				return true;
+			},
+		};
+	},
+	addOptions() {
+		return {
+			onEnter: () => {},
+		};
+	},
+});
 
 export const Tiptap = forwardRef(
 	(
@@ -28,7 +65,7 @@ export const Tiptap = forwardRef(
 			members,
 			onChange,
 			disabled = false,
-			//onEnter, // New prop for Enter key submission
+			onEnter, // New prop for Enter key submission
 		}: {
 			members: ChatRoomMember[];
 			onChange: (output: ChatInputValue) => void;
@@ -49,29 +86,13 @@ export const Tiptap = forwardRef(
 				const markdown = props.editor.storage.markdown.getMarkdown();
 				const json = props.editor.getJSON();
 
-				const extractMentions = (
-					content: JSONContent[],
-				): ChatInputValue["mentions"] => {
-					let mentions: ChatInputValue["mentions"] = [];
-					for (const item of content) {
-						if (item.type === "mention") {
-							mentions.push({
-								id: item.attrs?.id,
-								name: item.attrs?.label,
-							});
-						}
-						if (item.content) {
-							mentions = mentions.concat(extractMentions(item.content));
-						}
-					}
-					return mentions;
-				};
-
 				if (!json.content) {
 					return;
 				}
 
-				const mentions = extractMentions(json.content);
+				const mentions = json.content
+					? extractMentionsFromJSONContent(json.content)
+					: [];
 				onChange({ content: markdown, mentions });
 			},
 			[onChange],
@@ -85,24 +106,10 @@ export const Tiptap = forwardRef(
 					HTMLAttributes: { class: "mention" },
 					suggestion: getMentionSuggestion(membersRef),
 				}),
-				// Custom extension for Enter and Shift + Enter handling (added for Goal 3)
-				/* Extension.create({
-					addKeyboardShortcuts() {
-						return {
-							Enter: () => {
-								if (onEnter) {
-									onEnter();
-									return true; // Prevent default Enter behavior
-								}
-								return false;
-							},
-							"Shift-Enter": () => {
-								this.editor.commands.enter(); // Insert a new line
-								return true;
-							},
-						};
-					},
-				}), */
+				// Add the custom keyboard extension with onEnter prop
+				KeyboardShortcuts.configure({
+					onEnter,
+				}),
 			],
 			onUpdate,
 			editable: !disabled,
@@ -113,6 +120,17 @@ export const Tiptap = forwardRef(
 		useImperativeHandle(ref, () => ({
 			clear: () => {
 				editor?.commands.clearContent();
+			},
+			getValue: (): ChatInputValue => {
+				if (!editor) {
+					return { content: "", mentions: [] };
+				}
+				const markdown = editor.storage.markdown.getMarkdown();
+				const json = editor.getJSON();
+				const mentions = json.content
+					? extractMentionsFromJSONContent(json.content)
+					: [];
+				return { content: markdown, mentions };
 			},
 		}));
 
