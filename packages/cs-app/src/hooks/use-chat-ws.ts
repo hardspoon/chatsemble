@@ -1,4 +1,5 @@
 import type {
+	ChatInputValue,
 	ChatRoom,
 	ChatRoomMember,
 	ChatRoomMessage,
@@ -12,17 +13,11 @@ import type { User } from "better-auth";
 import { nanoid } from "nanoid";
 import { useCallback, useEffect, useReducer, useRef } from "react";
 
-export interface UseChatWSProps {
-	roomId: string | null;
-	user: User;
-}
-
 // Define the chat state interface
 interface ChatState {
 	messages: ChatRoomMessage[];
 	members: ChatRoomMember[];
 	room: ChatRoom | null;
-	input: string;
 	connectionStatus: "disconnected" | "connecting" | "connected" | "ready";
 }
 
@@ -31,14 +26,12 @@ const initialChatState: ChatState = {
 	messages: [],
 	members: [],
 	room: null,
-	input: "",
 	connectionStatus: "disconnected",
 };
 
 // Define action types
 type ChatAction =
 	| { type: "SET_CONNECTION_STATUS"; status: ChatState["connectionStatus"] }
-	| { type: "SET_INPUT"; input: string }
 	| { type: "ADD_MESSAGE"; message: ChatRoomMessage }
 	| { type: "SET_MESSAGES"; messages: ChatRoomMessage[] }
 	| { type: "SET_MEMBERS"; members: ChatRoomMember[] }
@@ -50,8 +43,6 @@ function chatReducer(state: ChatState, action: ChatAction): ChatState {
 	switch (action.type) {
 		case "SET_CONNECTION_STATUS":
 			return { ...state, connectionStatus: action.status };
-		case "SET_INPUT":
-			return { ...state, input: action.input };
 		case "ADD_MESSAGE":
 			return { ...state, messages: [...state.messages, action.message] };
 		case "SET_MESSAGES":
@@ -65,6 +56,11 @@ function chatReducer(state: ChatState, action: ChatAction): ChatState {
 		default:
 			return state;
 	}
+}
+
+export interface UseChatWSProps {
+	roomId: string | null;
+	user: User;
 }
 
 export function useChatWS({ roomId, user }: UseChatWSProps) {
@@ -142,10 +138,6 @@ export function useChatWS({ roomId, user }: UseChatWSProps) {
 		wsRef.current = ws;
 	}, [roomId]);
 
-	const sendMessage = useCallback((message: WsChatIncomingMessage) => {
-		wsRef.current?.send(JSON.stringify(message));
-	}, []);
-
 	// Initialize WebSocket connection when roomId changes
 	useEffect(() => {
 		// Close any existing connection
@@ -170,18 +162,13 @@ export function useChatWS({ roomId, user }: UseChatWSProps) {
 		};
 	}, [roomId, startWebSocket]);
 
-	const handleInputChange = useCallback(
-		(e: React.ChangeEvent<HTMLTextAreaElement>) => {
-			dispatch({ type: "SET_INPUT", input: e.target.value });
-		},
-		[],
-	);
+	const sendMessage = useCallback((message: WsChatIncomingMessage) => {
+		wsRef.current?.send(JSON.stringify(message));
+	}, []);
 
 	const handleSubmit = useCallback(
-		async (e?: { preventDefault?: () => void }) => {
-			e?.preventDefault?.();
-
-			if (!state.input.trim() || !roomId) {
+		async (value: ChatInputValue) => {
+			if (!value.content.trim() || !roomId) {
 				return;
 			}
 
@@ -192,7 +179,7 @@ export function useChatWS({ roomId, user }: UseChatWSProps) {
 
 			const newMessagePartial: ChatRoomMessagePartial = {
 				id: nanoid(),
-				content: state.input.trim(),
+				content: value.content,
 				createdAt: Date.now(),
 			};
 
@@ -216,14 +203,12 @@ export function useChatWS({ roomId, user }: UseChatWSProps) {
 
 			sendMessage(wsMessage);
 			dispatch({ type: "ADD_MESSAGE", message: newMessage });
-			dispatch({ type: "SET_INPUT", input: "" });
 		},
-		[state.input, user, roomId, sendMessage],
+		[user, roomId, sendMessage],
 	);
 
 	return {
 		...state,
-		handleInputChange,
 		handleSubmit,
 	};
 }

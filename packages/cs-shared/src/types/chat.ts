@@ -1,5 +1,19 @@
 import { z } from "zod";
 
+// ChatInputValue
+
+export const chatInputValueSchema = z.object({
+	content: z.string().min(1),
+	mentions: z.array(
+		z.object({
+			id: z.string().min(1),
+			name: z.string().min(1),
+		}),
+	),
+});
+
+export type ChatInputValue = z.infer<typeof chatInputValueSchema>;
+
 // ChatRoomMessage
 
 export const chatMessagePartialSchema = z.object({
