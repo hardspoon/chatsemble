@@ -40,8 +40,10 @@ export function AppRightSidebar({
 		}
 
 		const newMessage: ChatRoomMessage = {
-			id: Date.now().toString(),
+			id: Date.now(),
 			content: input,
+			metadata: {},
+			mentions: [],
 			user: {
 				name: "You",
 				image: "",
@@ -77,7 +79,7 @@ export function AppRightSidebar({
 								<ChatMessageSkeleton />
 							) : messages.length > 0 ? (
 								messages.map((message) => (
-									<ChatMessage key={message.id} id={message.id}>
+									<ChatMessage key={String(message.id)} id={String(message.id)}>
 										<ChatMessageAvatar
 											imageSrc={message.user.image ?? undefined}
 										/>
