@@ -141,7 +141,7 @@ export class ChatDurableObject extends DurableObject<Env> {
 
 	async receiveChatRoomMessage(
 		memberId: string,
-		message: Omit<ChatRoomMessagePartial, "id">,
+		message: ChatRoomMessagePartial,
 		config: {
 			notifyAgents: boolean;
 		},
@@ -150,6 +150,12 @@ export class ChatDurableObject extends DurableObject<Env> {
 			memberId,
 			content: message.content,
 			mentions: message.mentions,
+			metadata: {
+				optimisticData: {
+					createdAt: message.createdAt,
+					id: message.id,
+				},
+			},
 		});
 
 		this.broadcastWebSocketMessage(
@@ -198,6 +204,7 @@ export class ChatDurableObject extends DurableObject<Env> {
 				mentions: chatMessage.mentions,
 				memberId: chatMessage.memberId,
 				createdAt: chatMessage.createdAt,
+				metadata: chatMessage.metadata,
 				user: {
 					id: chatRoomMember.id,
 					roomId: chatRoomMember.roomId,
@@ -228,6 +235,7 @@ export class ChatDurableObject extends DurableObject<Env> {
 				mentions: chatMessage.mentions,
 				memberId: chatMessage.memberId,
 				createdAt: chatMessage.createdAt,
+				metadata: chatMessage.metadata,
 				user: {
 					id: chatRoomMember.id,
 					roomId: chatRoomMember.roomId,

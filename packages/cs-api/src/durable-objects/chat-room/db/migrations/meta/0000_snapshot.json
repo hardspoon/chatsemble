@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "0a0b508c-4006-44ba-aef5-c5a5c9f7b226",
+  "id": "e2800674-5821-43e9-9f38-3e16412ca931",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "chat_message": {
@@ -42,6 +42,13 @@
           "notNull": true,
           "autoincrement": false,
           "default": "(unixepoch() * 1000)"
+        },
+        "metadata": {
+          "name": "metadata",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
         }
       },
       "indexes": {},

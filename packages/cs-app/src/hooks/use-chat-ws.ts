@@ -42,8 +42,25 @@ function chatReducer(state: ChatState, action: ChatAction): ChatState {
 	switch (action.type) {
 		case "SET_CONNECTION_STATUS":
 			return { ...state, connectionStatus: action.status };
-		case "ADD_MESSAGE":
+		case "ADD_MESSAGE": {
+			const existingOptimisticMessage = state.messages.some(
+				(message) => message.id === action.message.metadata.optimisticData?.id,
+			);
+
+			if (existingOptimisticMessage) {
+				return {
+					...state,
+					messages: state.messages.map((message) =>
+						message.id === action.message.metadata.optimisticData?.id
+							? action.message
+							: message,
+					),
+				};
+			}
+
 			return { ...state, messages: [...state.messages, action.message] };
+		}
+
 		case "SET_MESSAGES":
 			return { ...state, messages: action.messages };
 		case "SET_MEMBERS":
@@ -87,7 +104,7 @@ export function useChatWS({ roomId, user }: UseChatWSProps) {
 			const wsMessage: WsMessageChatInit = {
 				type: "chat-init",
 			};
-			sendMessage(wsMessage);
+			sendWsMessage(wsMessage);
 			dispatch({ type: "SET_CONNECTION_STATUS", status: "connected" });
 		};
 
@@ -98,7 +115,9 @@ export function useChatWS({ roomId, user }: UseChatWSProps) {
 				switch (wsMessage.type) {
 					case "message-broadcast": {
 						const newMessage = wsMessage.message;
+
 						dispatch({ type: "ADD_MESSAGE", message: newMessage });
+
 						break;
 					}
 					case "messages-sync": {
@@ -161,7 +180,7 @@ export function useChatWS({ roomId, user }: UseChatWSProps) {
 		};
 	}, [roomId, startWebSocket]);
 
-	const sendMessage = useCallback((message: WsChatIncomingMessage) => {
+	const sendWsMessage = useCallback((message: WsChatIncomingMessage) => {
 		wsRef.current?.send(JSON.stringify(message));
 	}, []);
 
@@ -177,21 +196,44 @@ export function useChatWS({ roomId, user }: UseChatWSProps) {
 			}
 
 			const newMessagePartial: ChatRoomMessagePartial = {
+				id: Date.now() + Math.random() * 10000,
 				content: value.content,
 				mentions: value.mentions,
 				createdAt: Date.now(),
 			};
+
+			console.log("members", state.members);
+			console.log("user", user);
 
 			const wsMessage: WsMessageReceive = {
 				type: "message-receive",
 				message: newMessagePartial, // Cast to satisfy type, server will assign ID
 			};
 
-			sendMessage(wsMessage);
-			// No longer adding a temporary message to the UI
-			// The message will be added when the server sends it back
+			sendWsMessage(wsMessage);
+
+			const newMessage: ChatRoomMessage = {
+				...newMessagePartial,
+				user: {
+					id: user.id,
+					roomId: roomId,
+					name: user.name,
+					type: "user",
+					role: "member",
+					email: user.email,
+					image: user.image,
+				},
+				metadata: {
+					optimisticData: {
+						createdAt: newMessagePartial.createdAt,
+						id: newMessagePartial.id,
+					},
+				},
+			};
+
+			dispatch({ type: "ADD_MESSAGE", message: newMessage });
 		},
-		[roomId, sendMessage],
+		[roomId, sendWsMessage, state.members, user.id],
 	);
 
 	return {
