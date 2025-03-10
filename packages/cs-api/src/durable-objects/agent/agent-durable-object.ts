@@ -239,6 +239,7 @@ export class AgentDurableObject extends DurableObject<Env> {
 			content: result,
 			mentions: [],
 			createdAt: Date.now(),
+			parentId: null, // TODO: Allow agent to respond in threads
 		};
 	}
 
@@ -294,7 +295,10 @@ export class AgentDurableObject extends DurableObject<Env> {
 
 		const chatRoomDO = this.env.CHAT_DURABLE_OBJECT.get(chatRoomDoId);
 
-		const messages = await chatRoomDO.selectMessages(limit);
+		const messages = await chatRoomDO.selectMessages({
+			limit,
+			topLevelOnly: true, // TODO: Allow agent to respond in threads
+		});
 
 		return messages;
 	}

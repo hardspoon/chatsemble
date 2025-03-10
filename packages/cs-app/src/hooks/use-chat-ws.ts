@@ -185,7 +185,10 @@ export function useChatWS({ roomId, user }: UseChatWSProps) {
 	}, []);
 
 	const handleSubmit = useCallback(
-		async (value: ChatInputValue) => {
+		async ({
+			value,
+			parentId,
+		}: { value: ChatInputValue; parentId: number | null }) => {
 			if (!value.content.trim() || !roomId) {
 				return;
 			}
@@ -200,6 +203,7 @@ export function useChatWS({ roomId, user }: UseChatWSProps) {
 				content: value.content,
 				mentions: value.mentions,
 				createdAt: Date.now(),
+				parentId,
 			};
 
 			console.log("members", state.members);
