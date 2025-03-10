@@ -7,7 +7,7 @@ import type {
 	WsChatIncomingMessage,
 	WsChatOutgoingMessage,
 } from "@/cs-shared";
-import { desc, eq, inArray } from "drizzle-orm";
+import { desc, eq, inArray, isNull } from "drizzle-orm";
 /// <reference types="@cloudflare/workers-types" />
 /// <reference types="../../../worker-configuration" />
 import {
@@ -91,7 +91,9 @@ export class ChatDurableObject extends DurableObject<Env> {
 					this.sendWebSocketMessageToUser(
 						{
 							type: "chat-ready",
-							messages: await this.selectMessages(),
+							messages: await this.selectMessages({
+								topLevelOnly: true,
+							}),
 							members: await this.getMembers(),
 							room: await this.getConfig(),
 						},
@@ -150,6 +152,7 @@ export class ChatDurableObject extends DurableObject<Env> {
 			memberId,
 			content: message.content,
 			mentions: message.mentions,
+			parentId: message.parentId,
 			metadata: {
 				optimisticData: {
 					createdAt: message.createdAt,
@@ -158,13 +161,10 @@ export class ChatDurableObject extends DurableObject<Env> {
 			},
 		});
 
-		this.broadcastWebSocketMessage(
-			{
-				type: "message-broadcast",
-				message: chatRoomMessage,
-			},
-			//memberId,
-		);
+		this.broadcastWebSocketMessage({
+			type: "message-broadcast",
+			message: chatRoomMessage,
+		});
 
 		if (config?.notifyAgents) {
 			const agentMembers = await this.getMembers({
@@ -205,6 +205,7 @@ export class ChatDurableObject extends DurableObject<Env> {
 				memberId: chatMessage.memberId,
 				createdAt: chatMessage.createdAt,
 				metadata: chatMessage.metadata,
+				parentId: chatMessage.parentId,
 				user: {
 					id: chatRoomMember.id,
 					roomId: chatRoomMember.roomId,
@@ -227,7 +228,10 @@ export class ChatDurableObject extends DurableObject<Env> {
 		return messageWithMember;
 	}
 
-	async selectMessages(limit?: number): Promise<ChatRoomMessage[]> {
+	async selectMessages(options?: {
+		limit?: number;
+		topLevelOnly?: boolean;
+	}): Promise<ChatRoomMessage[]> {
 		const query = this.db
 			.select({
 				id: chatMessage.id,
@@ -236,6 +240,7 @@ export class ChatDurableObject extends DurableObject<Env> {
 				memberId: chatMessage.memberId,
 				createdAt: chatMessage.createdAt,
 				metadata: chatMessage.metadata,
+				parentId: chatMessage.parentId,
 				user: {
 					id: chatRoomMember.id,
 					roomId: chatRoomMember.roomId,
@@ -250,8 +255,12 @@ export class ChatDurableObject extends DurableObject<Env> {
 			.innerJoin(chatRoomMember, eq(chatMessage.memberId, chatRoomMember.id))
 			.orderBy(desc(chatMessage.id));
 
-		if (limit) {
-			query.limit(limit);
+		if (options?.limit) {
+			query.limit(options.limit);
+		}
+
+		if (options?.topLevelOnly) {
+			query.where(isNull(chatMessage.parentId));
 		}
 
 		const result = await query;

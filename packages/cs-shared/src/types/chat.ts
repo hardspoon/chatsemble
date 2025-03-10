@@ -36,6 +36,7 @@ export const chatMessagePartialSchema = z.object({
 	content: z.string().min(1),
 	mentions: chatMentionsSchema,
 	createdAt: z.number(),
+	parentId: z.number().nullable(),
 });
 
 export type ChatRoomMessagePartial = z.infer<typeof chatMessagePartialSchema>;
