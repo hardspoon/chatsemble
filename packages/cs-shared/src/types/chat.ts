@@ -1,5 +1,12 @@
 import { z } from "zod";
 
+export type ChatMessageMetadata = {
+	optimisticData?: {
+		createdAt: number;
+		id: number;
+	};
+};
+
 // ChatMention
 
 export const chatMentionSchema = z.object({
@@ -25,6 +32,7 @@ export type ChatInputValue = z.infer<typeof chatInputValueSchema>;
 // ChatRoomMessage
 
 export const chatMessagePartialSchema = z.object({
+	id: z.number(),
 	content: z.string().min(1),
 	mentions: chatMentionsSchema,
 	createdAt: z.number(),
@@ -33,8 +41,8 @@ export const chatMessagePartialSchema = z.object({
 export type ChatRoomMessagePartial = z.infer<typeof chatMessagePartialSchema>;
 
 export interface ChatRoomMessage extends ChatRoomMessagePartial {
-	id: number;
 	user: ChatRoomMember;
+	metadata: ChatMessageMetadata;
 }
 
 // ChatRoomMember

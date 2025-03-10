@@ -1,5 +1,6 @@
 import type {
 	ChatMentions,
+	ChatMessageMetadata,
 	ChatRoomMemberRole,
 	ChatRoomMemberType,
 	ChatRoomType,
@@ -27,6 +28,9 @@ export const chatMessage = sqliteTable("chat_message", {
 	createdAt: integer("created_at", { mode: "number" })
 		.notNull()
 		.default(sql`(unixepoch() * 1000)`),
+	metadata: text("metadata", { mode: "json" })
+		.$type<ChatMessageMetadata>()
+		.notNull(),
 });
 
 export const chatRoomMember = sqliteTable("chat_room_member", {
