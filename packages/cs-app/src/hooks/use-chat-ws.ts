@@ -233,7 +233,7 @@ export function useChatWS({ roomId, user }: UseChatWSProps) {
 
 			dispatch({ type: "ADD_MESSAGE", message: newMessage });
 		},
-		[roomId, sendWsMessage, state.members, user.id],
+		[roomId, sendWsMessage, state.members, user],
 	);
 
 	return {
