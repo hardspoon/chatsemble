@@ -12,7 +12,6 @@ import {
 	drizzle,
 } from "drizzle-orm/durable-sqlite";
 import { migrate } from "drizzle-orm/durable-sqlite/migrator";
-import { nanoid } from "nanoid";
 import { chatRoomMessagesToAiMessages } from "../../lib/ai/ai-utils";
 import {
 	getAgentPrompt,
@@ -236,7 +235,7 @@ export class AgentDurableObject extends DurableObject<Env> {
 		}
 
 		return {
-			id: nanoid(), // TODO: Should be sequential
+			id: Date.now() + Math.random() * 1000000,
 			content: result,
 			mentions: [],
 			createdAt: Date.now(),
