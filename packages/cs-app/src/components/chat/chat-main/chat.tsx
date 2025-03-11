@@ -5,16 +5,22 @@ import { ChatHeader } from "@/components/chat/chat-main/chat-header";
 import { ChatWsProvider } from "@/components/chat/chat-main/chat-ws-provider";
 import { SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import type { User } from "better-auth";
-import { useSearchParams } from "next/navigation";
 import { ChatRoomThreadSidebar } from "@/components/chat/chat-sidebar/chat-room-thread-sidebar";
 import { SidebarRightProvider } from "@/components/ui/sidebar-right";
+import { ChatParamsProvider, useChatParams } from "./chat-params-provider";
 
 export function Chat({ user }: { user: User }) {
-	const queryParams = useSearchParams();
-	const roomId = queryParams.get("roomId");
-	const threadIdText = queryParams.get("threadId");
-	const threadId = threadIdText ? Number(threadIdText) : null;
+	return (
+		<>
+			<ChatParamsProvider>
+				<ChatWithParams user={user} />
+			</ChatParamsProvider>
+		</>
+	);
+}
 
+function ChatWithParams({ user }: { user: User }) {
+	const { roomId, threadId } = useChatParams();
 	const sidebarRightDefaultOpen = !!roomId && !!threadId;
 
 	return (
@@ -22,20 +28,18 @@ export function Chat({ user }: { user: User }) {
 			<ChatWsProvider roomId={roomId} threadId={threadId} user={user}>
 				<SidebarRightProvider defaultOpen={sidebarRightDefaultOpen}>
 					<SidebarInset>
-						<ChatRoomUI user={user} roomId={roomId} />
+						<ChatRoomUI user={user} />
 					</SidebarInset>
-					<ChatRoomThreadSidebar
-						user={user}
-						roomId={roomId}
-						threadId={threadId}
-					/>
+					<ChatRoomThreadSidebar user={user} />
 				</SidebarRightProvider>
 			</ChatWsProvider>
 		</>
 	);
 }
 
-function ChatRoomUI({ user, roomId }: { user: User; roomId: string | null }) {
+function ChatRoomUI({ user }: { user: User }) {
+	const { roomId } = useChatParams();
+
 	if (!roomId) {
 		return <NoChatRoomSelected />;
 	}
