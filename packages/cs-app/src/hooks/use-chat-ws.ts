@@ -241,28 +241,8 @@ export function useChatWS({ roomId, threadId, user }: UseChatWSProps) {
 						break;
 					}
 					case "thread-init-response": {
-						console.log("--------------------------------");
-						console.log(
-							"Thread init response received",
-							JSON.parse(
-								JSON.stringify({
-									wsMessage: wsMessage,
-									activeThreadId: activeThreadIdRef.current,
-								}),
-							),
-						);
-
 						// Only update if this response is for the current active thread
 						if (wsMessage.threadId === activeThreadIdRef.current) {
-							console.log(
-								"Updating thread messages",
-								JSON.parse(
-									JSON.stringify({
-										threadId: wsMessage.threadId,
-										activeThreadId: activeThreadIdRef.current,
-									}),
-								),
-							);
 							dispatch({
 								type: "SET_THREAD_MESSAGES",
 								messages: wsMessage.messages,
@@ -347,7 +327,6 @@ export function useChatWS({ roomId, threadId, user }: UseChatWSProps) {
 		activeThreadIdRef.current = null; // Reset the ref as well
 
 		if (roomId) {
-			console.log("Starting WebSocket connection");
 			startWebSocket(roomId);
 		}
 
@@ -369,17 +348,6 @@ export function useChatWS({ roomId, threadId, user }: UseChatWSProps) {
 
 	// Handle thread ID changes from props
 	useEffect(() => {
-		console.log(
-			"threadId changed",
-			JSON.parse(
-				JSON.stringify({
-					threadId,
-					activeThreadIdRef: activeThreadIdRef.current,
-					connectionStatus: state.connectionStatus,
-				}),
-			),
-		);
-
 		// We need to update the thread if either:
 		// 1. The threadId has changed
 		// 2. Connection status changes to 'ready' while we have an active threadId
@@ -392,15 +360,6 @@ export function useChatWS({ roomId, threadId, user }: UseChatWSProps) {
 		if (threadIdChanged) {
 			activeThreadIdRef.current = threadId;
 			dispatch({ type: "SET_ACTIVE_THREAD", threadId });
-
-			console.log(
-				"threadId is different",
-				JSON.parse(
-					JSON.stringify({
-						threadId,
-					}),
-				),
-			);
 		}
 
 		// If we have a thread ID and an active connection, fetch thread messages
@@ -410,7 +369,6 @@ export function useChatWS({ roomId, threadId, user }: UseChatWSProps) {
 			threadId &&
 			state.connectionStatus === "ready"
 		) {
-			console.log("Fetching thread messages for threadId:", threadId);
 			const wsMessage: WsMessageThreadInitRequest = {
 				type: "thread-init-request",
 				threadId,

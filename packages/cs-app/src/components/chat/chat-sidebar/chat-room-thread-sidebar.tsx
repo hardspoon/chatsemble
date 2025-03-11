@@ -14,36 +14,43 @@ import {
 } from "@/components/ui/chat-message";
 import { ChatMessageArea } from "@/components/ui/chat-message-area";
 import { SidebarContent, SidebarHeader } from "@/components/ui/sidebar";
-import { SidebarRight } from "@/components/ui/sidebar-right";
+import { SidebarRight, useSidebarRight } from "@/components/ui/sidebar-right";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { useChatWsContext } from "../chat-main/chat-ws-provider";
 import type { User } from "better-auth";
+import { X } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useChatParams } from "../chat-main/chat-params-provider";
 
-export function ChatRoomThreadSidebar({
-	user,
-	roomId,
-	threadId,
-}: { user: User; roomId: string | null; threadId: number | null }) {
+export function ChatRoomThreadSidebar({ user }: { user: User }) {
+	const { setOpen: setSidebarRightOpen, open: sidebarRightOpen } =
+		useSidebarRight();
+
+	const { roomId, threadId } = useChatParams();
+
+	const sidebarRightDefaultOpen = !!roomId && !!threadId;
+
+	useEffect(() => {
+		if (sidebarRightDefaultOpen && !sidebarRightOpen) {
+			setSidebarRightOpen(true);
+		}
+		if (!sidebarRightDefaultOpen && sidebarRightOpen) {
+			setSidebarRightOpen(false);
+		}
+	}, [sidebarRightDefaultOpen, sidebarRightOpen, setSidebarRightOpen]);
+
 	return (
 		<SidebarRight>
-			{!!roomId && !!threadId && (
-				<ChatRoomThreadSidebarContent
-					user={user}
-					roomId={roomId}
-					threadId={threadId}
-				/>
-			)}
+			{!!roomId && !!threadId && <ChatRoomThreadSidebarContent user={user} />}
 		</SidebarRight>
 	);
 }
 
-export function ChatRoomThreadSidebarContent({
-	user,
-	threadId,
-}: { user: User; roomId: string; threadId: number }) {
+export function ChatRoomThreadSidebarContent({ user }: { user: User }) {
 	const { activeThread, handleSubmit, connectionStatus, members } =
 		useChatWsContext();
+	const { threadId, clearThreadId } = useChatParams();
 
 	const isLoading =
 		connectionStatus !== "ready" || activeThread.status !== "success";
@@ -57,13 +64,23 @@ export function ChatRoomThreadSidebarContent({
 
 	return (
 		<SidebarRight>
-			<SidebarHeader className="flex h-16 items-center justify-between border-b px-4">
+			<SidebarHeader className="flex flex-row h-16 items-center justify-between border-b px-4">
 				<div className="flex flex-col">
 					<div className="font-medium">Thread</div>
 					<div className="text-xs text-muted-foreground">
 						{activeThread.messages.length} messages
 					</div>
 				</div>
+				<Button
+					variant="ghost"
+					size="icon"
+					onClick={() => {
+						clearThreadId();
+					}}
+					title="Close thread"
+				>
+					<X className="h-4 w-4" />
+				</Button>
 			</SidebarHeader>
 
 			<SidebarContent className="flex-1 flex flex-col h-full overflow-y-auto">

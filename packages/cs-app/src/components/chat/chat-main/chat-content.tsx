@@ -20,16 +20,13 @@ import {
 import type { User } from "better-auth";
 import { useMemo } from "react";
 import { BookmarkIcon, MessageSquareIcon } from "lucide-react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { useSidebarRight } from "@/components/ui/sidebar-right";
+import { useChatParams } from "./chat-params-provider";
 
 export function ChatContent({ user }: { user: User }) {
 	const { topLevelMessages, handleSubmit, connectionStatus, members } =
 		useChatWsContext();
 
-	const router = useRouter();
-	const searchParams = useSearchParams();
-	const { setOpen } = useSidebarRight();
+	const { setThreadId } = useChatParams();
 
 	const isLoading =
 		connectionStatus !== "ready" || topLevelMessages.status !== "success";
@@ -61,12 +58,7 @@ export function ChatContent({ user }: { user: User }) {
 										<ChatMessageAction
 											label="Reply in thread"
 											onClick={() => {
-												const params = new URLSearchParams(
-													searchParams.toString(),
-												);
-												params.set("threadId", String(message.id));
-												router.push(`/chat?${params.toString()}`);
-												setOpen(true);
+												setThreadId(message.id);
 											}}
 										>
 											<MessageSquareIcon />
