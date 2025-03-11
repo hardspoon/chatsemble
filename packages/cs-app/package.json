@@ -34,6 +34,7 @@
 		"@react-email/components": "^0.0.33",
 		"@tanstack/react-query": "^5.66.0",
 		"@tiptap/extension-mention": "^2.11.5",
+		"@tiptap/extension-placeholder": "^2.11.5",
 		"@tiptap/pm": "^2.11.5",
 		"@tiptap/react": "^2.11.5",
 		"@tiptap/starter-kit": "^2.11.5",
