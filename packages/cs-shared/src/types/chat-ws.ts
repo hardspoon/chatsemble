@@ -5,38 +5,58 @@ import type {
 	ChatRoom,
 } from "./chat";
 
-export type WsMessageChatInit = {
-	type: "chat-init";
+export type WsMessageChatInitRequest = {
+	type: "chat-init-request";
 };
-export type WsMessageReceive = {
-	type: "message-receive";
+export type WsMessageSend = {
+	type: "message-send";
 	message: ChatRoomMessagePartial;
 };
 
-export type WsChatIncomingMessage = WsMessageReceive | WsMessageChatInit;
+export type WsMessageThreadInitRequest = {
+	type: "thread-init-request";
+	threadId: number; // This is the parentId of the thread messages
+};
+
+export type WsMessageThreadInitResponse = {
+	type: "thread-init-response";
+	threadId: number;
+	messages: ChatRoomMessage[];
+};
+
+export type WsMessageThreadBroadcast = {
+	type: "thread-message-broadcast";
+	threadId: number;
+	message: ChatRoomMessage;
+};
+
+export type WsChatIncomingMessage =
+	| WsMessageSend
+	| WsMessageChatInitRequest
+	| WsMessageThreadInitRequest;
 
 export type WsMessageBroadcast = {
 	type: "message-broadcast";
 	message: ChatRoomMessage;
 };
 
-export type WsMessageChatReady = {
-	type: "chat-ready";
+export type WsMessageChatInitResponse = {
+	type: "chat-init-response";
 	messages: ChatRoomMessage[];
 	members: ChatRoomMember[];
 	room: ChatRoom;
 };
 
-export type WsMessagesSync = {
-	type: "messages-sync";
-	messages: ChatRoomMessage[];
+export type WsMemberUpdate = {
+	type: "member-update";
+	members: ChatRoomMember[];
 };
-export type WsMemberSync = { type: "member-sync"; members: ChatRoomMember[] };
 
 export type WsChatOutgoingMessage =
+	| WsMessageChatInitResponse
+	| WsMessageThreadInitResponse
+	| WsMemberUpdate
 	| WsMessageBroadcast
-	| WsMessagesSync
-	| WsMemberSync
-	| WsMessageChatReady;
+	| WsMessageThreadBroadcast;
 
 export type WsChatMessage = WsChatIncomingMessage | WsChatOutgoingMessage;
