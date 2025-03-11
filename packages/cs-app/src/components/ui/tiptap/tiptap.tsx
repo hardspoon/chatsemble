@@ -2,6 +2,7 @@
 
 import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
+import Placeholder from '@tiptap/extension-placeholder'
 import {
 	forwardRef,
 	useCallback,
@@ -47,6 +48,7 @@ const KeyboardShortcuts = Extension.create({
 			Enter: () => {
 				if (this.options.onEnter) {
 					this.options.onEnter();
+					// TODO: Since we are hijacking enter then style changing no longer works when you change line with shift enter
 				}
 				return true;
 			},
@@ -109,6 +111,9 @@ export const Tiptap = forwardRef(
 				// Add the custom keyboard extension with onEnter prop
 				KeyboardShortcuts.configure({
 					onEnter,
+				}),
+				Placeholder.configure({
+					placeholder: "Type a message...",
 				}),
 			],
 			onUpdate,

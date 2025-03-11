@@ -9,11 +9,13 @@ import { cn } from "@/lib/utils";
 import { type VariantProps, cva } from "class-variance-authority";
 import { SparklesIcon, UserIcon } from "lucide-react";
 import React, { type ReactNode } from "react";
+import { Button } from "@/components/ui/button";
+import { Card } from "./card";
 
 const chatMessageVariants = cva("flex gap-4 w-full", {
 	variants: {
 		variant: {
-			default: "",
+			default: "group relative",
 			bubble: "",
 			full: "p-5",
 		},
@@ -147,7 +149,7 @@ ChatMessageAvatar.displayName = "ChatMessageAvatar";
 const chatMessageContentVariants = cva("flex flex-col gap-2 w-full", {
 	variants: {
 		variant: {
-			default: "hover:bg-muted p-2 rounded-md",
+			default: "group-hover:bg-muted p-2 rounded-md",
 			bubble: "rounded-xl px-3 py-2",
 			full: "",
 		},
@@ -291,10 +293,64 @@ const ChatMessageMetadata = React.forwardRef<
 });
 ChatMessageMetadata.displayName = "ChatMessageMetadata";
 
+// Actions component
+interface ChatMessageActionProps
+	extends React.HTMLAttributes<HTMLButtonElement> {
+	label: string;
+}
+
+const ChatMessageAction = React.forwardRef<
+	HTMLButtonElement,
+	ChatMessageActionProps
+>(({ className, children, label, ...props }, ref) => (
+	<Tooltip>
+		<TooltipTrigger asChild>
+			<Button
+				variant="ghost"
+				size="icon"
+				className={cn("h-7 w-7", className)}
+				ref={ref}
+				{...props}
+			>
+				{children}
+				<span className="sr-only">{label}</span>
+			</Button>
+		</TooltipTrigger>
+		<TooltipContent>
+			<p>{label}</p>
+		</TooltipContent>
+	</Tooltip>
+));
+ChatMessageAction.displayName = "ChatMessageAction";
+
+interface ChatMessageActionsAreaProps
+	extends React.HTMLAttributes<HTMLDivElement> {
+	children?: React.ReactNode;
+}
+
+const ChatMessageActionsArea = React.forwardRef<
+	HTMLDivElement,
+	ChatMessageActionsAreaProps
+>(({ className, children, ...props }, ref) => (
+	<Card
+		ref={ref}
+		className={cn(
+			"absolute right-2 top-1 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1 p-1",
+			className,
+		)}
+		{...props}
+	>
+		<TooltipProvider>{children}</TooltipProvider>
+	</Card>
+));
+ChatMessageActionsArea.displayName = "ChatMessageActionsArea";
+
 export {
 	ChatMessage,
 	ChatMessageAvatar,
 	ChatMessageContent,
 	ChatMessageContentArea,
 	ChatMessageMetadata,
+	ChatMessageActionsArea,
+	ChatMessageAction,
 };

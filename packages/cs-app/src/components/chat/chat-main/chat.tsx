@@ -3,18 +3,24 @@
 import { ChatContent } from "@/components/chat/chat-main/chat-content";
 import { ChatHeader } from "@/components/chat/chat-main/chat-header";
 import { ChatWsProvider } from "@/components/chat/chat-main/chat-ws-provider";
-import { SidebarTrigger } from "@/components/ui/sidebar";
+import { SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import type { User } from "better-auth";
 import { useSearchParams } from "next/navigation";
+import { ChatRoomThreadSidebar } from "@/components/chat/chat-sidebar/chat-room-thread-sidebar";
 
 export function Chat({ user }: { user: User }) {
 	const queryParams = useSearchParams();
 	const roomId = queryParams.get("roomId");
 
 	return (
-		<ChatWsProvider roomId={roomId} user={user}>
-			{roomId ? <ChatRoomUI user={user} /> : <ChatNoRoomSelected />}
-		</ChatWsProvider>
+		<>
+			<ChatWsProvider roomId={roomId} user={user}>
+				<SidebarInset>
+					{roomId ? <ChatRoomUI user={user} /> : <ChatNoRoomSelected />}
+				</SidebarInset>
+				{roomId && <ChatRoomThreadSidebar />}
+			</ChatWsProvider>
+		</>
 	);
 }
 

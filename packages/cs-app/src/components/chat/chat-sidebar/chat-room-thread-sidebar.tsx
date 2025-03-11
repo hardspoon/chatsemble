@@ -23,7 +23,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import type { ChatRoomMessage } from "@/cs-shared";
 import { useState } from "react";
 
-export function AppRightSidebar({
+export function ChatRoomThreadSidebar({
 	...props
 }: React.ComponentProps<typeof SidebarRight>) {
 	const [input, setInput] = useState("");
@@ -53,6 +53,7 @@ export function AppRightSidebar({
 				roomId: "room",
 				email: "you@example.com",
 			},
+			parentId: null,
 			createdAt: Date.now(),
 		};
 
