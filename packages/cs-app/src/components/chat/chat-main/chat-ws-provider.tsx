@@ -9,8 +9,8 @@ interface ChatProviderProps extends UseChatWSProps {
 	children: ReactNode;
 }
 
-export function ChatWsProvider({ children, roomId, user }: ChatProviderProps) {
-	const chatState = useChatWS({ roomId, user });
+export function ChatWsProvider({ children, ...props }: ChatProviderProps) {
+	const chatState = useChatWS(props);
 
 	return (
 		<ChatWsContext.Provider value={chatState}>

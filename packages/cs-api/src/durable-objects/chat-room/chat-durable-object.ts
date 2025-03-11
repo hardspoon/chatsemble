@@ -81,16 +81,16 @@ export class ChatDurableObject extends DurableObject<Env> {
 
 			const parsedMsg: WsChatIncomingMessage = JSON.parse(message);
 			switch (parsedMsg.type) {
-				case "message-receive": {
+				case "message-send": {
 					await this.receiveChatRoomMessage(session.userId, parsedMsg.message, {
 						notifyAgents: true,
 					});
 					break;
 				}
-				case "chat-init": {
+				case "chat-init-request": {
 					this.sendWebSocketMessageToUser(
 						{
-							type: "chat-ready",
+							type: "chat-init-response",
 							messages: await this.selectMessages({
 								topLevelOnly: true,
 							}),
@@ -99,6 +99,24 @@ export class ChatDurableObject extends DurableObject<Env> {
 						},
 						session.userId,
 					);
+					break;
+				}
+				case "thread-init-request": {
+					console.log("--------------------------------");
+					console.log("Thread init request received", parsedMsg);
+					const threadMessages = await this.selectThreadMessages(
+						parsedMsg.threadId,
+					);
+					console.log("Thread messages", threadMessages);
+					this.sendWebSocketMessageToUser(
+						{
+							type: "thread-init-response",
+							threadId: parsedMsg.threadId,
+							messages: threadMessages,
+						},
+						session.userId,
+					);
+					console.log("--------------------------------");
 					break;
 				}
 			}
@@ -161,10 +179,19 @@ export class ChatDurableObject extends DurableObject<Env> {
 			},
 		});
 
-		this.broadcastWebSocketMessage({
-			type: "message-broadcast",
-			message: chatRoomMessage,
-		});
+		if (chatRoomMessage.parentId === null) {
+			// Broadcast to all users
+			this.broadcastWebSocketMessage({
+				type: "message-broadcast",
+				message: chatRoomMessage,
+			});
+		} else {
+			this.broadcastWebSocketMessage({
+				type: "thread-message-broadcast",
+				threadId: chatRoomMessage.parentId,
+				message: chatRoomMessage,
+			});
+		}
 
 		if (config?.notifyAgents) {
 			const agentMembers = await this.getMembers({
@@ -272,7 +299,7 @@ export class ChatDurableObject extends DurableObject<Env> {
 		await this.db.insert(chatRoomMember).values(members).onConflictDoNothing();
 
 		this.broadcastWebSocketMessage({
-			type: "member-sync",
+			type: "member-update",
 			members: await this.getMembers(),
 		});
 	}
@@ -283,7 +310,7 @@ export class ChatDurableObject extends DurableObject<Env> {
 			.where(inArray(chatRoomMember.id, memberIds));
 
 		this.broadcastWebSocketMessage({
-			type: "member-sync",
+			type: "member-update",
 			members: await this.getMembers(),
 		});
 	}
@@ -333,5 +360,35 @@ export class ChatDurableObject extends DurableObject<Env> {
 		}
 
 		return config;
+	}
+
+	async selectThreadMessages(parentId: number): Promise<ChatRoomMessage[]> {
+		const query = this.db
+			.select({
+				id: chatMessage.id,
+				content: chatMessage.content,
+				mentions: chatMessage.mentions,
+				memberId: chatMessage.memberId,
+				createdAt: chatMessage.createdAt,
+				metadata: chatMessage.metadata,
+				parentId: chatMessage.parentId,
+				user: {
+					id: chatRoomMember.id,
+					roomId: chatRoomMember.roomId,
+					role: chatRoomMember.role,
+					type: chatRoomMember.type,
+					name: chatRoomMember.name,
+					email: chatRoomMember.email,
+					image: chatRoomMember.image,
+				},
+			})
+			.from(chatMessage)
+			.innerJoin(chatRoomMember, eq(chatMessage.memberId, chatRoomMember.id))
+			.where(eq(chatMessage.parentId, parentId))
+			.orderBy(desc(chatMessage.id));
+
+		const result = await query;
+		// Reverse to get chronological order (oldest to newest)
+		return result.reverse();
 	}
 }

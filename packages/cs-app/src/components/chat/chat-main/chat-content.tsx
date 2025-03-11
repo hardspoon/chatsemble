@@ -24,24 +24,20 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useSidebarRight } from "@/components/ui/sidebar-right";
 
 export function ChatContent({ user }: { user: User }) {
-	const { messages, handleSubmit, connectionStatus, members } =
+	const { topLevelMessages, handleSubmit, connectionStatus, members } =
 		useChatWsContext();
 
 	const router = useRouter();
 	const searchParams = useSearchParams();
 	const { setOpen } = useSidebarRight();
 
-	const isLoading = connectionStatus !== "ready";
+	const isLoading =
+		connectionStatus !== "ready" || topLevelMessages.status !== "success";
 
 	const membersWithoutCurrentUser = useMemo(
 		() => members.filter((member) => member.id !== user.id),
 		[members, user.id],
 	);
-
-	const handleBookmark = (messageId: string) => {
-		// Implement bookmark functionality
-		console.log("Bookmark message:", messageId);
-	};
 
 	return (
 		<div className="flex-1 flex flex-col h-full overflow-y-auto">
@@ -49,14 +45,16 @@ export function ChatContent({ user }: { user: User }) {
 				<div className="max-w-2xl mx-auto w-full px-4 py-8 space-y-4">
 					{isLoading ? (
 						<ChatMessageSkeleton />
-					) : messages.length > 0 ? (
-						messages.map((message) => {
+					) : topLevelMessages.data.length > 0 ? (
+						topLevelMessages.data.map((message) => {
 							return (
 								<ChatMessage key={String(message.id)} id={String(message.id)}>
 									<ChatMessageActionsArea>
 										<ChatMessageAction
 											label="Bookmark message"
-											onClick={() => handleBookmark(String(message.id))}
+											onClick={() =>
+												console.log("Bookmark message:", message.id)
+											}
 										>
 											<BookmarkIcon />
 										</ChatMessageAction>

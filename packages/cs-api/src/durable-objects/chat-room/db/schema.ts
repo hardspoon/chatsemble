@@ -31,7 +31,7 @@ export const chatMessage = sqliteTable("chat_message", {
 	metadata: text("metadata", { mode: "json" })
 		.$type<ChatMessageMetadata>()
 		.notNull(),
-	parentId: integer("parent_id"),
+	parentId: integer("parent_id"), // TODO: Change to threadId
 });
 
 export const chatRoomMember = sqliteTable("chat_room_member", {

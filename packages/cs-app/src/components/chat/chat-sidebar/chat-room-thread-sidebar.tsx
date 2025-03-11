@@ -20,16 +20,40 @@ import { useMemo } from "react";
 import { useChatWsContext } from "../chat-main/chat-ws-provider";
 import type { User } from "better-auth";
 
-export function ChatRoomThreadSidebar({ user }: { user: User }) {
-	const { messages, handleSubmit, connectionStatus, members } =
+export function ChatRoomThreadSidebar({
+	user,
+	roomId,
+	threadId,
+}: { user: User; roomId: string | null; threadId: number | null }) {
+	return (
+		<SidebarRight>
+			{!!roomId && !!threadId && (
+				<ChatRoomThreadSidebarContent
+					user={user}
+					roomId={roomId}
+					threadId={threadId}
+				/>
+			)}
+		</SidebarRight>
+	);
+}
+
+export function ChatRoomThreadSidebarContent({
+	user,
+	threadId,
+}: { user: User; roomId: string; threadId: number }) {
+	const { activeThread, handleSubmit, connectionStatus, members } =
 		useChatWsContext();
 
-	const isLoading = connectionStatus !== "ready";
+	const isLoading =
+		connectionStatus !== "ready" || activeThread.status !== "success";
 
 	const membersWithoutCurrentUser = useMemo(
 		() => members.filter((member) => member.id !== user.id),
 		[members, user.id],
 	);
+
+	//console.log("activeThread", activeThread);
 
 	return (
 		<SidebarRight>
@@ -37,7 +61,7 @@ export function ChatRoomThreadSidebar({ user }: { user: User }) {
 				<div className="flex flex-col">
 					<div className="font-medium">Thread</div>
 					<div className="text-xs text-muted-foreground">
-						{messages.length} messages
+						{activeThread.messages.length} messages
 					</div>
 				</div>
 			</SidebarHeader>
@@ -47,8 +71,8 @@ export function ChatRoomThreadSidebar({ user }: { user: User }) {
 					<div className="w-full p-8 space-y-4">
 						{isLoading ? (
 							<ChatMessageSkeleton />
-						) : messages.length > 0 ? (
-							messages.map((message) => (
+						) : activeThread.messages.length > 0 ? (
+							activeThread.messages.map((message) => (
 								<ChatMessage key={String(message.id)} id={String(message.id)}>
 									<ChatMessageAvatar
 										imageSrc={message.user.image ?? undefined}
@@ -74,7 +98,7 @@ export function ChatRoomThreadSidebar({ user }: { user: User }) {
 						onSubmit={(value) => {
 							handleSubmit({
 								value,
-								parentId: null,
+								parentId: threadId,
 							});
 						}}
 						chatMembers={membersWithoutCurrentUser}
