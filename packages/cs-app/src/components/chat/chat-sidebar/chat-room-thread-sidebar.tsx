@@ -3,8 +3,8 @@
 import {
 	ChatInput,
 	ChatInputSubmit,
-	ChatInputTextArea,
-} from "@/components/ui/chat-input";
+	ChatInputTiptap,
+} from "@/components/ui/tiptap-chat-input";
 import {
 	ChatMessage,
 	ChatMessageAvatar,
@@ -13,56 +13,26 @@ import {
 	ChatMessageMetadata,
 } from "@/components/ui/chat-message";
 import { ChatMessageArea } from "@/components/ui/chat-message-area";
-import {
-	SidebarContent,
-	SidebarFooter,
-	SidebarHeader,
-} from "@/components/ui/sidebar";
+import { SidebarContent, SidebarHeader } from "@/components/ui/sidebar";
 import { SidebarRight } from "@/components/ui/sidebar-right";
 import { Skeleton } from "@/components/ui/skeleton";
-import type { ChatRoomMessage } from "@/cs-shared";
-import { useState } from "react";
+import { useMemo } from "react";
+import { useChatWsContext } from "../chat-main/chat-ws-provider";
+import type { User } from "better-auth";
 
-export function ChatRoomThreadSidebar({
-	...props
-}: React.ComponentProps<typeof SidebarRight>) {
-	const [input, setInput] = useState("");
-	const [messages, setMessages] = useState<ChatRoomMessage[]>([]);
-	const isLoading = false;
+export function ChatRoomThreadSidebar({ user }: { user: User }) {
+	const { messages, handleSubmit, connectionStatus, members } =
+		useChatWsContext();
 
-	const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-		setInput(e.target.value);
-	};
+	const isLoading = connectionStatus !== "ready";
 
-	const handleSubmit = () => {
-		if (!input.trim()) {
-			return;
-		}
-
-		const newMessage: ChatRoomMessage = {
-			id: Date.now(),
-			content: input,
-			metadata: {},
-			mentions: [],
-			user: {
-				name: "You",
-				image: "",
-				id: "user",
-				role: "member",
-				type: "user",
-				roomId: "room",
-				email: "you@example.com",
-			},
-			parentId: null,
-			createdAt: Date.now(),
-		};
-
-		setMessages([...messages, newMessage]);
-		setInput("");
-	};
+	const membersWithoutCurrentUser = useMemo(
+		() => members.filter((member) => member.id !== user.id),
+		[members, user.id],
+	);
 
 	return (
-		<SidebarRight {...props}>
+		<SidebarRight>
 			<SidebarHeader className="flex h-16 items-center justify-between border-b px-4">
 				<div className="flex flex-col">
 					<div className="font-medium">Thread</div>
@@ -72,47 +42,49 @@ export function ChatRoomThreadSidebar({
 				</div>
 			</SidebarHeader>
 
-			<SidebarContent>
-				<div className="flex-1 flex flex-col h-full overflow-y-auto">
-					<ChatMessageArea scrollButtonAlignment="center">
-						<div className="px-4 py-8 space-y-4">
-							{isLoading ? (
-								<ChatMessageSkeleton />
-							) : messages.length > 0 ? (
-								messages.map((message) => (
-									<ChatMessage key={String(message.id)} id={String(message.id)}>
-										<ChatMessageAvatar
-											imageSrc={message.user.image ?? undefined}
+			<SidebarContent className="flex-1 flex flex-col h-full overflow-y-auto">
+				<ChatMessageArea scrollButtonAlignment="center">
+					<div className="w-full p-8 space-y-4">
+						{isLoading ? (
+							<ChatMessageSkeleton />
+						) : messages.length > 0 ? (
+							messages.map((message) => (
+								<ChatMessage key={String(message.id)} id={String(message.id)}>
+									<ChatMessageAvatar
+										imageSrc={message.user.image ?? undefined}
+									/>
+									<ChatMessageContentArea>
+										<ChatMessageMetadata
+											username={message.user.name}
+											createdAt={message.createdAt}
 										/>
-										<ChatMessageContentArea>
-											<ChatMessageMetadata
-												username={message.user.name}
-												createdAt={message.createdAt}
-											/>
-											<ChatMessageContent content={message.content} />
-										</ChatMessageContentArea>
-									</ChatMessage>
-								))
-							) : (
-								<div className="text-center text-sm text-muted-foreground">
-									No messages yet
-								</div>
-							)}
-						</div>
-					</ChatMessageArea>
+										<ChatMessageContent content={message.content} />
+									</ChatMessageContentArea>
+								</ChatMessage>
+							))
+						) : (
+							<div className="text-center text-sm text-muted-foreground">
+								No messages yet
+							</div>
+						)}
+					</div>
+				</ChatMessageArea>
+				<div className="px-2 py-4 max-w-2xl mx-auto w-full">
+					<ChatInput
+						onSubmit={(value) => {
+							handleSubmit({
+								value,
+								parentId: null,
+							});
+						}}
+						chatMembers={membersWithoutCurrentUser}
+						disabled={isLoading}
+					>
+						<ChatInputTiptap />
+						<ChatInputSubmit />
+					</ChatInput>
 				</div>
 			</SidebarContent>
-
-			<SidebarFooter className="border-t p-4">
-				<ChatInput
-					value={input}
-					onChange={handleInputChange}
-					onSubmit={handleSubmit}
-				>
-					<ChatInputTextArea placeholder="Type a message..." />
-					<ChatInputSubmit />
-				</ChatInput>
-			</SidebarFooter>
 		</SidebarRight>
 	);
 }

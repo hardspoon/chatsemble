@@ -18,7 +18,7 @@ export function Chat({ user }: { user: User }) {
 				<SidebarInset>
 					{roomId ? <ChatRoomUI user={user} /> : <ChatNoRoomSelected />}
 				</SidebarInset>
-				{roomId && <ChatRoomThreadSidebar />}
+				{roomId && <ChatRoomThreadSidebar user={user} />}
 			</ChatWsProvider>
 		</>
 	);
