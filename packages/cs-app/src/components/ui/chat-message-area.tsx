@@ -54,7 +54,6 @@ export function ChatMessageArea({
 	const [containerRef, showScrollButton, scrollToBottom] =
 		useScrollToBottom<HTMLDivElement>();
 
-	// TODO: Update to new layout for chat-message-area from agents example fork
 	return (
 		<ScrollArea className="flex-1 relative">
 			<div ref={containerRef}>

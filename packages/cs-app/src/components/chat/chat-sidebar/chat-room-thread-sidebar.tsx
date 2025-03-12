@@ -114,7 +114,7 @@ export function ChatRoomThreadSidebarContent({ user }: { user: User }) {
 						onSubmit={(value) => {
 							handleSubmit({
 								value,
-								parentId: threadId,
+								threadId,
 							});
 						}}
 						chatMembers={membersWithoutCurrentUser}

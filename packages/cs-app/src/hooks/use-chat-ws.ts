@@ -226,9 +226,9 @@ export function useChatWS({ roomId, threadId, user }: UseChatWSProps) {
 						const newMessage = wsMessage.message;
 
 						// Determine if this is a top-level message or thread message
-						if (newMessage.parentId === null) {
+						if (newMessage.threadId === null) {
 							dispatch({ type: "ADD_TOP_LEVEL_MESSAGE", message: newMessage });
-						} else if (newMessage.parentId === activeThreadIdRef.current) {
+						} else if (newMessage.threadId === activeThreadIdRef.current) {
 							// Use the ref instead of state.activeThread.id
 							dispatch({
 								type: "ADD_THREAD_MESSAGE",
@@ -372,7 +372,10 @@ export function useChatWS({ roomId, threadId, user }: UseChatWSProps) {
 
 		if (threadIdChanged) {
 			activeThreadIdRef.current = threadId;
-			console.log("messages", JSON.parse(JSON.stringify(state.topLevelMessages.data)));
+			console.log(
+				"messages",
+				JSON.parse(JSON.stringify(state.topLevelMessages.data)),
+			);
 			const threadMessage =
 				state.topLevelMessages.data.find(
 					(message) => message.id === threadId,
@@ -405,8 +408,8 @@ export function useChatWS({ roomId, threadId, user }: UseChatWSProps) {
 	const handleSubmit = useCallback(
 		async ({
 			value,
-			parentId,
-		}: { value: ChatInputValue; parentId: number | null }) => {
+			threadId,
+		}: { value: ChatInputValue; threadId: number | null }) => {
 			if (!value.content.trim() || !roomId) {
 				return;
 			}
@@ -421,7 +424,7 @@ export function useChatWS({ roomId, threadId, user }: UseChatWSProps) {
 				content: value.content,
 				mentions: value.mentions,
 				createdAt: Date.now(),
-				parentId,
+				threadId,
 			};
 
 			const wsMessage: WsMessageSend = {
@@ -451,7 +454,7 @@ export function useChatWS({ roomId, threadId, user }: UseChatWSProps) {
 			};
 
 			// Determine if this is a top-level message or thread message
-			if (parentId === null) {
+			if (threadId === null) {
 				dispatch({ type: "ADD_TOP_LEVEL_MESSAGE", message: newMessage });
 			} else {
 				dispatch({
