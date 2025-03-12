@@ -15,10 +15,21 @@ export const agentConfig = sqliteTable("agent_config", {
 export const agentChatRoom = sqliteTable("agent_chat_room", {
 	id: text("id").primaryKey(),
 	name: text("name").notNull(),
-	notifications: integer("notifications").notNull().default(0),
-	// Time when the chat room should be processed by the agent
-	processAt: integer("process_at", { mode: "number" }),
 	organizationId: text("organization_id").notNull(),
+	createdAt: integer("created_at", { mode: "number" })
+		.notNull()
+		.default(sql`(unixepoch() * 1000)`),
+});
+
+// Table to track notifications for both top-level messages and thread messages
+export const agentChatRoomNotification = sqliteTable("agent_chat_room_notification", {
+	// Composite primary key of roomId + threadId (null for top-level messages)
+	id: text("id").primaryKey(), // Format: "roomId:threadId" or "roomId:" for top-level
+	roomId: text("room_id").notNull(), // References agentChatRoom.id
+	threadId: integer("thread_id", { mode: "number" }), // null means top-level messages
+	notifications: integer("notifications").notNull().default(0),
+	// Time when the messages for this room/thread should be processed by the agent
+	processAt: integer("process_at", { mode: "number" }),
 	createdAt: integer("created_at", { mode: "number" })
 		.notNull()
 		.default(sql`(unixepoch() * 1000)`),
