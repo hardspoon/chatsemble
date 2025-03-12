@@ -133,10 +133,10 @@ export class AgentDurableObject extends DurableObject<Env> {
 	private async triggerGeneration(chatRoomId: string, notifications: number) {
 		const messages = await this.ctx.blockConcurrencyWhile(async () => {
 			const messagesToGet = notifications + 10;
-			const messages = await this.getChatRoomMessages(
-				chatRoomId,
-				messagesToGet,
-			);
+			const messages = await this.getChatRoomMessages(chatRoomId, {
+				limit: messagesToGet,
+				threadId: null, // TODO: Allow agent to respond in threads
+			});
 
 			// Reset the processAt and notifications count after fetching messages
 			await this.updateChatRoom(chatRoomId, {
@@ -290,14 +290,20 @@ export class AgentDurableObject extends DurableObject<Env> {
 		});
 	}
 
-	async getChatRoomMessages(chatRoomId: string, limit?: number) {
+	async getChatRoomMessages(
+		chatRoomId: string,
+		options: {
+			limit?: number;
+			threadId?: number | null;
+		},
+	) {
 		const chatRoomDoId = this.env.CHAT_DURABLE_OBJECT.idFromString(chatRoomId);
 
 		const chatRoomDO = this.env.CHAT_DURABLE_OBJECT.get(chatRoomDoId);
 
-		const messages = await chatRoomDO.selectMessages({
-			limit,
-			topLevelOnly: true, // TODO: Allow agent to respond in threads
+		const messages = await chatRoomDO.getMessages({
+			limit: options.limit,
+			threadId: options.threadId,
 		});
 
 		return messages;
