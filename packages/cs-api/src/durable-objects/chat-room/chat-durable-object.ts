@@ -88,8 +88,6 @@ export class ChatDurableObject extends DurableObject<Env> {
 					break;
 				}
 				case "chat-init-request": {
-					console.log("chat-init-request", JSON.parse(JSON.stringify(parsedMsg)));
-					console.log("SESSION", JSON.parse(JSON.stringify(this.sessions)));
 					this.sendWebSocketMessageToUser(
 						{
 							type: "chat-init-response",
@@ -298,7 +296,7 @@ export class ChatDurableObject extends DurableObject<Env> {
 
 		if (options.threadId === null) {
 			query.where(isNull(chatMessage.threadId));
-		} else if (typeof options.threadId === "number") {
+		} else if (options.threadId && typeof options.threadId === "number") {
 			query.where(eq(chatMessage.threadId, options.threadId));
 		}
 

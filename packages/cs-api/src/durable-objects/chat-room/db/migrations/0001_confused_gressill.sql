@@ -1,1 +1,0 @@
-ALTER TABLE `chat_message` ADD `parent_id` integer;

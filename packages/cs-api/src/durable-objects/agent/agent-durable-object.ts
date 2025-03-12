@@ -181,6 +181,8 @@ export class AgentDurableObject extends DurableObject<Env> {
 				threadId: threadId,
 			});
 
+			console.log("messages", JSON.parse(JSON.stringify(messages)));
+
 			// Reset the notification after processing
 			const notificationId = this.getChatRoomNotificationId(
 				chatRoomId,
@@ -359,6 +361,15 @@ export class AgentDurableObject extends DurableObject<Env> {
 			limit: options.limit,
 			threadId: options.threadId,
 		});
+
+		if (options.threadId) {
+			const threadMessage = await chatRoomDO.getMessageById(options.threadId);
+			if (!threadMessage) {
+				throw new Error("Thread message not found");
+			}
+
+			return [threadMessage, ...messages];
+		}
 
 		return messages;
 	}
