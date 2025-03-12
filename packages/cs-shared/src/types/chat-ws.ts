@@ -15,7 +15,7 @@ export type WsMessageSend = {
 
 export type WsMessageThreadInitRequest = {
 	type: "thread-init-request";
-	threadId: number; // This is the parentId of the thread messages
+	threadId: number;
 };
 
 export type WsMessageThreadInitResponse = {

@@ -173,7 +173,7 @@ export class ChatDurableObject extends DurableObject<Env> {
 			memberId,
 			content: message.content,
 			mentions: message.mentions,
-			parentId: message.parentId,
+			threadId: message.threadId,
 			metadata: {
 				optimisticData: {
 					createdAt: message.createdAt,
@@ -182,7 +182,7 @@ export class ChatDurableObject extends DurableObject<Env> {
 			},
 		});
 
-		if (chatRoomMessage.parentId === null) {
+		if (chatRoomMessage.threadId === null) {
 			// Broadcast to all users
 			this.broadcastWebSocketMessage({
 				type: "message-broadcast",
@@ -191,7 +191,7 @@ export class ChatDurableObject extends DurableObject<Env> {
 		} else {
 			this.broadcastWebSocketMessage({
 				type: "thread-message-broadcast",
-				threadId: chatRoomMessage.parentId,
+				threadId: chatRoomMessage.threadId,
 				message: chatRoomMessage,
 			});
 		}
@@ -245,7 +245,7 @@ export class ChatDurableObject extends DurableObject<Env> {
 				memberId: chatMessage.memberId,
 				createdAt: chatMessage.createdAt,
 				metadata: chatMessage.metadata,
-				parentId: chatMessage.parentId,
+				threadId: chatMessage.threadId,
 				user: {
 					id: chatRoomMember.id,
 					roomId: chatRoomMember.roomId,
@@ -274,7 +274,7 @@ export class ChatDurableObject extends DurableObject<Env> {
 				memberId: chatMessage.memberId,
 				createdAt: chatMessage.createdAt,
 				metadata: chatMessage.metadata,
-				parentId: chatMessage.parentId,
+				threadId: chatMessage.threadId,
 				user: {
 					id: chatRoomMember.id,
 					roomId: chatRoomMember.roomId,
@@ -294,9 +294,9 @@ export class ChatDurableObject extends DurableObject<Env> {
 		}
 
 		if (options.threadId === null) {
-			query.where(isNull(chatMessage.parentId));
+			query.where(isNull(chatMessage.threadId));
 		} else if (typeof options.threadId === "number") {
-			query.where(eq(chatMessage.parentId, options.threadId));
+			query.where(eq(chatMessage.threadId, options.threadId));
 		}
 
 		const result = await query;

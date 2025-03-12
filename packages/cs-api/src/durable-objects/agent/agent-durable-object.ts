@@ -239,7 +239,7 @@ export class AgentDurableObject extends DurableObject<Env> {
 			content: result,
 			mentions: [],
 			createdAt: Date.now(),
-			parentId: null, // TODO: Allow agent to respond in threads
+			threadId: null, // TODO: Allow agent to respond in threads
 		};
 	}
 

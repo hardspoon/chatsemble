@@ -82,7 +82,7 @@ export function ChatContent({ user }: { user: User }) {
 					onSubmit={(value) => {
 						handleSubmit({
 							value,
-							parentId: null,
+							threadId: null,
 						});
 					}}
 					chatMembers={membersWithoutCurrentUser}
