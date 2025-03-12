@@ -11,7 +11,7 @@ import {
 	ChatMessageMetadata,
 } from "@/components/ui/chat-message";
 import { ChatMessageArea } from "@/components/ui/chat-message-area";
-import { Skeleton } from "@/components/ui/skeleton";
+
 import {
 	ChatInput,
 	ChatInputSubmit,
@@ -20,7 +20,8 @@ import {
 import type { User } from "better-auth";
 import { useMemo } from "react";
 import { BookmarkIcon, MessageSquareIcon } from "lucide-react";
-import { useChatParams } from "./chat-params-provider";
+import { useChatParams } from "@/components/chat/chat-main/chat-params-provider";
+import { ChatMessagesSkeleton } from "@/components/chat/chat-message-skeleton";
 
 export function ChatContent({ user }: { user: User }) {
 	const { topLevelMessages, handleSubmit, connectionStatus, members } =
@@ -41,7 +42,7 @@ export function ChatContent({ user }: { user: User }) {
 			<ChatMessageArea scrollButtonAlignment="center">
 				<div className="max-w-2xl mx-auto w-full px-4 py-8 space-y-4">
 					{isLoading ? (
-						<ChatMessageSkeleton />
+						<ChatMessagesSkeleton />
 					) : topLevelMessages.data.length > 0 ? (
 						topLevelMessages.data.map((message) => {
 							return (
@@ -100,22 +101,5 @@ export function ChatContent({ user }: { user: User }) {
 				</ChatInput>
 			</div>
 		</div>
-	);
-}
-
-function ChatMessageSkeleton() {
-	return (
-		<>
-			{[1, 2, 3].map((i) => (
-				<div key={i} className="flex space-x-3">
-					<Skeleton className="h-10 w-10 rounded-full" />
-					<div className="space-y-2 flex-1">
-						<Skeleton className="h-4 w-[200px]" />
-						<Skeleton className="h-4 w-[300px]" />
-						<Skeleton className="h-4 w-[250px]" />
-					</div>
-				</div>
-			))}
-		</>
 	);
 }

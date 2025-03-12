@@ -91,8 +91,8 @@ export class ChatDurableObject extends DurableObject<Env> {
 					this.sendWebSocketMessageToUser(
 						{
 							type: "chat-init-response",
-							messages: await this.selectMessages({
-								topLevelOnly: true,
+							messages: await this.getMessages({
+								threadId: null,
 							}),
 							members: await this.getMembers(),
 							room: await this.getConfig(),
@@ -102,21 +102,24 @@ export class ChatDurableObject extends DurableObject<Env> {
 					break;
 				}
 				case "thread-init-request": {
-					console.log("--------------------------------");
-					console.log("Thread init request received", parsedMsg);
-					const threadMessages = await this.selectThreadMessages(
-						parsedMsg.threadId,
-					);
-					console.log("Thread messages", threadMessages);
+					const threadMessage = await this.getMessageById(parsedMsg.threadId);
+					if (!threadMessage) {
+						throw new Error("Thread message not found");
+					}
+
+					const threadMessages = await this.getMessages({
+						threadId: parsedMsg.threadId,
+					});
+
 					this.sendWebSocketMessageToUser(
 						{
 							type: "thread-init-response",
 							threadId: parsedMsg.threadId,
+							threadMessage,
 							messages: threadMessages,
 						},
 						session.userId,
 					);
-					console.log("--------------------------------");
 					break;
 				}
 			}
@@ -224,7 +227,17 @@ export class ChatDurableObject extends DurableObject<Env> {
 		}
 
 		// Then fetch the message with user data
-		const messageWithMember = await this.db
+		const messageWithMember = await this.getMessageById(insertedMessage.id);
+
+		if (!messageWithMember) {
+			throw new Error("Failed to fetch message with user data");
+		}
+
+		return messageWithMember;
+	}
+
+	async getMessageById(id: number): Promise<ChatRoomMessage | undefined> {
+		return await this.db
 			.select({
 				id: chatMessage.id,
 				content: chatMessage.content,
@@ -245,19 +258,13 @@ export class ChatDurableObject extends DurableObject<Env> {
 			})
 			.from(chatMessage)
 			.innerJoin(chatRoomMember, eq(chatMessage.memberId, chatRoomMember.id))
-			.where(eq(chatMessage.id, insertedMessage.id))
+			.where(eq(chatMessage.id, id))
 			.get();
-
-		if (!messageWithMember) {
-			throw new Error("Failed to fetch message with user data");
-		}
-
-		return messageWithMember;
 	}
 
-	async selectMessages(options?: {
+	async getMessages(options: {
 		limit?: number;
-		topLevelOnly?: boolean;
+		threadId?: number | null;
 	}): Promise<ChatRoomMessage[]> {
 		const query = this.db
 			.select({
@@ -282,12 +289,14 @@ export class ChatDurableObject extends DurableObject<Env> {
 			.innerJoin(chatRoomMember, eq(chatMessage.memberId, chatRoomMember.id))
 			.orderBy(desc(chatMessage.id));
 
-		if (options?.limit) {
+		if (options.limit) {
 			query.limit(options.limit);
 		}
 
-		if (options?.topLevelOnly) {
+		if (options.threadId === null) {
 			query.where(isNull(chatMessage.parentId));
+		} else if (typeof options.threadId === "number") {
+			query.where(eq(chatMessage.parentId, options.threadId));
 		}
 
 		const result = await query;
@@ -360,35 +369,5 @@ export class ChatDurableObject extends DurableObject<Env> {
 		}
 
 		return config;
-	}
-
-	async selectThreadMessages(parentId: number): Promise<ChatRoomMessage[]> {
-		const query = this.db
-			.select({
-				id: chatMessage.id,
-				content: chatMessage.content,
-				mentions: chatMessage.mentions,
-				memberId: chatMessage.memberId,
-				createdAt: chatMessage.createdAt,
-				metadata: chatMessage.metadata,
-				parentId: chatMessage.parentId,
-				user: {
-					id: chatRoomMember.id,
-					roomId: chatRoomMember.roomId,
-					role: chatRoomMember.role,
-					type: chatRoomMember.type,
-					name: chatRoomMember.name,
-					email: chatRoomMember.email,
-					image: chatRoomMember.image,
-				},
-			})
-			.from(chatMessage)
-			.innerJoin(chatRoomMember, eq(chatMessage.memberId, chatRoomMember.id))
-			.where(eq(chatMessage.parentId, parentId))
-			.orderBy(desc(chatMessage.id));
-
-		const result = await query;
-		// Reverse to get chronological order (oldest to newest)
-		return result.reverse();
 	}
 }

@@ -15,13 +15,15 @@ import {
 import { ChatMessageArea } from "@/components/ui/chat-message-area";
 import { SidebarContent, SidebarHeader } from "@/components/ui/sidebar";
 import { SidebarRight, useSidebarRight } from "@/components/ui/sidebar-right";
-import { Skeleton } from "@/components/ui/skeleton";
 import { useEffect, useMemo } from "react";
 import { useChatWsContext } from "../chat-main/chat-ws-provider";
 import type { User } from "better-auth";
 import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useChatParams } from "../chat-main/chat-params-provider";
+import { Separator } from "@/components/ui/separator";
+import { ChatMessageSkeleton } from "../chat-message-skeleton";
+import { ChatMessagesSkeleton } from "../chat-message-skeleton";
 
 export function ChatRoomThreadSidebar({ user }: { user: User }) {
 	const { setOpen: setSidebarRightOpen, open: sidebarRightOpen } =
@@ -50,6 +52,7 @@ export function ChatRoomThreadSidebar({ user }: { user: User }) {
 export function ChatRoomThreadSidebarContent({ user }: { user: User }) {
 	const { activeThread, handleSubmit, connectionStatus, members } =
 		useChatWsContext();
+
 	const { threadId, clearThreadId } = useChatParams();
 
 	const isLoading =
@@ -86,8 +89,30 @@ export function ChatRoomThreadSidebarContent({ user }: { user: User }) {
 			<SidebarContent className="flex-1 flex flex-col h-full overflow-y-auto">
 				<ChatMessageArea scrollButtonAlignment="center">
 					<div className="w-full p-8 space-y-4">
+						{activeThread.threadMessage ? (
+							<ChatMessage
+								key={String(activeThread.threadMessage.id)}
+								id={String(activeThread.threadMessage.id)}
+							>
+								<ChatMessageAvatar
+									imageSrc={activeThread.threadMessage.user.image ?? undefined}
+								/>
+								<ChatMessageContentArea>
+									<ChatMessageMetadata
+										username={activeThread.threadMessage.user.name}
+										createdAt={activeThread.threadMessage.createdAt}
+									/>
+									<ChatMessageContent
+										content={activeThread.threadMessage.content}
+									/>
+								</ChatMessageContentArea>
+							</ChatMessage>
+						) : (
+							isLoading && <ChatMessageSkeleton />
+						)}
+						<Separator className="my-4" />
 						{isLoading ? (
-							<ChatMessageSkeleton />
+							<ChatMessagesSkeleton />
 						) : activeThread.messages.length > 0 ? (
 							activeThread.messages.map((message) => (
 								<ChatMessage key={String(message.id)} id={String(message.id)}>
@@ -127,22 +152,5 @@ export function ChatRoomThreadSidebarContent({ user }: { user: User }) {
 				</div>
 			</SidebarContent>
 		</SidebarRight>
-	);
-}
-
-function ChatMessageSkeleton() {
-	return (
-		<>
-			{[1, 2, 3].map((i) => (
-				<div key={i} className="flex space-x-3">
-					<Skeleton className="h-10 w-10 rounded-full" />
-					<div className="space-y-2 flex-1">
-						<Skeleton className="h-4 w-[200px]" />
-						<Skeleton className="h-4 w-[300px]" />
-						<Skeleton className="h-4 w-[250px]" />
-					</div>
-				</div>
-			))}
-		</>
 	);
 }

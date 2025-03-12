@@ -21,6 +21,7 @@ export type WsMessageThreadInitRequest = {
 export type WsMessageThreadInitResponse = {
 	type: "thread-init-response";
 	threadId: number;
+	threadMessage: ChatRoomMessage;
 	messages: ChatRoomMessage[];
 };
 

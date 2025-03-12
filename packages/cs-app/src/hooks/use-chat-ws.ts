@@ -22,6 +22,7 @@ interface ChatState {
 	// Track active thread with its own messages and status
 	activeThread: {
 		id: number | null;
+		threadMessage: ChatRoomMessage | null;
 		messages: ChatRoomMessage[];
 		status: "idle" | "loading" | "success" | "error";
 	};
@@ -38,6 +39,7 @@ const initialChatState: ChatState = {
 	},
 	activeThread: {
 		id: null,
+		threadMessage: null,
 		messages: [],
 		status: "idle",
 	},
@@ -56,8 +58,16 @@ type ChatAction =
 			status: "idle" | "loading" | "success" | "error";
 	  }
 	| { type: "ADD_THREAD_MESSAGE"; message: ChatRoomMessage }
-	| { type: "SET_THREAD_MESSAGES"; messages: ChatRoomMessage[] }
-	| { type: "SET_ACTIVE_THREAD"; threadId: number | null }
+	| {
+			type: "SET_THREAD_MESSAGES";
+			threadMessage: ChatRoomMessage;
+			messages: ChatRoomMessage[];
+	  }
+	| {
+			type: "SET_ACTIVE_THREAD";
+			threadId: number | null;
+			threadMessage: ChatRoomMessage | null;
+	  }
 	| {
 			type: "SET_ACTIVE_THREAD_STATUS";
 			status: "idle" | "loading" | "success" | "error";
@@ -153,6 +163,7 @@ function chatReducer(state: ChatState, action: ChatAction): ChatState {
 				...state,
 				activeThread: {
 					...state.activeThread,
+					threadMessage: action.threadMessage,
 					messages: action.messages,
 					status: "success",
 				},
@@ -163,6 +174,7 @@ function chatReducer(state: ChatState, action: ChatAction): ChatState {
 				...state,
 				activeThread: {
 					id: action.threadId,
+					threadMessage: action.threadMessage,
 					messages: [], // Clear messages when changing threads
 					status: action.threadId !== null ? "loading" : "idle",
 				},
@@ -245,6 +257,7 @@ export function useChatWS({ roomId, threadId, user }: UseChatWSProps) {
 						if (wsMessage.threadId === activeThreadIdRef.current) {
 							dispatch({
 								type: "SET_THREAD_MESSAGES",
+								threadMessage: wsMessage.threadMessage,
 								messages: wsMessage.messages,
 							});
 						}
@@ -359,7 +372,13 @@ export function useChatWS({ roomId, threadId, user }: UseChatWSProps) {
 
 		if (threadIdChanged) {
 			activeThreadIdRef.current = threadId;
-			dispatch({ type: "SET_ACTIVE_THREAD", threadId });
+			console.log("messages", JSON.parse(JSON.stringify(state.topLevelMessages.data)));
+			const threadMessage =
+				state.topLevelMessages.data.find(
+					(message) => message.id === threadId,
+				) ?? null;
+			console.log("threadMessage", JSON.parse(JSON.stringify(threadMessage)));
+			dispatch({ type: "SET_ACTIVE_THREAD", threadId, threadMessage });
 		}
 
 		// If we have a thread ID and an active connection, fetch thread messages
@@ -377,9 +396,10 @@ export function useChatWS({ roomId, threadId, user }: UseChatWSProps) {
 		}
 	}, [
 		threadId,
-		state.connectionStatus,
 		sendWsMessage,
+		state.connectionStatus,
 		state.activeThread.status,
+		state.topLevelMessages.data,
 	]);
 
 	const handleSubmit = useCallback(
