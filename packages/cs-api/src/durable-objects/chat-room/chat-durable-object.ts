@@ -88,6 +88,8 @@ export class ChatDurableObject extends DurableObject<Env> {
 					break;
 				}
 				case "chat-init-request": {
+					console.log("chat-init-request", JSON.parse(JSON.stringify(parsedMsg)));
+					console.log("SESSION", JSON.parse(JSON.stringify(this.sessions)));
 					this.sendWebSocketMessageToUser(
 						{
 							type: "chat-init-response",
@@ -208,6 +210,7 @@ export class ChatDurableObject extends DurableObject<Env> {
 
 				await agentDO.receiveNotification({
 					chatRoomId: this.ctx.id.toString(),
+					threadId: chatRoomMessage.threadId,
 				});
 			}
 		}
