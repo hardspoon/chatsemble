@@ -14,7 +14,6 @@ import { Users } from "lucide-react";
 import { type Dispatch, type SetStateAction, useState } from "react";
 import { ChatDetailsDialog } from "../chat-details/chat-details-dialog";
 import type { ChatDetailsDialogOpen } from "../chat-details/chat-details-dialog";
-import { SidebarRightTrigger } from "@/components/ui/sidebar-right";
 
 export function ChatHeader() {
 	const [openChatDetailsDialog, setOpenChatDetailsDialog] =
@@ -23,10 +22,9 @@ export function ChatHeader() {
 	const { connectionStatus } = useChatWsContext();
 
 	return (
-		<header className="sticky top-0 flex shrink-0 items-center gap-2 border-b bg-background p-4">
+		<header className="h-16 sticky top-0 flex shrink-0 items-center gap-2 border-b bg-background p-4">
 			<SidebarTrigger />
 			<Separator orientation="vertical" className="-mr-1 ml-1 h-4" />
-			<SidebarRightTrigger />
 			{connectionStatus === "ready" ? (
 				<>
 					<ChatName setOpenChatDetailsDialog={setOpenChatDetailsDialog} />
