@@ -6,7 +6,7 @@ import type { ChatRoomMessage, ChatRoomMessagePartial } from "@/cs-shared";
 //import { createOpenAI } from "@ai-sdk/openai";
 import { createGroq } from "@ai-sdk/groq";
 import { type CoreMessage, generateText } from "ai";
-import { and, eq, gt, isNotNull, lt, sql } from "drizzle-orm";
+import { and, eq, gt, isNotNull, lte, sql } from "drizzle-orm";
 import {
 	type DrizzleSqliteDODatabase,
 	drizzle,
@@ -44,8 +44,9 @@ import {
  * This approach balances message batching with guaranteed response times.
  */
 
-const ALARM_TIME_IN_MS = 5 * 1000; // Standard wait time for batching messages
-const MAX_ALARM_TIME_IN_MS = 15 * 1000; // Maximum time a message can wait before processing
+// TODO: Test more with different values, currently anything above 9 seconds is not working
+const ALARM_TIME_IN_MS = 15 * 1000; // Standard wait time for batching messages
+const MAX_ALARM_TIME_IN_MS = 25 * 1000; // Maximum time a message can wait before processing
 
 export class AgentDurableObject extends DurableObject<Env> {
 	storage: DurableObjectStorage;
@@ -55,7 +56,7 @@ export class AgentDurableObject extends DurableObject<Env> {
 		super(ctx, env);
 		this.storage = ctx.storage;
 		this.db = drizzle(this.storage, { logger: false });
-		this.storage.deleteAlarm();
+		//this.storage.deleteAlarm();
 	}
 
 	async migrate() {
@@ -145,7 +146,7 @@ export class AgentDurableObject extends DurableObject<Env> {
 			.from(agentChatRoomNotification)
 			.where(
 				and(
-					lt(agentChatRoomNotification.processAt, currentTime),
+					lte(agentChatRoomNotification.processAt, currentTime),
 					isNotNull(agentChatRoomNotification.processAt),
 					gt(agentChatRoomNotification.notifications, 0),
 				),
@@ -180,8 +181,6 @@ export class AgentDurableObject extends DurableObject<Env> {
 				limit: messagesToGet,
 				threadId: threadId,
 			});
-
-			console.log("messages", JSON.parse(JSON.stringify(messages)));
 
 			// Reset the notification after processing
 			const notificationId = this.getChatRoomNotificationId(
@@ -268,6 +267,7 @@ export class AgentDurableObject extends DurableObject<Env> {
 		}
 		const aiMessages = chatRoomMessagesToAiMessages(messages);
 
+		// TODO: Ensure mentions are only within the notification messages and not older ones
 		const hasMentionsOfAgent = messages.some((message) =>
 			message.mentions.some((mention) => mention.id === agentConfig.id),
 		);
@@ -417,6 +417,7 @@ export class AgentDurableObject extends DurableObject<Env> {
 	}
 
 	async deleteChatRoom(id: string) {
+		await this.db.delete(agentChatRoomNotification).where(eq(agentChatRoomNotification.roomId, id));
 		await this.db.delete(agentChatRoom).where(eq(agentChatRoom.id, id));
 	}
 
