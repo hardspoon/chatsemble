@@ -5,13 +5,6 @@ import {
 	ChatInputSubmit,
 	ChatInputTiptap,
 } from "@/components/ui/tiptap-chat-input";
-import {
-	ChatMessage,
-	ChatMessageAvatar,
-	ChatMessageContent,
-	ChatMessageContentArea,
-	ChatMessageMetadata,
-} from "@/components/ui/chat-message";
 import { ChatMessageArea } from "@/components/ui/chat-message-area";
 import { SidebarContent, SidebarHeader } from "@/components/ui/sidebar";
 import { SidebarRight, useSidebarRight } from "@/components/ui/sidebar-right";
@@ -22,8 +15,8 @@ import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useChatParams } from "../chat-main/chat-params-provider";
 import { Separator } from "@/components/ui/separator";
-import { ChatMessageSkeleton } from "../chat-message-skeleton";
-import { ChatMessagesSkeleton } from "../chat-message-skeleton";
+import { ChatMessageSkeleton, ChatRoomMessage } from "../chat-room-message";
+import { ChatMessagesSkeleton } from "../chat-room-message";
 
 export function ChatRoomThreadSidebar({ user }: { user: User }) {
 	const { setOpen: setSidebarRightOpen, open: sidebarRightOpen } =
@@ -44,7 +37,13 @@ export function ChatRoomThreadSidebar({ user }: { user: User }) {
 
 	return (
 		<SidebarRight>
-			{!!roomId && !!threadId && <ChatRoomThreadSidebarContent user={user} />}
+			{!!roomId && !!threadId ? (
+				<ChatRoomThreadSidebarContent user={user} />
+			) : (
+				<div className="flex-1 flex flex-col h-full w-full">
+					Select a thread to start chatting
+				</div>
+			)}
 		</SidebarRight>
 	);
 }
@@ -87,55 +86,30 @@ export function ChatRoomThreadSidebarContent({ user }: { user: User }) {
 			</SidebarHeader>
 
 			<SidebarContent className="flex-1 flex flex-col h-full overflow-y-auto">
-				<ChatMessageArea scrollButtonAlignment="center">
-					<div className="w-full p-8 space-y-4">
+				<ChatMessageArea scrollButtonAlignment="center" className="px-6">
+					<div className="pt-8">
 						{activeThread.threadMessage ? (
-							<ChatMessage
-								key={String(activeThread.threadMessage.id)}
-								id={String(activeThread.threadMessage.id)}
-							>
-								<ChatMessageAvatar
-									imageSrc={activeThread.threadMessage.user.image ?? undefined}
-								/>
-								<ChatMessageContentArea>
-									<ChatMessageMetadata
-										username={activeThread.threadMessage.user.name}
-										createdAt={activeThread.threadMessage.createdAt}
-									/>
-									<ChatMessageContent
-										content={activeThread.threadMessage.content}
-									/>
-								</ChatMessageContentArea>
-							</ChatMessage>
+							<ChatRoomMessage message={activeThread.threadMessage} />
 						) : (
 							isLoading && <ChatMessageSkeleton />
 						)}
-						<Separator className="my-4" />
+					</div>
+					<Separator className="mt-3 mb-6" />
+					<div className="pb-8 space-y-4">
 						{isLoading ? (
-							<ChatMessagesSkeleton />
+							<ChatMessagesSkeleton items={2} />
 						) : activeThread.messages.length > 0 ? (
 							activeThread.messages.map((message) => (
-								<ChatMessage key={String(message.id)} id={String(message.id)}>
-									<ChatMessageAvatar
-										imageSrc={message.user.image ?? undefined}
-									/>
-									<ChatMessageContentArea>
-										<ChatMessageMetadata
-											username={message.user.name}
-											createdAt={message.createdAt}
-										/>
-										<ChatMessageContent content={message.content} />
-									</ChatMessageContentArea>
-								</ChatMessage>
+								<ChatRoomMessage key={String(message.id)} message={message} />
 							))
 						) : (
 							<div className="text-center text-sm text-muted-foreground">
-								No messages yet
+								Send a message to start the thread
 							</div>
 						)}
 					</div>
 				</ChatMessageArea>
-				<div className="px-2 py-4 max-w-2xl mx-auto w-full">
+				<div className="p-4 w-full">
 					<ChatInput
 						onSubmit={(value) => {
 							handleSubmit({

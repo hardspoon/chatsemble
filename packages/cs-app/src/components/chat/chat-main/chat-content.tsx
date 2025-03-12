@@ -2,13 +2,8 @@
 
 import { useChatWsContext } from "@/components/chat/chat-main/chat-ws-provider";
 import {
-	ChatMessage,
 	ChatMessageActionsArea,
 	ChatMessageAction,
-	ChatMessageAvatar,
-	ChatMessageContent,
-	ChatMessageContentArea,
-	ChatMessageMetadata,
 } from "@/components/ui/chat-message";
 import { ChatMessageArea } from "@/components/ui/chat-message-area";
 
@@ -21,7 +16,10 @@ import type { User } from "better-auth";
 import { useMemo } from "react";
 import { BookmarkIcon, MessageSquareIcon } from "lucide-react";
 import { useChatParams } from "@/components/chat/chat-main/chat-params-provider";
-import { ChatMessagesSkeleton } from "@/components/chat/chat-message-skeleton";
+import {
+	ChatMessagesSkeleton,
+	ChatRoomMessage,
+} from "@/components/chat/chat-room-message";
 
 export function ChatContent({ user }: { user: User }) {
 	const { topLevelMessages, handleSubmit, connectionStatus, members } =
@@ -46,36 +44,30 @@ export function ChatContent({ user }: { user: User }) {
 					) : topLevelMessages.data.length > 0 ? (
 						topLevelMessages.data.map((message) => {
 							return (
-								<ChatMessage key={String(message.id)} id={String(message.id)}>
-									<ChatMessageActionsArea>
-										<ChatMessageAction
-											label="Bookmark message"
-											onClick={() =>
-												console.log("Bookmark message:", message.id)
-											}
-										>
-											<BookmarkIcon />
-										</ChatMessageAction>
-										<ChatMessageAction
-											label="Reply in thread"
-											onClick={() => {
-												setThreadId(message.id);
-											}}
-										>
-											<MessageSquareIcon />
-										</ChatMessageAction>
-									</ChatMessageActionsArea>
-									<ChatMessageAvatar
-										imageSrc={message.user.image ?? undefined}
-									/>
-									<ChatMessageContentArea>
-										<ChatMessageMetadata
-											username={message.user.name}
-											createdAt={message.createdAt}
-										/>
-										<ChatMessageContent content={message.content} />
-									</ChatMessageContentArea>
-								</ChatMessage>
+								<ChatRoomMessage
+									key={message.id}
+									message={message}
+									actionArea={
+										<ChatMessageActionsArea>
+											<ChatMessageAction
+												label="Bookmark message"
+												onClick={() =>
+													console.log("Bookmark message:", message.id)
+												}
+											>
+												<BookmarkIcon />
+											</ChatMessageAction>
+											<ChatMessageAction
+												label="Reply in thread"
+												onClick={() => {
+													setThreadId(message.id);
+												}}
+											>
+												<MessageSquareIcon />
+											</ChatMessageAction>
+										</ChatMessageActionsArea>
+									}
+								/>
 							);
 						})
 					) : (
