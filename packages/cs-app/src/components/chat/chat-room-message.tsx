@@ -25,7 +25,7 @@ export function ChatRoomMessage({
 					username={message.user.name}
 					createdAt={message.createdAt}
 				/>
-				<ChatMessageContent content={message.content} />
+				<ChatMessageContent content={message.content} /> {/* TODO: Show if we have a thread */}
 			</ChatMessageContentArea>
 		</ChatMessage>
 	);

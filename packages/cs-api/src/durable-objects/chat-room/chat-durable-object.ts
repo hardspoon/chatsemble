@@ -7,7 +7,7 @@ import type {
 	WsChatIncomingMessage,
 	WsChatOutgoingMessage,
 } from "@/cs-shared";
-import { desc, eq, inArray, isNull } from "drizzle-orm";
+import { desc, eq, inArray, isNull, gt, lte, and } from "drizzle-orm";
 /// <reference types="@cloudflare/workers-types" />
 /// <reference types="../../../worker-configuration" />
 import {
@@ -266,6 +266,8 @@ export class ChatDurableObject extends DurableObject<Env> {
 	async getMessages(options: {
 		limit?: number;
 		threadId?: number | null;
+		afterId?: number;
+		beforeId?: number;
 	}): Promise<ChatRoomMessage[]> {
 		const query = this.db
 			.select({
@@ -290,14 +292,32 @@ export class ChatDurableObject extends DurableObject<Env> {
 			.innerJoin(chatRoomMember, eq(chatMessage.memberId, chatRoomMember.id))
 			.orderBy(desc(chatMessage.id));
 
-		if (options.limit) {
-			query.limit(options.limit);
+		// Build up conditions with AND logic
+		const conditions = [];
+
+		// Thread conditions
+		if (options.threadId === null) {
+			conditions.push(isNull(chatMessage.threadId));
+		} else if (options.threadId && typeof options.threadId === "number") {
+			conditions.push(eq(chatMessage.threadId, options.threadId));
 		}
 
-		if (options.threadId === null) {
-			query.where(isNull(chatMessage.threadId));
-		} else if (options.threadId && typeof options.threadId === "number") {
-			query.where(eq(chatMessage.threadId, options.threadId));
+		// ID range conditions
+		if (options.afterId) {
+			conditions.push(gt(chatMessage.id, options.afterId));
+		}
+
+		if (options.beforeId) {
+			conditions.push(lte(chatMessage.id, options.beforeId));
+		}
+
+		// Apply all conditions with AND
+		if (conditions.length > 0) {
+			query.where(and(...conditions));
+		}
+
+		if (options.limit) {
+			query.limit(options.limit);
 		}
 
 		const result = await query;
