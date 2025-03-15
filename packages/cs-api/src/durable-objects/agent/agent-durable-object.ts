@@ -6,7 +6,6 @@ import type { ChatRoomMessage, ChatRoomMessagePartial } from "@/cs-shared";
 //import { createOpenAI } from "@ai-sdk/openai";
 import { createGroq } from "@ai-sdk/groq";
 import { type CoreMessage, generateText } from "ai";
-import { and, eq, isNotNull, lte, sql } from "drizzle-orm";
 import {
 	type DrizzleSqliteDODatabase,
 	drizzle,
@@ -19,19 +18,20 @@ import {
 	shouldRespondTools,
 } from "../../lib/ai/prompts/agent-prompt";
 import migrations from "./db/migrations/migrations";
-import { agentChatRoom, agentChatRoomQueue, agentConfig } from "./db/schema";
 import type { AgentChatRoomQueueItem } from "./types";
+import { createAgentDbServices } from "./db/services";
 
 const ALARM_TIME_IN_MS = 3 * 1000; // Standard wait time for batching messages
 
 export class AgentDurableObject extends DurableObject<Env> {
 	storage: DurableObjectStorage;
 	db: DrizzleSqliteDODatabase;
-
+	dbServices: ReturnType<typeof createAgentDbServices>;
 	constructor(ctx: DurableObjectState, env: Env) {
 		super(ctx, env);
 		this.storage = ctx.storage;
 		this.db = drizzle(this.storage, { logger: false });
+		this.dbServices = createAgentDbServices(this.db, this.ctx.id.toString());
 	}
 
 	async migrate() {
@@ -47,7 +47,7 @@ export class AgentDurableObject extends DurableObject<Env> {
 	}) {
 		await this.ensureChatRoomExists(chatRoomId);
 
-		const queueItem = await this.getChatRoomQueueItem(
+		const queueItem = await this.dbServices.getChatRoomQueueItem(
 			chatRoomId,
 			message.threadId,
 		);
@@ -58,7 +58,7 @@ export class AgentDurableObject extends DurableObject<Env> {
 		if (!queueItem || !pastProcessAt || pastProcessAt < now) {
 			const processAt = now + ALARM_TIME_IN_MS;
 
-			await this.createOrUpdateChatRoomQueueItem({
+			await this.dbServices.createOrUpdateChatRoomQueueItem({
 				chatRoomId,
 				threadId: message.threadId,
 				processAt,
@@ -72,13 +72,8 @@ export class AgentDurableObject extends DurableObject<Env> {
 		const currentAlarm = await this.storage.getAlarm();
 
 		if (!currentAlarm) {
-			const nextProcessingResult = await this.db
-				.select({
-					minProcessAt: sql<number>`MIN(${agentChatRoomQueue.processAt})`,
-				})
-				.from(agentChatRoomQueue)
-				.where(isNotNull(agentChatRoomQueue.processAt))
-				.get();
+			const nextProcessingResult =
+				await this.dbServices.getChatRoomQueueMinProcessAt();
 
 			const earliestProcessAt = nextProcessingResult?.minProcessAt;
 
@@ -92,7 +87,7 @@ export class AgentDurableObject extends DurableObject<Env> {
 		const currentTime = Date.now();
 
 		const queueItemsToProcess =
-			await this.getChatRoomQueueItemsToProcess(currentTime);
+			await this.dbServices.getChatRoomQueueItemsToProcess(currentTime);
 
 		const processingPromises = queueItemsToProcess.map(async (queueItem) => {
 			try {
@@ -115,7 +110,7 @@ export class AgentDurableObject extends DurableObject<Env> {
 					lastProcessedId: chatRoomQueueItem.lastProcessedId,
 				},
 			);
-			await this.clearChatRoomQueueProcessAt(chatRoomQueueItem.id);
+			await this.dbServices.clearChatRoomQueueProcessAt(chatRoomQueueItem.id);
 
 			return messageWithContext;
 		});
@@ -149,7 +144,7 @@ export class AgentDurableObject extends DurableObject<Env> {
 		);
 
 		if (highestMessageId > 0) {
-			await this.updateChatRoomQueueLastProcessedId(
+			await this.dbServices.updateChatRoomQueueLastProcessedId(
 				chatRoomQueueItem.id,
 				highestMessageId,
 			);
@@ -219,14 +214,14 @@ export class AgentDurableObject extends DurableObject<Env> {
 	}
 
 	private async checkIfImMentioned(messages: ChatRoomMessage[]) {
-		const agentConfig = await this.getAgentConfig();
+		const agentConfig = await this.dbServices.getAgentConfig();
 		return messages.some((message) =>
 			message.mentions.some((mention) => mention.id === agentConfig.id),
 		);
 	}
 
 	private async checkIfMessagesAreRelevant(messages: CoreMessage[]) {
-		const agentConfig = await this.getAgentConfig();
+		const agentConfig = await this.dbServices.getAgentConfig();
 
 		const groqClient = createGroq({
 			baseURL: this.env.AI_GATEWAY_GROQ_URL,
@@ -255,7 +250,7 @@ export class AgentDurableObject extends DurableObject<Env> {
 	}
 
 	private async formulateResponse(messages: ChatRoomMessage[]) {
-		const agentConfig = await this.getAgentConfig();
+		const agentConfig = await this.dbServices.getAgentConfig();
 
 		const groqClient = createGroq({
 			baseURL: this.env.AI_GATEWAY_GROQ_URL,
@@ -290,84 +285,6 @@ export class AgentDurableObject extends DurableObject<Env> {
 		};
 	}
 
-	private getChatRoomQueueItemId(
-		chatRoomId: string,
-		threadId: number | null,
-	): string {
-		return threadId === null ? `${chatRoomId}:` : `${chatRoomId}:${threadId}`;
-	}
-
-	private async createOrUpdateChatRoomQueueItem({
-		chatRoomId,
-		threadId,
-		processAt,
-	}: {
-		chatRoomId: string;
-		threadId: number | null;
-		processAt: number;
-	}) {
-		const queueItemId = this.getChatRoomQueueItemId(chatRoomId, threadId);
-
-		await this.db
-			.insert(agentChatRoomQueue)
-			.values({
-				id: queueItemId,
-				roomId: chatRoomId,
-				threadId: threadId,
-				processAt: processAt,
-			})
-			.onConflictDoUpdate({
-				target: [agentChatRoomQueue.id],
-				set: {
-					processAt: processAt,
-				},
-			});
-	}
-
-	private async clearChatRoomQueueProcessAt(queueItemId: string) {
-		await this.db
-			.update(agentChatRoomQueue)
-			.set({ processAt: null })
-			.where(eq(agentChatRoomQueue.id, queueItemId));
-	}
-
-	private async updateChatRoomQueueLastProcessedId(
-		queueItemId: string,
-		lastProcessedId: number,
-	) {
-		await this.db
-			.update(agentChatRoomQueue)
-			.set({
-				lastProcessedId: lastProcessedId,
-			})
-			.where(eq(agentChatRoomQueue.id, queueItemId));
-	}
-
-	private async getChatRoomQueueItemsToProcess(currentTime: number) {
-		return this.db
-			.select()
-			.from(agentChatRoomQueue)
-			.where(
-				and(
-					lte(agentChatRoomQueue.processAt, currentTime),
-					isNotNull(agentChatRoomQueue.processAt),
-				),
-			)
-			.all();
-	}
-
-	private async getChatRoomQueueItem(
-		chatRoomId: string,
-		threadId: number | null,
-	) {
-		const queueItemId = this.getChatRoomQueueItemId(chatRoomId, threadId);
-		return this.db
-			.select()
-			.from(agentChatRoomQueue)
-			.where(eq(agentChatRoomQueue.id, queueItemId))
-			.get();
-	}
-
 	private async sendResponse(
 		chatRoomId: string,
 		message: ChatRoomMessagePartial,
@@ -381,91 +298,24 @@ export class AgentDurableObject extends DurableObject<Env> {
 	}
 
 	async upsertAgentConfig(
-		agentConfigData: Omit<typeof agentConfig.$inferSelect, "id" | "createdAt">,
+		agentConfigData: Parameters<typeof this.dbServices.upsertAgentConfig>[0],
 	) {
-		const doId = this.ctx.id.toString();
-		await this.db
-			.insert(agentConfig)
-			.values({
-				...agentConfigData,
-				id: doId,
-			})
-			.onConflictDoUpdate({
-				target: [agentConfig.id],
-				set: {
-					image: agentConfigData.image,
-					name: agentConfigData.name,
-					systemPrompt: agentConfigData.systemPrompt,
-				},
-			});
+		await this.dbServices.upsertAgentConfig(agentConfigData);
 	}
 
-	async getAgentConfig() {
-		const config = await this.db
-			.select()
-			.from(agentConfig)
-			.where(eq(agentConfig.id, this.ctx.id.toString()))
-			.get();
-
-		if (!config) {
-			throw new Error("Agent config not found");
-		}
-
-		return config;
-	}
-
-	async getChatRooms() {
-		const chatRooms = await this.db.select().from(agentChatRoom);
-
-		return chatRooms;
-	}
-
-	async getChatRoom(id: string) {
-		const chatRoom = await this.db
-			.select()
-			.from(agentChatRoom)
-			.where(eq(agentChatRoom.id, id))
-			.get();
-
-		if (!chatRoom) {
-			throw new Error("Chat room not found");
-		}
-
-		return chatRoom;
-	}
-
-	async updateChatRoom(
-		chatRoomId: string,
-		chatRoom: Partial<typeof agentChatRoom.$inferSelect>,
+	async addChatRoom(
+		chatRoom: Parameters<typeof this.dbServices.addChatRoom>[0],
 	) {
-		await this.db
-			.update(agentChatRoom)
-			.set(chatRoom)
-			.where(eq(agentChatRoom.id, chatRoomId));
+		await this.dbServices.addChatRoom(chatRoom);
 	}
 
-	async addChatRoom(chatRoom: typeof agentChatRoom.$inferInsert) {
-		await this.db
-			.insert(agentChatRoom)
-			.values(chatRoom)
-			.onConflictDoUpdate({
-				target: [agentChatRoom.id],
-				set: {
-					name: chatRoom.name,
-				},
-			});
-	}
-
-	async deleteChatRoom(id: string) {
-		await this.db
-			.delete(agentChatRoomQueue)
-			.where(eq(agentChatRoomQueue.roomId, id));
-		await this.db.delete(agentChatRoom).where(eq(agentChatRoom.id, id));
+	async deleteChatRoom(chatRoomId: string) {
+		await this.dbServices.deleteChatRoom(chatRoomId);
 	}
 
 	private async ensureChatRoomExists(chatRoomId: string) {
 		try {
-			await this.getChatRoom(chatRoomId);
+			await this.dbServices.getChatRoom(chatRoomId);
 		} catch (error) {
 			console.log(
 				`Chat room ${chatRoomId} not found, creating it: ${error instanceof Error ? error.message : String(error)}`,
@@ -477,7 +327,7 @@ export class AgentDurableObject extends DurableObject<Env> {
 
 			const config = await chatRoomDO.getConfig();
 
-			await this.addChatRoom({
+			await this.dbServices.addChatRoom({
 				id: chatRoomId,
 				name: config.name,
 				organizationId: config.organizationId,
