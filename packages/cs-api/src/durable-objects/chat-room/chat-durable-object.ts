@@ -1,34 +1,32 @@
 import { DurableObject } from "cloudflare:workers";
 import type {
 	ChatRoomMember,
-	ChatRoomMemberType,
 	ChatRoomMessage,
 	ChatRoomMessagePartial,
 	WsChatIncomingMessage,
 	WsChatOutgoingMessage,
 } from "@/cs-shared";
-import { desc, eq, inArray, isNull, gt, lte, and } from "drizzle-orm";
 /// <reference types="@cloudflare/workers-types" />
 /// <reference types="../../../worker-configuration" />
-import {
-	type DrizzleSqliteDODatabase,
-	drizzle,
-} from "drizzle-orm/durable-sqlite";
+import { drizzle } from "drizzle-orm/durable-sqlite";
+import type { DrizzleSqliteDODatabase } from "drizzle-orm/durable-sqlite";
 import { migrate } from "drizzle-orm/durable-sqlite/migrator";
 import type { Session } from "../../types/session";
 import migrations from "./db/migrations/migrations";
-import { chatMessage, chatRoomConfig, chatRoomMember } from "./db/schema";
+import { createChatRoomDbServices } from "./db/services";
 
 export class ChatDurableObject extends DurableObject<Env> {
 	storage: DurableObjectStorage;
 	db: DrizzleSqliteDODatabase;
 	sessions: Map<WebSocket, Session>;
+	dbServices: ReturnType<typeof createChatRoomDbServices>;
 
 	constructor(ctx: DurableObjectState, env: Env) {
 		super(ctx, env);
 		this.storage = ctx.storage;
 		this.db = drizzle(this.storage, { logger: false });
 		this.sessions = new Map();
+		this.dbServices = createChatRoomDbServices(this.db, this.ctx.id.toString());
 
 		// Restore any existing WebSocket sessions
 		for (const webSocket of ctx.getWebSockets()) {
@@ -169,7 +167,7 @@ export class ChatDurableObject extends DurableObject<Env> {
 			notifyAgents: boolean;
 		},
 	) {
-		const chatRoomMessage = await this.insertMessage({
+		const chatRoomMessage = await this.dbServices.insertMessage({
 			memberId,
 			content: message.content,
 			mentions: message.mentions,
@@ -214,119 +212,18 @@ export class ChatDurableObject extends DurableObject<Env> {
 		}
 	}
 
-	async insertMessage(
-		message: typeof chatMessage.$inferInsert,
-	): Promise<ChatRoomMessage> {
-		// First insert the message
-		const [insertedMessage] = await this.db
-			.insert(chatMessage)
-			.values(message)
-			.returning();
-
-		if (!insertedMessage) {
-			throw new Error("Failed to insert message");
-		}
-
-		// Then fetch the message with user data
-		const messageWithMember = await this.getMessageById(insertedMessage.id);
-
-		if (!messageWithMember) {
-			throw new Error("Failed to fetch message with user data");
-		}
-
-		return messageWithMember;
-	}
-
 	async getMessageById(id: number): Promise<ChatRoomMessage | undefined> {
-		return await this.db
-			.select({
-				id: chatMessage.id,
-				content: chatMessage.content,
-				mentions: chatMessage.mentions,
-				memberId: chatMessage.memberId,
-				createdAt: chatMessage.createdAt,
-				metadata: chatMessage.metadata,
-				threadId: chatMessage.threadId,
-				user: {
-					id: chatRoomMember.id,
-					roomId: chatRoomMember.roomId,
-					role: chatRoomMember.role,
-					type: chatRoomMember.type,
-					name: chatRoomMember.name,
-					email: chatRoomMember.email,
-					image: chatRoomMember.image,
-				},
-			})
-			.from(chatMessage)
-			.innerJoin(chatRoomMember, eq(chatMessage.memberId, chatRoomMember.id))
-			.where(eq(chatMessage.id, id))
-			.get();
+		return this.dbServices.getMessageById(id);
 	}
 
-	async getMessages(options: {
-		limit?: number;
-		threadId?: number | null;
-		afterId?: number;
-		beforeId?: number;
-	}): Promise<ChatRoomMessage[]> {
-		const query = this.db
-			.select({
-				id: chatMessage.id,
-				content: chatMessage.content,
-				mentions: chatMessage.mentions,
-				memberId: chatMessage.memberId,
-				createdAt: chatMessage.createdAt,
-				metadata: chatMessage.metadata,
-				threadId: chatMessage.threadId,
-				user: {
-					id: chatRoomMember.id,
-					roomId: chatRoomMember.roomId,
-					role: chatRoomMember.role,
-					type: chatRoomMember.type,
-					name: chatRoomMember.name,
-					email: chatRoomMember.email,
-					image: chatRoomMember.image,
-				},
-			})
-			.from(chatMessage)
-			.innerJoin(chatRoomMember, eq(chatMessage.memberId, chatRoomMember.id))
-			.orderBy(desc(chatMessage.id));
-
-		// Build up conditions with AND logic
-		const conditions = [];
-
-		// Thread conditions
-		if (options.threadId === null) {
-			conditions.push(isNull(chatMessage.threadId));
-		} else if (options.threadId && typeof options.threadId === "number") {
-			conditions.push(eq(chatMessage.threadId, options.threadId));
-		}
-
-		// ID range conditions
-		if (options.afterId) {
-			conditions.push(gt(chatMessage.id, options.afterId));
-		}
-
-		if (options.beforeId) {
-			conditions.push(lte(chatMessage.id, options.beforeId));
-		}
-
-		// Apply all conditions with AND
-		if (conditions.length > 0) {
-			query.where(and(...conditions));
-		}
-
-		if (options.limit) {
-			query.limit(options.limit);
-		}
-
-		const result = await query;
-		// Reverse to get chronological order (oldest to newest)
-		return result.reverse();
+	async getMessages(
+		options: Parameters<typeof this.dbServices.getMessages>[0],
+	) {
+		return this.dbServices.getMessages(options);
 	}
 
-	async addMembers(members: (typeof chatRoomMember.$inferInsert)[]) {
-		await this.db.insert(chatRoomMember).values(members).onConflictDoNothing();
+	async addMembers(members: Parameters<typeof this.dbServices.addMembers>[0]) {
+		await this.dbServices.addMembers(members);
 
 		this.broadcastWebSocketMessage({
 			type: "member-update",
@@ -335,9 +232,7 @@ export class ChatDurableObject extends DurableObject<Env> {
 	}
 
 	async removeMembers(memberIds: string[]) {
-		await this.db
-			.delete(chatRoomMember)
-			.where(inArray(chatRoomMember.id, memberIds));
+		await this.dbServices.removeMembers(memberIds);
 
 		this.broadcastWebSocketMessage({
 			type: "member-update",
@@ -345,50 +240,19 @@ export class ChatDurableObject extends DurableObject<Env> {
 		});
 	}
 
-	async getMember(id: string): Promise<ChatRoomMember | undefined> {
-		return this.db
-			.select()
-			.from(chatRoomMember)
-			.where(eq(chatRoomMember.id, id))
-			.get();
+	async getMembers(
+		filter?: Parameters<typeof this.dbServices.getMembers>[0],
+	): Promise<ChatRoomMember[]> {
+		return this.dbServices.getMembers(filter);
 	}
 
-	async getMembers(filter?: {
-		type?: ChatRoomMemberType;
-	}): Promise<ChatRoomMember[]> {
-		const query = this.db.select().from(chatRoomMember);
-
-		if (filter?.type) {
-			query.where(eq(chatRoomMember.type, filter.type));
-		}
-
-		return await query.all();
-	}
-
-	async upsertConfig(config: typeof chatRoomConfig.$inferInsert) {
-		await this.db
-			.insert(chatRoomConfig)
-			.values(config)
-			.onConflictDoUpdate({
-				target: [chatRoomConfig.id],
-				set: {
-					name: config.name,
-					organizationId: config.organizationId,
-				},
-			});
+	async upsertConfig(
+		config: Parameters<typeof this.dbServices.upsertConfig>[0],
+	) {
+		await this.dbServices.upsertConfig(config);
 	}
 
 	async getConfig() {
-		const config = await this.db
-			.select()
-			.from(chatRoomConfig)
-			.where(eq(chatRoomConfig.id, this.ctx.id.toString()))
-			.get();
-
-		if (!config) {
-			throw new Error("Chat room config not found");
-		}
-
-		return config;
+		return this.dbServices.getConfig();
 	}
 }
