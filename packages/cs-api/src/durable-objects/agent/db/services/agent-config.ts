@@ -1,6 +1,6 @@
+import { eq } from "drizzle-orm";
 // packages/cs-api/src/durable-objects/agent/db/agentConfigOperations.ts
 import type { DrizzleSqliteDODatabase } from "drizzle-orm/durable-sqlite";
-import { eq } from "drizzle-orm";
 import { agentConfig } from "../schema";
 
 export function createAgentConfigService(

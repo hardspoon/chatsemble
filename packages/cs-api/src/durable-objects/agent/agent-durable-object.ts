@@ -18,8 +18,8 @@ import {
 	shouldRespondTools,
 } from "../../lib/ai/prompts/agent-prompt";
 import migrations from "./db/migrations/migrations";
-import type { AgentChatRoomQueueItem } from "./types";
 import { createAgentDbServices } from "./db/services";
+import type { AgentChatRoomQueueItem } from "./types";
 
 const ALARM_TIME_IN_MS = 3 * 1000; // Standard wait time for batching messages
 

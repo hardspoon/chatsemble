@@ -1,20 +1,20 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
+import { ChatMessageArea } from "@/components/ui/chat-message-area";
+import { Separator } from "@/components/ui/separator";
+import { SidebarContent, SidebarHeader } from "@/components/ui/sidebar";
+import { SidebarRight, useSidebarRight } from "@/components/ui/sidebar-right";
 import {
 	ChatInput,
 	ChatInputSubmit,
 	ChatInputTiptap,
 } from "@/components/ui/tiptap-chat-input";
-import { ChatMessageArea } from "@/components/ui/chat-message-area";
-import { SidebarContent, SidebarHeader } from "@/components/ui/sidebar";
-import { SidebarRight, useSidebarRight } from "@/components/ui/sidebar-right";
-import { useEffect, useMemo } from "react";
-import { useChatWsContext } from "../chat-main/chat-ws-provider";
 import type { User } from "better-auth";
 import { X } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { useEffect, useMemo } from "react";
 import { useChatParams } from "../chat-main/chat-params-provider";
-import { Separator } from "@/components/ui/separator";
+import { useChatWsContext } from "../chat-main/chat-ws-provider";
 import { ChatMessageSkeleton, ChatRoomMessage } from "../chat-room-message";
 import { ChatMessagesSkeleton } from "../chat-room-message";
 

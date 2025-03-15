@@ -2,24 +2,24 @@
 
 import { useChatWsContext } from "@/components/chat/chat-main/chat-ws-provider";
 import {
-	ChatMessageActionsArea,
 	ChatMessageAction,
+	ChatMessageActionsArea,
 } from "@/components/ui/chat-message";
 import { ChatMessageArea } from "@/components/ui/chat-message-area";
 
+import { useChatParams } from "@/components/chat/chat-main/chat-params-provider";
+import {
+	ChatMessagesSkeleton,
+	ChatRoomMessage,
+} from "@/components/chat/chat-room-message";
 import {
 	ChatInput,
 	ChatInputSubmit,
 	ChatInputTiptap,
 } from "@/components/ui/tiptap-chat-input";
 import type { User } from "better-auth";
-import { useMemo } from "react";
 import { BookmarkIcon, MessageSquareIcon } from "lucide-react";
-import { useChatParams } from "@/components/chat/chat-main/chat-params-provider";
-import {
-	ChatMessagesSkeleton,
-	ChatRoomMessage,
-} from "@/components/chat/chat-room-message";
+import { useMemo } from "react";
 
 export function ChatContent({ user }: { user: User }) {
 	const { topLevelMessages, handleSubmit, connectionStatus, members } =

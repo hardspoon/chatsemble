@@ -1,7 +1,7 @@
 import type { DrizzleSqliteDODatabase } from "drizzle-orm/durable-sqlite";
+import { createChatRoomConfigService } from "./chat-room-config";
 import { createChatRoomMemberService } from "./chat-room-member";
 import { createChatRoomMessageService } from "./chat-room-message";
-import { createChatRoomConfigService } from "./chat-room-config";
 
 export function createChatRoomDbServices(
 	db: DrizzleSqliteDODatabase,

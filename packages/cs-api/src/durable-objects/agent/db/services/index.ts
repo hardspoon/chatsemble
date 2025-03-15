@@ -1,8 +1,8 @@
 // packages/cs-api/src/durable-objects/agent/agentDbOperations.ts
 import type { DrizzleSqliteDODatabase } from "drizzle-orm/durable-sqlite";
-import { createAgentConfigService } from "./agent-config";
 import { createAgentChatRoomService } from "./agent-chat-room";
 import { createAgentChatRoomQueueService } from "./agent-chat-room-queue";
+import { createAgentConfigService } from "./agent-config";
 
 export function createAgentDbServices(
 	db: DrizzleSqliteDODatabase,

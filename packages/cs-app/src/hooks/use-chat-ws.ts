@@ -243,7 +243,10 @@ export function useChatWS({ roomId, threadId, user }: UseChatWSProps) {
 						break;
 					}
 					case "chat-init-response": {
-						console.log("chat-init-response", JSON.parse(JSON.stringify(wsMessage)));
+						console.log(
+							"chat-init-response",
+							JSON.parse(JSON.stringify(wsMessage)),
+						);
 						dispatch({ type: "SET_CONNECTION_STATUS", status: "ready" });
 						dispatch({
 							type: "SET_TOP_LEVEL_MESSAGES",
