@@ -3,10 +3,10 @@
 import { ChatContent } from "@/components/chat/chat-main/chat-content";
 import { ChatHeader } from "@/components/chat/chat-main/chat-header";
 import { ChatWsProvider } from "@/components/chat/chat-main/chat-ws-provider";
-import { SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
-import type { User } from "better-auth";
 import { ChatRoomThreadSidebar } from "@/components/chat/chat-sidebar/chat-room-thread-sidebar";
+import { SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { SidebarRightProvider } from "@/components/ui/sidebar-right";
+import type { User } from "better-auth";
 import { ChatParamsProvider, useChatParams } from "./chat-params-provider";
 
 export function Chat({ user }: { user: User }) {

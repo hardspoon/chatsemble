@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/button";
 import { MarkdownContent } from "@/components/ui/markdown-content";
 import {
 	Tooltip,
@@ -9,7 +10,6 @@ import { cn } from "@/lib/utils";
 import { type VariantProps, cva } from "class-variance-authority";
 import { SparklesIcon, UserIcon } from "lucide-react";
 import React, { type ReactNode } from "react";
-import { Button } from "@/components/ui/button";
 import { Card } from "./card";
 
 const chatMessageVariants = cva("flex gap-4 w-full", {
