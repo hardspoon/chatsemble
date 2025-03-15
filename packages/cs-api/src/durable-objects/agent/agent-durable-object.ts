@@ -19,14 +19,10 @@ import {
 	shouldRespondTools,
 } from "../../lib/ai/prompts/agent-prompt";
 import migrations from "./db/migrations/migrations";
-import {
-	agentChatRoom,
-	agentChatRoomNotification,
-	agentConfig,
-} from "./db/schema";
-import type { AgentChatRoomNotification } from "./types";
+import { agentChatRoom, agentChatRoomQueue, agentConfig } from "./db/schema";
+import type { AgentChatRoomQueueItem } from "./types";
 
-const ALARM_TIME_IN_MS = 5 * 1000; // Standard wait time for batching messages
+const ALARM_TIME_IN_MS = 3 * 1000; // Standard wait time for batching messages
 
 export class AgentDurableObject extends DurableObject<Env> {
 	storage: DurableObjectStorage;
@@ -42,29 +38,29 @@ export class AgentDurableObject extends DurableObject<Env> {
 		migrate(this.db, migrations);
 	}
 
-	async receiveNotification({
+	async receiveMessage({
 		chatRoomId,
-		threadId,
+		message,
 	}: {
 		chatRoomId: string;
-		threadId: number | null;
+		message: ChatRoomMessage;
 	}) {
 		await this.ensureChatRoomExists(chatRoomId);
 
-		const notification = await this.getChatRoomNotification(
+		const queueItem = await this.getChatRoomQueueItem(
 			chatRoomId,
-			threadId,
+			message.threadId,
 		);
 
 		const now = Date.now();
-		const pastProcessAt = notification?.processAt;
+		const pastProcessAt = queueItem?.processAt;
 
-		if (!notification || !pastProcessAt || pastProcessAt < now) {
+		if (!queueItem || !pastProcessAt || pastProcessAt < now) {
 			const processAt = now + ALARM_TIME_IN_MS;
 
-			await this.createOrUpdateChatRoomNotification({
+			await this.createOrUpdateChatRoomQueueItem({
 				chatRoomId,
-				threadId,
+				threadId: message.threadId,
 				processAt,
 			});
 
@@ -78,10 +74,10 @@ export class AgentDurableObject extends DurableObject<Env> {
 		if (!currentAlarm) {
 			const nextProcessingResult = await this.db
 				.select({
-					minProcessAt: sql<number>`MIN(${agentChatRoomNotification.processAt})`,
+					minProcessAt: sql<number>`MIN(${agentChatRoomQueue.processAt})`,
 				})
-				.from(agentChatRoomNotification)
-				.where(isNotNull(agentChatRoomNotification.processAt))
+				.from(agentChatRoomQueue)
+				.where(isNotNull(agentChatRoomQueue.processAt))
 				.get();
 
 			const earliestProcessAt = nextProcessingResult?.minProcessAt;
@@ -95,38 +91,31 @@ export class AgentDurableObject extends DurableObject<Env> {
 	async alarm() {
 		const currentTime = Date.now();
 
-		const notificationsToProcess =
-			await this.getChatRoomNotificationsToProcess(currentTime);
+		const queueItemsToProcess =
+			await this.getChatRoomQueueItemsToProcess(currentTime);
 
-		const processingPromises = notificationsToProcess.map(
-			async (notification) => {
-				try {
-					await this.processNewMessages(notification);
-				} catch (error) {
-					console.error(
-						`Error processing notification ${notification.id}:`,
-						error,
-					);
-				}
-			},
-		);
+		const processingPromises = queueItemsToProcess.map(async (queueItem) => {
+			try {
+				await this.processNewMessages(queueItem);
+			} catch (error) {
+				console.error(`Error processing queue item ${queueItem.id}:`, error);
+			}
+		});
 
 		await Promise.all(processingPromises);
 		await this.setChatRoomCheckAlarm();
 	}
 
-	private async processNewMessages(
-		chatRoomNotification: AgentChatRoomNotification,
-	) {
+	private async processNewMessages(chatRoomQueueItem: AgentChatRoomQueueItem) {
 		const messageResult = await this.ctx.blockConcurrencyWhile(async () => {
 			const messageWithContext = await this.gatherMessagesWithContext(
-				chatRoomNotification.roomId,
+				chatRoomQueueItem.roomId,
 				{
-					threadId: chatRoomNotification.threadId,
-					lastProcessedId: chatRoomNotification.lastProcessedId,
+					threadId: chatRoomQueueItem.threadId,
+					lastProcessedId: chatRoomQueueItem.lastProcessedId,
 				},
 			);
-			await this.clearChatRoomNotificationProcessAt(chatRoomNotification.id);
+			await this.clearChatRoomQueueProcessAt(chatRoomQueueItem.id);
 
 			return messageWithContext;
 		});
@@ -148,10 +137,10 @@ export class AgentDurableObject extends DurableObject<Env> {
 			if (responseText) {
 				const responseMessage = this.prepareResponseMessage({
 					content: responseText,
-					threadId: chatRoomNotification.threadId,
+					threadId: chatRoomQueueItem.threadId,
 				});
 
-				await this.sendResponse(chatRoomNotification.roomId, responseMessage);
+				await this.sendResponse(chatRoomQueueItem.roomId, responseMessage);
 			}
 		}
 
@@ -160,9 +149,8 @@ export class AgentDurableObject extends DurableObject<Env> {
 		);
 
 		if (highestMessageId > 0) {
-			// Only update lastProcessedId, never clear processAt
-			await this.updateChatRoomNotificationLastProcessedId(
-				chatRoomNotification.id,
+			await this.updateChatRoomQueueLastProcessedId(
+				chatRoomQueueItem.id,
 				highestMessageId,
 			);
 		}
@@ -302,14 +290,14 @@ export class AgentDurableObject extends DurableObject<Env> {
 		};
 	}
 
-	private getChatRoomNotificationId(
+	private getChatRoomQueueItemId(
 		chatRoomId: string,
 		threadId: number | null,
 	): string {
 		return threadId === null ? `${chatRoomId}:` : `${chatRoomId}:${threadId}`;
 	}
 
-	private async createOrUpdateChatRoomNotification({
+	private async createOrUpdateChatRoomQueueItem({
 		chatRoomId,
 		threadId,
 		processAt,
@@ -318,66 +306,65 @@ export class AgentDurableObject extends DurableObject<Env> {
 		threadId: number | null;
 		processAt: number;
 	}) {
-		const notificationId = this.getChatRoomNotificationId(chatRoomId, threadId);
+		const queueItemId = this.getChatRoomQueueItemId(chatRoomId, threadId);
 
 		await this.db
-			.insert(agentChatRoomNotification)
+			.insert(agentChatRoomQueue)
 			.values({
-				id: notificationId,
+				id: queueItemId,
 				roomId: chatRoomId,
 				threadId: threadId,
 				processAt: processAt,
 			})
 			.onConflictDoUpdate({
-				target: [agentChatRoomNotification.id],
+				target: [agentChatRoomQueue.id],
 				set: {
 					processAt: processAt,
 				},
 			});
 	}
 
-	private async clearChatRoomNotificationProcessAt(notificationId: string) {
+	private async clearChatRoomQueueProcessAt(queueItemId: string) {
 		await this.db
-			.update(agentChatRoomNotification)
+			.update(agentChatRoomQueue)
 			.set({ processAt: null })
-			.where(eq(agentChatRoomNotification.id, notificationId));
+			.where(eq(agentChatRoomQueue.id, queueItemId));
 	}
 
-	private async updateChatRoomNotificationLastProcessedId(
-		notificationId: string,
+	private async updateChatRoomQueueLastProcessedId(
+		queueItemId: string,
 		lastProcessedId: number,
 	) {
 		await this.db
-			.update(agentChatRoomNotification)
+			.update(agentChatRoomQueue)
 			.set({
 				lastProcessedId: lastProcessedId,
 			})
-			.where(eq(agentChatRoomNotification.id, notificationId));
+			.where(eq(agentChatRoomQueue.id, queueItemId));
 	}
 
-	private async getChatRoomNotificationsToProcess(currentTime: number) {
+	private async getChatRoomQueueItemsToProcess(currentTime: number) {
 		return this.db
 			.select()
-			.from(agentChatRoomNotification)
+			.from(agentChatRoomQueue)
 			.where(
 				and(
-					lte(agentChatRoomNotification.processAt, currentTime),
-					isNotNull(agentChatRoomNotification.processAt),
+					lte(agentChatRoomQueue.processAt, currentTime),
+					isNotNull(agentChatRoomQueue.processAt),
 				),
 			)
 			.all();
 	}
 
-	private async getChatRoomNotification(
+	private async getChatRoomQueueItem(
 		chatRoomId: string,
 		threadId: number | null,
 	) {
-		const notificationId = this.getChatRoomNotificationId(chatRoomId, threadId);
-
+		const queueItemId = this.getChatRoomQueueItemId(chatRoomId, threadId);
 		return this.db
 			.select()
-			.from(agentChatRoomNotification)
-			.where(eq(agentChatRoomNotification.id, notificationId))
+			.from(agentChatRoomQueue)
+			.where(eq(agentChatRoomQueue.id, queueItemId))
 			.get();
 	}
 
@@ -471,8 +458,8 @@ export class AgentDurableObject extends DurableObject<Env> {
 
 	async deleteChatRoom(id: string) {
 		await this.db
-			.delete(agentChatRoomNotification)
-			.where(eq(agentChatRoomNotification.roomId, id));
+			.delete(agentChatRoomQueue)
+			.where(eq(agentChatRoomQueue.roomId, id));
 		await this.db.delete(agentChatRoom).where(eq(agentChatRoom.id, id));
 	}
 

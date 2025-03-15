@@ -206,9 +206,9 @@ export class ChatDurableObject extends DurableObject<Env> {
 					this.env.AGENT_DURABLE_OBJECT.idFromString(agent.id),
 				);
 
-				await agentDO.receiveNotification({
+				await agentDO.receiveMessage({
 					chatRoomId: this.ctx.id.toString(),
-					threadId: chatRoomMessage.threadId,
+					message: chatRoomMessage,
 				});
 			}
 		}

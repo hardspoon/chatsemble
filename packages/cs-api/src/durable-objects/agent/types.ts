@@ -1,4 +1,3 @@
-import type { agentChatRoomNotification } from "./db/schema";
+import type { agentChatRoomQueue } from "./db/schema";
 
-export type AgentChatRoomNotification =
-	typeof agentChatRoomNotification.$inferSelect;
+export type AgentChatRoomQueueItem = typeof agentChatRoomQueue.$inferSelect;

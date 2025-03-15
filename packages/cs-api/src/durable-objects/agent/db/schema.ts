@@ -18,18 +18,13 @@ export const agentChatRoom = sqliteTable("agent_chat_room", {
 });
 
 // Table to track notifications for both top-level messages and thread messages
-export const agentChatRoomNotification = sqliteTable(
-	"agent_chat_room_notification",
-	{
-		// Composite primary key of roomId + threadId (null for top-level messages)
-		id: text("id").primaryKey(), // Format: "roomId:threadId" or "roomId:" for top-level
-		roomId: text("room_id").notNull(), // References agentChatRoom.id
-		threadId: integer("thread_id"), // null means top-level messages
-		lastProcessedId: integer("last_processed_id"),
-		// Time when the messages for this room/thread should be processed by the agent
-		processAt: integer("process_at"),
-		createdAt: integer("created_at")
-			.notNull()
-			.default(sql`(unixepoch() * 1000)`),
-	},
-);
+export const agentChatRoomQueue = sqliteTable("agent_chat_room_queue", {
+	// Composite primary key of roomId + threadId (null for top-level messages)
+	id: text("id").primaryKey(), // Format: "roomId:threadId" or "roomId:" for top-level
+	roomId: text("room_id").notNull(), // References agentChatRoom.id
+	threadId: integer("thread_id"), // null means top-level messages
+	lastProcessedId: integer("last_processed_id"),
+	// Time when the messages for this room/thread should be processed by the agent
+	processAt: integer("process_at"),
+	createdAt: integer("created_at").notNull().default(sql`(unixepoch() * 1000)`),
+});
