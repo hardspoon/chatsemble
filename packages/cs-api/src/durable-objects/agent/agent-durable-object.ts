@@ -6,7 +6,7 @@ import type { ChatRoomMessage, ChatRoomMessagePartial } from "@/cs-shared";
 //import { createOpenAI } from "@ai-sdk/openai";
 import { createGroq } from "@ai-sdk/groq";
 import { type CoreMessage, generateText } from "ai";
-import { and, eq, gt, isNotNull, lte, sql } from "drizzle-orm";
+import { and, eq, isNotNull, lte, sql } from "drizzle-orm";
 import {
 	type DrizzleSqliteDODatabase,
 	drizzle,
@@ -24,29 +24,9 @@ import {
 	agentChatRoomNotification,
 	agentConfig,
 } from "./db/schema";
+import type { AgentChatRoomNotification } from "./types";
 
-/**
- * Agent message batching strategy:
- *
- * 1. When a notification arrives, we set a processAt time (current time + 5 seconds)
- *    if one of these conditions is met:
- *    - This is the first notification (notifications = 0)
- *    - There is no existing processAt time
- *    - The existing processAt time is too far in the future (> 15 seconds from now)
- *
- * 2. If there's already a processAt time set and none of the above conditions are met,
- *    we keep the existing processAt time. This prevents indefinite delays when
- *    messages continuously arrive.
- *
- * 3. Each chatroom/thread has its own independent processAt time, allowing for
- *    separate batching per conversation context.
- *
- * This approach balances message batching with guaranteed response times.
- */
-
-// TODO: Test more with different values, currently anything above 9 seconds is not working
-const ALARM_TIME_IN_MS = 15 * 1000; // Standard wait time for batching messages
-const MAX_ALARM_TIME_IN_MS = 25 * 1000; // Maximum time a message can wait before processing
+const ALARM_TIME_IN_MS = 5 * 1000; // Standard wait time for batching messages
 
 export class AgentDurableObject extends DurableObject<Env> {
 	storage: DurableObjectStorage;
@@ -56,7 +36,6 @@ export class AgentDurableObject extends DurableObject<Env> {
 		super(ctx, env);
 		this.storage = ctx.storage;
 		this.db = drizzle(this.storage, { logger: false });
-		//this.storage.deleteAlarm();
 	}
 
 	async migrate() {
@@ -70,13 +49,10 @@ export class AgentDurableObject extends DurableObject<Env> {
 		chatRoomId: string;
 		threadId: number | null;
 	}) {
-		// Ensure the chat room exists in agentChatRoom
 		await this.ensureChatRoomExists(chatRoomId);
 
-		// Create a unique notification ID by combining roomId and threadId
 		const notificationId = this.getChatRoomNotificationId(chatRoomId, threadId);
 
-		// Try to get existing notification record
 		const notification = await this.db
 			.select()
 			.from(agentChatRoomNotification)
@@ -84,57 +60,54 @@ export class AgentDurableObject extends DurableObject<Env> {
 			.get();
 
 		const now = Date.now();
-		let processAt = notification?.processAt;
-		const newNotifications = (notification?.notifications || 0) + 1;
+		const pastProcessAt = notification?.processAt;
 
-		// Determine if we need to update the processAt time
-		if (
-			!notification ||
-			notification.notifications === 0 ||
-			!processAt ||
-			processAt > now + MAX_ALARM_TIME_IN_MS
-		) {
-			// Set standard delay for new notification sequences
-			processAt = now + ALARM_TIME_IN_MS;
-		}
+		if (!notification || !pastProcessAt || pastProcessAt < now) {
+			const processAt = now + ALARM_TIME_IN_MS;
 
-		// Upsert the notification record
-		await this.db
-			.insert(agentChatRoomNotification)
-			.values({
-				id: notificationId,
-				roomId: chatRoomId,
-				threadId: threadId,
-				notifications: newNotifications,
-				processAt: processAt,
-			})
-			.onConflictDoUpdate({
-				target: [agentChatRoomNotification.id],
-				set: {
-					notifications: newNotifications,
+			await this.db
+				.insert(agentChatRoomNotification)
+				.values({
+					id: notificationId,
+					roomId: chatRoomId,
+					threadId: threadId,
 					processAt: processAt,
-				},
-			});
+				})
+				.onConflictDoUpdate({
+					target: [agentChatRoomNotification.id],
+					set: {
+						processAt: processAt,
+					},
+				});
 
-		await this.setChatRoomCheckAlarm();
+			// Always check if we need to update the alarm after adding/updating a notification
+			await this.setChatRoomCheckAlarm();
+		}
 	}
 
 	private async setChatRoomCheckAlarm() {
-		// Find the earliest processAt time from all notifications
-		const nextProcessingResult = await this.db
-			.select({
-				minProcessAt: sql<number>`MIN(${agentChatRoomNotification.processAt})`,
-			})
-			.from(agentChatRoomNotification)
-			.where(isNotNull(agentChatRoomNotification.processAt))
-			.get();
+		// Check if there's already an alarm set
+		const currentAlarm = await this.storage.getAlarm();
 
-		// Cancel any existing alarm
-		await this.storage.deleteAlarm();
+		// Only set a new alarm if there isn't one already
+		if (!currentAlarm) {
+			// Find the earliest processAt time from all notifications
+			const nextProcessingResult = await this.db
+				.select({
+					minProcessAt: sql<number>`MIN(${agentChatRoomNotification.processAt})`,
+				})
+				.from(agentChatRoomNotification)
+				.where(isNotNull(agentChatRoomNotification.processAt))
+				.get();
 
-		// Set new alarm if there are notifications to process
-		if (nextProcessingResult?.minProcessAt) {
-			this.storage.setAlarm(nextProcessingResult.minProcessAt);
+			const earliestProcessAt = nextProcessingResult?.minProcessAt;
+
+			if (earliestProcessAt) {
+				console.log(
+					`Setting new alarm for ${new Date(earliestProcessAt).toISOString()}`,
+				);
+				this.storage.setAlarm(earliestProcessAt);
+			}
 		}
 	}
 
@@ -148,7 +121,6 @@ export class AgentDurableObject extends DurableObject<Env> {
 				and(
 					lte(agentChatRoomNotification.processAt, currentTime),
 					isNotNull(agentChatRoomNotification.processAt),
-					gt(agentChatRoomNotification.notifications, 0),
 				),
 			)
 			.all();
@@ -156,55 +128,68 @@ export class AgentDurableObject extends DurableObject<Env> {
 		// Process each notification
 		const processingPromises = notificationsToProcess.map(
 			async (notification) => {
-				await this.triggerGeneration(
-					notification.roomId,
-					notification.threadId,
-					notification.notifications,
-				);
+				try {
+					await this.triggerGeneration(notification);
+				} catch (error) {
+					console.error(
+						`Error processing notification ${notification.id}:`,
+						error,
+					);
+				}
 			},
 		);
 
 		await Promise.all(processingPromises);
 
-		// Set up the next alarm for any remaining notifications
 		await this.setChatRoomCheckAlarm();
 	}
 
 	private async triggerGeneration(
-		chatRoomId: string,
-		threadId: number | null,
-		notifications: number,
+		chatRoomNotification: AgentChatRoomNotification,
 	) {
-		const messages = await this.ctx.blockConcurrencyWhile(async () => {
-			const messagesToGet = notifications + 10;
-			const messages = await this.getChatRoomMessages(chatRoomId, {
-				limit: messagesToGet,
-				threadId: threadId,
-			});
-
-			// Reset the notification after processing
-			const notificationId = this.getChatRoomNotificationId(
-				chatRoomId,
-				threadId,
+		const messageResult = await this.ctx.blockConcurrencyWhile(async () => {
+			const messageWithContext = await this.getChatRoomMessagesWithContext(
+				chatRoomNotification.roomId,
+				{
+					threadId: chatRoomNotification.threadId,
+					lastProcessedId: chatRoomNotification.lastProcessedId,
+					contextSize: 10,
+				},
 			);
 			await this.db
 				.update(agentChatRoomNotification)
-				.set({
-					processAt: null,
-					notifications: 0,
-				})
-				.where(eq(agentChatRoomNotification.id, notificationId));
+				.set({ processAt: null })
+				.where(eq(agentChatRoomNotification.id, chatRoomNotification.id));
 
-			return messages;
+			return messageWithContext;
 		});
 
-		const aiMessage = await this.generateChatRoomMessagePartial(
-			messages,
-			threadId,
-		);
+		if (messageResult.newMessages.length === 0) {
+			return;
+		}
+
+		const aiMessage = await this.generateChatRoomMessagePartial({
+			contextMessages: messageResult.contextMessages,
+			newMessages: messageResult.newMessages,
+			threadId: chatRoomNotification.threadId,
+		});
 
 		if (aiMessage) {
-			await this.sendChatRoomMessage(chatRoomId, aiMessage);
+			await this.sendChatRoomMessage(chatRoomNotification.roomId, aiMessage);
+		}
+
+		const highestMessageId = Math.max(
+			...messageResult.newMessages.map((msg) => msg.id),
+		);
+
+		if (highestMessageId > 0) {
+			// Only update lastProcessedId, never clear processAt
+			await this.db
+				.update(agentChatRoomNotification)
+				.set({
+					lastProcessedId: highestMessageId,
+				})
+				.where(eq(agentChatRoomNotification.id, chatRoomNotification.id));
 		}
 	}
 
@@ -221,7 +206,7 @@ export class AgentDurableObject extends DurableObject<Env> {
 			system: getAiCheckerPrompt({
 				agentConfig,
 			}),
-			messages,
+			messages, // TODO: Change to enum
 			tools: shouldRespondTools,
 			toolChoice: "required",
 		});
@@ -256,24 +241,29 @@ export class AgentDurableObject extends DurableObject<Env> {
 		return result.text;
 	}
 
-	private async generateChatRoomMessagePartial(
-		messages: ChatRoomMessage[],
-		threadId: number | null,
-	): Promise<ChatRoomMessagePartial | null> {
+	private async generateChatRoomMessagePartial({
+		contextMessages,
+		newMessages,
+		threadId,
+	}: {
+		contextMessages: ChatRoomMessage[];
+		newMessages: ChatRoomMessage[];
+		threadId: number | null;
+	}): Promise<ChatRoomMessagePartial | null> {
 		const agentConfig = await this.getAgentConfig();
 
 		if (!agentConfig) {
 			throw new Error("Agent config not found");
 		}
-		const aiMessages = chatRoomMessagesToAiMessages(messages);
 
-		// TODO: Ensure mentions are only within the notification messages and not older ones
-		const hasMentionsOfAgent = messages.some((message) =>
+		// Check for mentions only in NEW messages
+		const hasMentionsOfAgent = newMessages.some((message) =>
 			message.mentions.some((mention) => mention.id === agentConfig.id),
 		);
 
 		if (!hasMentionsOfAgent) {
-			// TODO: The prompt for this should be better it currently answers when it shouldn't
+			// Only check if we should respond when there's no direct mention
+			const aiMessages = chatRoomMessagesToAiMessages(newMessages); // TODO: Change how users or agents are encoded
 			const shouldRespond = await this.shouldAiRespond(aiMessages);
 
 			if (!shouldRespond) {
@@ -283,6 +273,10 @@ export class AgentDurableObject extends DurableObject<Env> {
 		}
 
 		console.log("shouldRespond", true);
+		const aiMessages = chatRoomMessagesToAiMessages([
+			...contextMessages,
+			...newMessages,
+		]);
 
 		const result = await this.generateAiResponse(aiMessages);
 
@@ -346,32 +340,67 @@ export class AgentDurableObject extends DurableObject<Env> {
 		});
 	}
 
-	async getChatRoomMessages(
+	async getChatRoomMessagesWithContext(
 		chatRoomId: string,
-		options: {
-			limit?: number;
-			threadId?: number | null;
+		{
+			threadId,
+			lastProcessedId,
+			contextSize = 10, // Default context size
+		}: {
+			threadId: number | null;
+			lastProcessedId: number | null;
+			contextSize?: number;
 		},
 	) {
 		const chatRoomDoId = this.env.CHAT_DURABLE_OBJECT.idFromString(chatRoomId);
-
 		const chatRoomDO = this.env.CHAT_DURABLE_OBJECT.get(chatRoomDoId);
 
-		const messages = await chatRoomDO.getMessages({
-			limit: options.limit,
-			threadId: options.threadId,
-		});
+		// Get new messages (messages after lastProcessedId)
+		const newMessages = lastProcessedId
+			? await chatRoomDO.getMessages({
+					threadId,
+					afterId: lastProcessedId,
+					limit: 50, // Reasonable limit for new messages
+				})
+			: await chatRoomDO.getMessages({
+					threadId,
+					limit: 50,
+				});
 
-		if (options.threadId) {
-			const threadMessage = await chatRoomDO.getMessageById(options.threadId);
-			if (!threadMessage) {
-				throw new Error("Thread message not found");
-			}
-
-			return [threadMessage, ...messages];
+		// Get context messages (messages before and including lastProcessedId)
+		let contextMessages: ChatRoomMessage[] = [];
+		if (lastProcessedId && contextSize > 0) {
+			contextMessages = await chatRoomDO.getMessages({
+				threadId,
+				beforeId: lastProcessedId,
+				limit: contextSize,
+			});
 		}
 
-		return messages;
+		// If we have a thread, ensure the thread message is included
+		if (threadId) {
+			const threadMessage = await chatRoomDO.getMessageById(threadId);
+			if (threadMessage) {
+				// Check if the thread message is already in either array
+				const isThreadInNewMessages = newMessages.some(
+					(msg) => msg.id === threadMessage.id,
+				);
+				const isThreadInContextMessages = contextMessages.some(
+					(msg) => msg.id === threadMessage.id,
+				);
+
+				// Add to context if not already present
+				if (!isThreadInNewMessages && !isThreadInContextMessages) {
+					contextMessages = [threadMessage, ...contextMessages];
+				}
+			}
+		}
+
+		return {
+			newMessages,
+			contextMessages,
+			allMessages: [...contextMessages, ...newMessages], // For convenience
+		};
 	}
 
 	async getChatRooms() {
@@ -417,7 +446,9 @@ export class AgentDurableObject extends DurableObject<Env> {
 	}
 
 	async deleteChatRoom(id: string) {
-		await this.db.delete(agentChatRoomNotification).where(eq(agentChatRoomNotification.roomId, id));
+		await this.db
+			.delete(agentChatRoomNotification)
+			.where(eq(agentChatRoomNotification.roomId, id));
 		await this.db.delete(agentChatRoom).where(eq(agentChatRoom.id, id));
 	}
 

@@ -1,5 +1,5 @@
 import journal from './meta/_journal.json';
-import m0000 from './0000_common_expediter.sql';
+import m0000 from './0000_petite_sandman.sql';
 
   export default {
     journal,
