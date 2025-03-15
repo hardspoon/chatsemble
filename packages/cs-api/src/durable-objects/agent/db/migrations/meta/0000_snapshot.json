@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "429b1dc9-ccb9-4367-ac9b-c8d70db6d7ac",
+  "id": "987619fa-2ba7-4dd1-af46-cd4ab539413a",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "agent_chat_room": {
@@ -43,8 +43,8 @@
       "uniqueConstraints": {},
       "checkConstraints": {}
     },
-    "agent_chat_room_notification": {
-      "name": "agent_chat_room_notification",
+    "agent_chat_room_queue": {
+      "name": "agent_chat_room_queue",
       "columns": {
         "id": {
           "name": "id",
