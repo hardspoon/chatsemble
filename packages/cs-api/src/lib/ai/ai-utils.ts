@@ -10,6 +10,7 @@ export function chatRoomMessagesToAgentMessages(
 			user: {
 				id: msg.user.id,
 				name: msg.user.name,
+				type: msg.user.type,
 			},
 		};
 	});

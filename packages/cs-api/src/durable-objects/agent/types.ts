@@ -9,5 +9,6 @@ export type AgentMessage = {
 	user: {
 		id: ChatRoomMessage["user"]["id"];
 		name: ChatRoomMessage["user"]["name"];
+		type: ChatRoomMessage["user"]["type"];
 	};
 };

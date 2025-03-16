@@ -16,7 +16,7 @@ export function createChatRoomMessageService(db: DrizzleSqliteDODatabase) {
 				createdAt: chatMessage.createdAt,
 				metadata: chatMessage.metadata,
 				threadId: chatMessage.threadId,
-				user: {
+				user: { // TODO: Change to be member
 					id: chatRoomMember.id,
 					roomId: chatRoomMember.roomId,
 					role: chatRoomMember.role,
