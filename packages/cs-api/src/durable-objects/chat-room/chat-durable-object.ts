@@ -36,7 +36,7 @@ export class ChatDurableObject extends DurableObject<Env> {
 	}
 
 	async migrate() {
-		migrate(this.db, migrations);
+		migrate(this.db, migrations); // TODO: Check when to migrate for later changes
 	}
 
 	async delete() {
@@ -210,6 +210,8 @@ export class ChatDurableObject extends DurableObject<Env> {
 				});
 			}
 		}
+
+		return chatRoomMessage;
 	}
 
 	async getMessageById(id: number): Promise<ChatRoomMessage | undefined> {

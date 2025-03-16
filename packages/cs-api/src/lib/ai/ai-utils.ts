@@ -1,21 +1,16 @@
 import type { ChatRoomMessage } from "@/cs-shared";
-import type { CoreMessage } from "ai";
+import type { AgentMessage } from "../../durable-objects/agent/types";
 
-export function chatRoomMessagesToAiMessages(
+export function chatRoomMessagesToAgentMessages(
 	messages: ChatRoomMessage[],
-): CoreMessage[] {
-	const aiMessages: CoreMessage[] = messages.map((msg) => {
-		if (msg.user.type === "agent") {
-			return {
-				role: "assistant",
-				//content: `(assistant: ${msg.user.name}): ${msg.content}`,
-				content: msg.content,
-			};
-		}
-
+): AgentMessage[] {
+	const aiMessages: AgentMessage[] = messages.map((msg) => {
 		return {
-			role: "user",
-			content: `(user: ${msg.user.name}): ${msg.content}`,
+			content: msg.content,
+			user: {
+				id: msg.user.id,
+				name: msg.user.name,
+			},
 		};
 	});
 
