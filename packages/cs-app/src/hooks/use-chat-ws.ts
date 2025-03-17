@@ -51,13 +51,8 @@ const initialChatState: ChatState = {
 // Define action types
 type ChatAction =
 	| { type: "SET_CONNECTION_STATUS"; status: ChatState["connectionStatus"] }
-	| { type: "ADD_TOP_LEVEL_MESSAGE"; message: ChatRoomMessage }
 	| { type: "SET_TOP_LEVEL_MESSAGES"; messages: ChatRoomMessage[] }
-	| {
-			type: "SET_TOP_LEVEL_MESSAGES_STATUS";
-			status: "idle" | "loading" | "success" | "error";
-	  }
-	| { type: "ADD_THREAD_MESSAGE"; message: ChatRoomMessage }
+	| { type: "ADD_MESSAGE"; addAsNew?: boolean; message: ChatRoomMessage }
 	| {
 			type: "SET_THREAD_MESSAGES";
 			threadMessage: ChatRoomMessage;
@@ -82,34 +77,6 @@ function chatReducer(state: ChatState, action: ChatAction): ChatState {
 		case "SET_CONNECTION_STATUS":
 			return { ...state, connectionStatus: action.status };
 
-		case "ADD_TOP_LEVEL_MESSAGE": {
-			const existingOptimisticMessage = state.topLevelMessages.data.some(
-				(message) => message.id === action.message.metadata.optimisticData?.id,
-			);
-
-			if (existingOptimisticMessage) {
-				return {
-					...state,
-					topLevelMessages: {
-						...state.topLevelMessages,
-						data: state.topLevelMessages.data.map((message) =>
-							message.id === action.message.metadata.optimisticData?.id
-								? action.message
-								: message,
-						),
-					},
-				};
-			}
-
-			return {
-				...state,
-				topLevelMessages: {
-					...state.topLevelMessages,
-					data: [...state.topLevelMessages.data, action.message],
-				},
-			};
-		}
-
 		case "SET_TOP_LEVEL_MESSAGES":
 			return {
 				...state,
@@ -120,54 +87,59 @@ function chatReducer(state: ChatState, action: ChatAction): ChatState {
 				},
 			};
 
-		case "SET_TOP_LEVEL_MESSAGES_STATUS":
-			return {
-				...state,
-				topLevelMessages: {
-					...state.topLevelMessages,
-					status: action.status,
-				},
-			};
+		case "ADD_MESSAGE": {
+			const { message: newMessage, addAsNew = false } = action;
+			console.log("[ADD_MESSAGE] newMessage", newMessage);
 
-		case "ADD_THREAD_MESSAGE": {
-			// Check if this is an optimistic message that needs to be replaced
-			const existingOptimisticIndex = state.activeThread.messages.findIndex(
-				(message) => message.id === action.message.metadata.optimisticData?.id,
-			);
+			if (newMessage.threadId === null) {
+				// Top-level message
 
-			// Create updated thread messages array
-			let updatedThreadMessages: ChatRoomMessage[];
-			if (existingOptimisticIndex >= 0) {
-				// Replace the existing optimistic message
-				updatedThreadMessages = [...state.activeThread.messages];
-				updatedThreadMessages[existingOptimisticIndex] = action.message;
-			} else {
-				// Add new message
-				updatedThreadMessages = [
-					...state.activeThread.messages,
-					action.message,
-				];
+				const updatedMessages = updateMessageList({
+					messages: state.topLevelMessages.data,
+					newMessage,
+					addAsNew,
+				});
+				return {
+					...state,
+					topLevelMessages: {
+						...state.topLevelMessages,
+						data: updatedMessages,
+					},
+				};
 			}
-
-			return {
-				...state,
-				activeThread: {
-					...state.activeThread,
-					messages: updatedThreadMessages,
-				},
-			};
+			if (newMessage.threadId === state.activeThread.id) {
+				// Thread message for the active thread
+				const updatedThreadMessages = updateMessageList({
+					messages: state.activeThread.messages,
+					newMessage,
+					addAsNew,
+				});
+				return {
+					...state,
+					activeThread: {
+						...state.activeThread,
+						messages: updatedThreadMessages,
+					},
+				};
+			}
+			// If it's a thread message for a different thread, don't update
+			return state;
 		}
 
-		case "SET_THREAD_MESSAGES":
-			return {
-				...state,
-				activeThread: {
-					...state.activeThread,
-					threadMessage: action.threadMessage,
-					messages: action.messages,
-					status: "success",
-				},
-			};
+		case "SET_THREAD_MESSAGES": {
+			if (action.threadMessage.id === state.activeThread.id) {
+				return {
+					...state,
+					activeThread: {
+						...state.activeThread,
+						threadMessage: action.threadMessage,
+						messages: action.messages,
+						status: "success",
+					},
+				};
+			}
+			return state;
+		}
 
 		case "SET_ACTIVE_THREAD":
 			return {
@@ -203,6 +175,49 @@ function chatReducer(state: ChatState, action: ChatAction): ChatState {
 	}
 }
 
+function updateMessageList({
+	messages,
+	newMessage,
+	addAsNew,
+}: {
+	messages: ChatRoomMessage[];
+	newMessage: ChatRoomMessage;
+	addAsNew?: boolean;
+}): ChatRoomMessage[] {
+	if (addAsNew) {
+		return [...messages, newMessage];
+	}
+
+	const optimisticId = newMessage.metadata.optimisticData?.id;
+	if (optimisticId) {
+		const existingOptimisticIndex = messages.findIndex(
+			(message) => message.id === optimisticId,
+		);
+		if (existingOptimisticIndex >= 0) {
+			console.log("[updateMessageList] optimisticId", optimisticId);
+			const updatedMessages = [...messages];
+			updatedMessages[existingOptimisticIndex] = newMessage;
+			return updatedMessages;
+		}
+	}
+
+	const existingMessageIndex = messages.findIndex(
+		(message) => message.id === newMessage.id,
+	);
+	if (existingMessageIndex >= 0) {
+		console.log(
+			"[updateMessageList] existingMessageIndex",
+			existingMessageIndex,
+		);
+		const updatedMessages = [...messages];
+		updatedMessages[existingMessageIndex] = newMessage;
+		return updatedMessages;
+	}
+	console.log("[updateMessageList] newMessage", newMessage);
+
+	return [...messages, newMessage];
+}
+
 export interface UseChatWSProps {
 	roomId: string | null;
 	threadId: number | null;
@@ -224,11 +239,12 @@ export function useChatWS({ roomId, threadId, user }: UseChatWSProps) {
 				switch (wsMessage.type) {
 					case "message-broadcast": {
 						const newMessage = wsMessage.message;
+						console.log("[handleWebSocketMessage] newMessage", newMessage);
+						dispatch({
+							type: "ADD_MESSAGE",
+							message: newMessage,
+						});
 
-						// Determine if this is a top-level message or thread message
-						if (newMessage.threadId === null) {
-							dispatch({ type: "ADD_TOP_LEVEL_MESSAGE", message: newMessage });
-						}
 						break;
 					}
 					case "member-update": {
@@ -252,23 +268,13 @@ export function useChatWS({ roomId, threadId, user }: UseChatWSProps) {
 					}
 					case "thread-init-response": {
 						// Only update if this response is for the current active thread
-						if (wsMessage.threadId === activeThreadIdRef.current) {
-							dispatch({
-								type: "SET_THREAD_MESSAGES",
-								threadMessage: wsMessage.threadMessage,
-								messages: wsMessage.messages,
-							});
-						}
-						break;
-					}
-					case "thread-message-broadcast": {
-						// Only handle if it's for the current active thread
-						if (wsMessage.threadId === activeThreadIdRef.current) {
-							dispatch({
-								type: "ADD_THREAD_MESSAGE",
-								message: wsMessage.message,
-							});
-						}
+
+						dispatch({
+							type: "SET_THREAD_MESSAGES",
+							threadMessage: wsMessage.threadMessage,
+							messages: wsMessage.messages,
+						});
+
 						break;
 					}
 				}
@@ -454,15 +460,13 @@ export function useChatWS({ roomId, threadId, user }: UseChatWSProps) {
 				},
 			};
 
-			// Determine if this is a top-level message or thread message
-			if (threadId === null) {
-				dispatch({ type: "ADD_TOP_LEVEL_MESSAGE", message: newMessage });
-			} else {
-				dispatch({
-					type: "ADD_THREAD_MESSAGE",
-					message: newMessage,
-				});
-			}
+			console.log("[handleSubmit] newMessage", newMessage);
+
+			dispatch({
+				type: "ADD_MESSAGE",
+				addAsNew: true,
+				message: newMessage,
+			});
 		},
 		[roomId, sendWsMessage, user],
 	);

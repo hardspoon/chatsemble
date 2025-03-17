@@ -25,12 +25,6 @@ export type WsMessageThreadInitResponse = {
 	messages: ChatRoomMessage[];
 };
 
-export type WsMessageThreadBroadcast = {
-	type: "thread-message-broadcast";
-	threadId: number;
-	message: ChatRoomMessage;
-};
-
 export type WsChatIncomingMessage =
 	| WsMessageSend
 	| WsMessageChatInitRequest
@@ -38,6 +32,7 @@ export type WsChatIncomingMessage =
 
 export type WsMessageBroadcast = {
 	type: "message-broadcast";
+	threadId: number | null;
 	message: ChatRoomMessage;
 };
 
@@ -57,7 +52,6 @@ export type WsChatOutgoingMessage =
 	| WsMessageChatInitResponse
 	| WsMessageThreadInitResponse
 	| WsMemberUpdate
-	| WsMessageBroadcast
-	| WsMessageThreadBroadcast;
+	| WsMessageBroadcast;
 
 export type WsChatMessage = WsChatIncomingMessage | WsChatOutgoingMessage;
