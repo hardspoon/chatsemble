@@ -175,19 +175,11 @@ export class ChatDurableObject extends DurableObject<Env> {
 			},
 		});
 
-		if (chatRoomMessage.threadId === null) {
-			// Broadcast to all users
-			this.broadcastWebSocketMessage({
-				type: "message-broadcast",
-				message: chatRoomMessage,
-			});
-		} else {
-			this.broadcastWebSocketMessage({
-				type: "thread-message-broadcast",
-				threadId: chatRoomMessage.threadId,
-				message: chatRoomMessage,
-			});
-		}
+		this.broadcastWebSocketMessage({
+			type: "message-broadcast",
+			threadId: chatRoomMessage.threadId,
+			message: chatRoomMessage,
+		});
 
 		if (config?.notifyAgents) {
 			const agentMembers = await this.getMembers({
