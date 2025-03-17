@@ -12,6 +12,7 @@ import type {
 } from "@/cs-shared";
 import type { User } from "better-auth";
 import { useCallback, useEffect, useReducer, useRef } from "react";
+import { customAlphabet } from "nanoid";
 
 // Define the chat state interface with separate message collections
 interface ChatState {
@@ -418,7 +419,7 @@ export function useChatWS({ roomId, threadId, user }: UseChatWSProps) {
 			}
 
 			const newMessagePartial: ChatRoomMessagePartial = {
-				id: Date.now() + Math.random() * 10000,
+				id: Number(customAlphabet("0123456789", 20)()),
 				content: value.content,
 				mentions: value.mentions,
 				createdAt: Date.now(),

@@ -12,10 +12,10 @@
 		"db:generate:agent": "DRIZZLE_SCHEMA=./src/durable-objects/agent/db/schema.ts DRIZZLE_OUT=./src/durable-objects/agent/db/migrations drizzle-kit generate"
 	},
 	"dependencies": {
-		"@ai-sdk/groq": "^1.1.9",
-		"@ai-sdk/openai": "^1.1.13",
+		"@ai-sdk/groq": "^1.1.14",
+		"@ai-sdk/openai": "^1.2.5",
 		"@hono/zod-validator": "^0.4.2",
-		"ai": "^4.1.45",
+		"ai": "^4.1.61",
 		"better-auth": "^1.2.2",
 		"dotenv": "^16.4.7",
 		"drizzle-orm": "^0.39.3",
