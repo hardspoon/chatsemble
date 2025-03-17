@@ -63,10 +63,6 @@ type ChatAction =
 			threadId: number | null;
 			threadMessage: ChatRoomMessage | null;
 	  }
-	| {
-			type: "SET_ACTIVE_THREAD_STATUS";
-			status: "idle" | "loading" | "success" | "error";
-	  }
 	| { type: "SET_MEMBERS"; members: ChatRoomMember[] }
 	| { type: "SET_ROOM"; room: ChatRoom }
 	| { type: "RESET_STATE" };
@@ -77,21 +73,14 @@ function chatReducer(state: ChatState, action: ChatAction): ChatState {
 		case "SET_CONNECTION_STATUS":
 			return { ...state, connectionStatus: action.status };
 
-		case "SET_TOP_LEVEL_MESSAGES":
-			return {
-				...state,
-				topLevelMessages: {
-					...state.topLevelMessages,
-					data: action.messages,
-					status: "success", // Auto set to success when we have messages
-				},
-			};
-
 		case "ADD_MESSAGE": {
 			const { message: newMessage, addAsNew = false } = action;
 			console.log("[ADD_MESSAGE] newMessage", newMessage);
 
-			if (newMessage.threadId === null) {
+			if (
+				newMessage.threadId === null &&
+				state.topLevelMessages.status === "success"
+			) {
 				// Top-level message
 
 				const updatedMessages = updateMessageList({
@@ -107,7 +96,10 @@ function chatReducer(state: ChatState, action: ChatAction): ChatState {
 					},
 				};
 			}
-			if (newMessage.threadId === state.activeThread.id) {
+			if (
+				newMessage.threadId === state.activeThread.id &&
+				state.activeThread.status === "success"
+			) {
 				// Thread message for the active thread
 				const updatedThreadMessages = updateMessageList({
 					messages: state.activeThread.messages,
@@ -125,6 +117,16 @@ function chatReducer(state: ChatState, action: ChatAction): ChatState {
 			// If it's a thread message for a different thread, don't update
 			return state;
 		}
+
+		case "SET_TOP_LEVEL_MESSAGES":
+			return {
+				...state,
+				topLevelMessages: {
+					...state.topLevelMessages,
+					data: action.messages,
+					status: "success",
+				},
+			};
 
 		case "SET_THREAD_MESSAGES": {
 			if (action.threadMessage.id === state.activeThread.id) {
@@ -149,15 +151,6 @@ function chatReducer(state: ChatState, action: ChatAction): ChatState {
 					threadMessage: action.threadMessage,
 					messages: [], // Clear messages when changing threads
 					status: action.threadId !== null ? "loading" : "idle",
-				},
-			};
-
-		case "SET_ACTIVE_THREAD_STATUS":
-			return {
-				...state,
-				activeThread: {
-					...state.activeThread,
-					status: action.status,
 				},
 			};
 

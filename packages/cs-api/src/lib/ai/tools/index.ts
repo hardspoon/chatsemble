@@ -1,6 +1,10 @@
 import { tool } from "ai";
+import { customAlphabet } from "nanoid";
 import { z } from "zod";
-import type { ChatRoomMessage } from "../../../../../cs-shared/src/types/chat";
+import type {
+	ChatRoomMessage,
+	ChatRoomMessagePartial,
+} from "../../../../../cs-shared/src/types/chat";
 
 export const searchInformationTool = tool({
 	description:
@@ -21,11 +25,9 @@ export const createMessageThreadTool = ({
 	onNewThread,
 }: {
 	onMessage: ({
-		message,
-		threadId,
+		newMessagePartial,
 	}: {
-		message: string;
-		threadId: number | null;
+		newMessagePartial: ChatRoomMessagePartial;
 	}) => Promise<ChatRoomMessage>;
 	onNewThread: (newThreadId: number) => void;
 }) =>
@@ -37,8 +39,13 @@ export const createMessageThreadTool = ({
 		}),
 		execute: async ({ message }) => {
 			const { id: newThreadId } = await onMessage({
-				message,
-				threadId: null,
+				newMessagePartial: {
+					id: Number(customAlphabet("0123456789", 20)()),
+					content: message,
+					mentions: [],
+					createdAt: Date.now(),
+					threadId: null,
+				},
 			});
 			onNewThread(newThreadId);
 			return {

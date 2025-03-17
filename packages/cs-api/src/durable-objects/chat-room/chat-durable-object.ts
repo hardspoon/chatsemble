@@ -75,7 +75,10 @@ export class ChatDurableObject extends DurableObject<Env> {
 			const parsedMsg: WsChatIncomingMessage = JSON.parse(message);
 			switch (parsedMsg.type) {
 				case "message-send": {
-					await this.receiveChatRoomMessage(session.userId, parsedMsg.message, {
+					await this.receiveChatRoomMessage({
+						memberId: session.userId,
+						message: parsedMsg.message,
+						existingMessageId: null,
 						notifyAgents: true,
 					});
 					break;
@@ -155,25 +158,39 @@ export class ChatDurableObject extends DurableObject<Env> {
 		}
 	}
 
-	async receiveChatRoomMessage(
-		memberId: string,
-		message: ChatRoomMessagePartial,
-		config: {
-			notifyAgents: boolean;
-		},
-	) {
-		const chatRoomMessage = await this.dbServices.insertMessage({
-			memberId,
-			content: message.content,
-			mentions: message.mentions,
-			threadId: message.threadId,
-			metadata: {
-				optimisticData: {
-					createdAt: message.createdAt,
-					id: message.id,
+	async receiveChatRoomMessage({
+		memberId,
+		message,
+		existingMessageId,
+		notifyAgents,
+	}: {
+		memberId: string;
+		message: ChatRoomMessagePartial;
+		existingMessageId: number | null;
+		notifyAgents: boolean;
+	}) {
+		let chatRoomMessage: ChatRoomMessage;
+
+		if (existingMessageId) {
+			chatRoomMessage = await this.dbServices.updateMessage({
+				id: existingMessageId,
+				content: message.content,
+				mentions: message.mentions,
+			});
+		} else {
+			chatRoomMessage = await this.dbServices.insertMessage({
+				memberId,
+				content: message.content,
+				mentions: message.mentions,
+				threadId: message.threadId,
+				metadata: {
+					optimisticData: {
+						createdAt: message.createdAt,
+						id: message.id,
+					},
 				},
-			},
-		});
+			});
+		}
 
 		this.broadcastWebSocketMessage({
 			type: "message-broadcast",
@@ -181,7 +198,7 @@ export class ChatDurableObject extends DurableObject<Env> {
 			message: chatRoomMessage,
 		});
 
-		if (config?.notifyAgents) {
+		if (notifyAgents) {
 			const agentMembers = await this.getMembers({
 				type: "agent",
 			});
