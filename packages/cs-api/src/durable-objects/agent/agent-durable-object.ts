@@ -51,6 +51,8 @@ export class AgentDurableObject extends DurableObject<Env> {
 	}) {
 		await this.ensureChatRoomExists(chatRoomId);
 
+		console.log("[receiveMessage] message", message);
+
 		const queueItem = await this.dbServices.getChatRoomQueueItem(
 			chatRoomId,
 			message.threadId,
@@ -179,18 +181,18 @@ export class AgentDurableObject extends DurableObject<Env> {
 				newMessages: messageResult.newMessages,
 				contextMessages: messageResult.contextMessages,
 				onMessage: async ({ message, threadId }) => {
-					console.log("[processNewMessages] onMessage", message);
 					const responseMessage = this.prepareResponseMessage({
 						content: message,
 						threadId,
 					});
-
+					
 					const newMessage = await this.sendResponse(
 						chatRoomQueueItem.roomId,
 						responseMessage,
 					);
-
+					
 					newAgentMessages.push(newMessage);
+					console.log("[processNewMessages] onMessage", newMessage);
 
 					return newMessage;
 				},
@@ -340,20 +342,22 @@ export class AgentDurableObject extends DurableObject<Env> {
 			threadId: number | null;
 		}) => Promise<ChatRoomMessage>;
 	}) {
+		console.log("[formulateResponse] chatRoomId", chatRoomId);
 		const agentConfig = await this.dbServices.getAgentConfig();
 		const chatRoom = await this.dbServices.getChatRoom(chatRoomId);
-
+		
 		/* const groqClient = createGroq({
 			baseURL: this.env.AI_GATEWAY_GROQ_URL,
 			apiKey: this.env.GROQ_API_KEY,
-		}); */
+			}); */
 
 		const openAIClient = createOpenAI({
 			baseURL: this.env.AI_GATEWAY_OPENAI_URL,
 			apiKey: this.env.OPENAI_API_KEY,
 		});
-
+		
 		let sendMessageThreadId: number | null = originalThreadId;
+		console.log("[formulateResponse] sendMessageThreadId", sendMessageThreadId);
 
 		const agentToolSet = {
 			searchInformation: searchInformationTool,
@@ -361,6 +365,7 @@ export class AgentDurableObject extends DurableObject<Env> {
 				onMessage,
 				onNewThread: (newThreadId) => {
 					sendMessageThreadId = newThreadId;
+					// TODO: We also need to create a queue item for the new thread
 				},
 			}),
 		};
@@ -397,7 +402,7 @@ export class AgentDurableObject extends DurableObject<Env> {
 			},
 		];
 
-		console.log("MESSAGES PROMPT///////////////////////", messages);
+		//console.log("MESSAGES PROMPT///////////////////////", messages);
 
 		await generateText({
 			model: openAIClient("gpt-4o"),

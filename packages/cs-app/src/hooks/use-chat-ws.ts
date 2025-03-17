@@ -228,12 +228,6 @@ export function useChatWS({ roomId, threadId, user }: UseChatWSProps) {
 						// Determine if this is a top-level message or thread message
 						if (newMessage.threadId === null) {
 							dispatch({ type: "ADD_TOP_LEVEL_MESSAGE", message: newMessage });
-						} else if (newMessage.threadId === activeThreadIdRef.current) {
-							// Use the ref instead of state.activeThread.id
-							dispatch({
-								type: "ADD_THREAD_MESSAGE",
-								message: newMessage,
-							});
 						}
 						break;
 					}
@@ -414,6 +408,7 @@ export function useChatWS({ roomId, threadId, user }: UseChatWSProps) {
 			value,
 			threadId,
 		}: { value: ChatInputValue; threadId: number | null }) => {
+			console.log("[handleSubmit] threadId", threadId);
 			if (!value.content.trim() || !roomId) {
 				return;
 			}
@@ -431,6 +426,8 @@ export function useChatWS({ roomId, threadId, user }: UseChatWSProps) {
 				threadId,
 			};
 
+			console.log("[handleSubmit] newMessagePartial", newMessagePartial);
+
 			const wsMessage: WsMessageSend = {
 				type: "message-send",
 				message: newMessagePartial,
@@ -440,7 +437,7 @@ export function useChatWS({ roomId, threadId, user }: UseChatWSProps) {
 
 			const newMessage: ChatRoomMessage = {
 				...newMessagePartial,
-				user: {
+				member: {
 					id: user.id,
 					roomId: roomId,
 					name: user.name,

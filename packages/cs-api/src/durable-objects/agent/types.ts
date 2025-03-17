@@ -5,10 +5,9 @@ export type AgentChatRoomQueueItem = typeof agentChatRoomQueue.$inferSelect;
 
 export type AgentMessage = {
 	content: string;
-
-	user: {
-		id: ChatRoomMessage["user"]["id"];
-		name: ChatRoomMessage["user"]["name"];
-		type: ChatRoomMessage["user"]["type"];
+	member: {
+		id: ChatRoomMessage["member"]["id"];
+		name: ChatRoomMessage["member"]["name"];
+		type: ChatRoomMessage["member"]["type"];
 	};
 };

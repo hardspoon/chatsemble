@@ -42,7 +42,7 @@ export const chatMessagePartialSchema = z.object({
 export type ChatRoomMessagePartial = z.infer<typeof chatMessagePartialSchema>;
 
 export interface ChatRoomMessage extends ChatRoomMessagePartial {
-	user: ChatRoomMember;
+	member: ChatRoomMember;
 	metadata: ChatMessageMetadata;
 }
 

@@ -19,10 +19,10 @@ export function ChatRoomMessage({
 	return (
 		<ChatMessage key={String(message.id)} id={String(message.id)}>
 			{actionArea}
-			<ChatMessageAvatar imageSrc={message.user.image ?? undefined} />
+			<ChatMessageAvatar imageSrc={message.member.image ?? undefined} />
 			<ChatMessageContentArea>
 				<ChatMessageMetadata
-					username={message.user.name}
+					username={message.member.name}
 					createdAt={message.createdAt}
 				/>
 				<ChatMessageContent content={message.content} />{" "}
