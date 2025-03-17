@@ -17,6 +17,7 @@ import { useChatParams } from "../chat-main/chat-params-provider";
 import { useChatWsContext } from "../chat-main/chat-ws-provider";
 import { ChatMessageSkeleton, ChatRoomMessage } from "../chat-room-message";
 import { ChatMessagesSkeleton } from "../chat-room-message";
+import type { ChatInputValue } from "@/cs-shared";
 
 export function ChatRoomThreadSidebar({ user }: { user: User }) {
 	const { setOpen: setSidebarRightOpen, open: sidebarRightOpen } =
@@ -62,7 +63,14 @@ export function ChatRoomThreadSidebarContent({ user }: { user: User }) {
 		[members, user.id],
 	);
 
-	//console.log("activeThread", activeThread);
+	const onSubmit = (value: ChatInputValue) => {
+		console.log("[ONSUBMIT]", {
+			value,
+			threadId,
+			activeThreadId: activeThread.id,
+		});
+		handleSubmit({ value, threadId });
+	};
 
 	return (
 		<SidebarRight>
@@ -111,12 +119,7 @@ export function ChatRoomThreadSidebarContent({ user }: { user: User }) {
 				</ChatMessageArea>
 				<div className="p-4 w-full">
 					<ChatInput
-						onSubmit={(value) => {
-							handleSubmit({
-								value,
-								threadId,
-							});
-						}}
+						onSubmit={onSubmit}
 						chatMembers={membersWithoutCurrentUser}
 						disabled={isLoading}
 					>

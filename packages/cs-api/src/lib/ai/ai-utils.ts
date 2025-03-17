@@ -7,10 +7,10 @@ export function chatRoomMessagesToAgentMessages(
 	const aiMessages: AgentMessage[] = messages.map((msg) => {
 		return {
 			content: msg.content,
-			user: {
-				id: msg.user.id,
-				name: msg.user.name,
-				type: msg.user.type,
+			member: {
+				id: msg.member.id,
+				name: msg.member.name,
+				type: msg.member.type,
 			},
 		};
 	});
