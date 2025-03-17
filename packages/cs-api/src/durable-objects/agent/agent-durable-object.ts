@@ -189,7 +189,6 @@ export class AgentDurableObject extends DurableObject<Env> {
 					});
 
 					newAgentMessages.push(newMessage);
-					console.log("[processNewMessages] onMessage", newMessage);
 
 					return newMessage;
 				},
@@ -406,8 +405,6 @@ export class AgentDurableObject extends DurableObject<Env> {
 
 		//console.log("MESSAGES PROMPT///////////////////////", messages);
 
-		let currentMessage: ChatRoomMessage | null = null;
-
 		const stream = streamText({
 			model: openAIClient("gpt-4o"),
 			system: systemPrompt,
@@ -415,62 +412,42 @@ export class AgentDurableObject extends DurableObject<Env> {
 			messages,
 			maxSteps: 10,
 			experimental_transform: smoothStream({
-				//delayInMs: 200,
 				chunking: "line",
 			}),
 		});
+
+		let currentMessage: ChatRoomMessage | null = null;
+
 		for await (const chunk of stream.fullStream) {
 			switch (chunk.type) {
 				case "step-start": {
-					const newMessage = await onMessage({
-						newMessagePartial: this.prepareResponseMessage({
-							content: "",
-							threadId: sendMessageThreadId,
-						}),
-					});
-					console.log(
-						`Starting new step ${currentMessage?.id}`,
-						JSON.parse(
-							JSON.stringify({
-								messageId: currentMessage?.id,
-								content: currentMessage?.content,
-							}),
-						),
-					);
-					currentMessage = newMessage;
+					console.log(`Starting new step ${chunk.messageId}`);
+					currentMessage = null;
 					break;
 				}
 
 				case "text-delta": {
-					/* console.log(
-						"Received text delta:",
-						JSON.parse(
-							JSON.stringify({
-								messageId: currentMessageId,
-								content: currentStepText,
-							}),
-						),
-					); */
-					if (currentMessage) {
+					if (chunk.textDelta.length > 0) {
 						console.log(
 							"Received text delta:",
 							JSON.parse(
 								JSON.stringify({
-									messageId: currentMessage.id,
+									messageId: currentMessage?.id,
 									content: chunk.textDelta,
 								}),
 							),
 						);
+						const newContent =
+							(currentMessage?.content ?? "") + chunk.textDelta;
 						const newMessage = await onMessage({
 							newMessagePartial: this.prepareResponseMessage({
-								content: currentMessage.content + chunk.textDelta,
+								content: newContent,
 								threadId: sendMessageThreadId,
 							}),
-							existingMessageId: currentMessage.id,
+							existingMessageId: currentMessage?.id,
 						});
 						currentMessage = newMessage;
 					}
-
 					break;
 				}
 
@@ -479,14 +456,42 @@ export class AgentDurableObject extends DurableObject<Env> {
 					currentMessage = null;
 					break;
 
+				case "tool-call":
+					console.log(
+						"Tool call",
+						JSON.parse(
+							JSON.stringify({
+								args: chunk.args,
+								toolName: chunk.toolName,
+								toolCallId: chunk.toolCallId,
+							}),
+						),
+					);
+					break;
+
+				case "tool-result":
+					console.log(
+						"Tool result",
+						JSON.parse(
+							JSON.stringify({
+								args: chunk.args,
+								toolName: chunk.toolName,
+								toolCallId: chunk.toolCallId,
+								result: chunk.result,
+							}),
+						),
+					);
+					break;
+
 				case "finish":
-					// Handle any remaining text that wasn't part of a step
-
 					console.log("Stream finished", currentMessage);
-
 					break;
 			}
 		}
+
+		const [toolCalls] = await stream.toolResults;
+
+		console.log("TOOL CALLS", toolCalls);
 	}
 
 	private prepareResponseMessage({
