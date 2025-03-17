@@ -32,6 +32,32 @@ export function createChatRoomMessageService(db: DrizzleSqliteDODatabase) {
 			.get();
 	}
 
+	async function updateMessage({
+		id,
+		...message
+	}: Omit<
+		typeof chatMessage.$inferSelect,
+		"createdAt" | "memberId" | "metadata" | "threadId"
+	>): Promise<ChatRoomMessage> {
+		const [updatedMessage] = await db
+			.update(chatMessage)
+			.set(message)
+			.where(eq(chatMessage.id, id))
+			.returning();
+
+		if (!updatedMessage) {
+			throw new Error("Failed to update message");
+		}
+
+		const messageWithMember = await getMessageById(updatedMessage.id);
+
+		if (!messageWithMember) {
+			throw new Error("Failed to fetch message with user data");
+		}
+
+		return messageWithMember;
+	}
+
 	async function insertMessage(
 		message: typeof chatMessage.$inferInsert,
 	): Promise<ChatRoomMessage> {
@@ -112,6 +138,7 @@ export function createChatRoomMessageService(db: DrizzleSqliteDODatabase) {
 
 	return {
 		insertMessage,
+		updateMessage,
 		getMessageById,
 		getMessages,
 	};

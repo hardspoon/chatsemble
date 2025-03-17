@@ -6,12 +6,13 @@ import type { ChatRoomMessage, ChatRoomMessagePartial } from "@/cs-shared";
 //import { createOpenAI } from "@ai-sdk/openai";
 import { createGroq } from "@ai-sdk/groq";
 import { createOpenAI } from "@ai-sdk/openai";
-import { type CoreMessage, generateObject, generateText } from "ai";
+import { type CoreMessage, generateObject, smoothStream, streamText } from "ai";
 import {
 	type DrizzleSqliteDODatabase,
 	drizzle,
 } from "drizzle-orm/durable-sqlite";
 import { migrate } from "drizzle-orm/durable-sqlite/migrator";
+import { customAlphabet } from "nanoid";
 import { chatRoomMessagesToAgentMessages } from "../../lib/ai/ai-utils";
 import {
 	agentSystemPrompt,
@@ -180,17 +181,13 @@ export class AgentDurableObject extends DurableObject<Env> {
 				threadId: chatRoomQueueItem.threadId,
 				newMessages: messageResult.newMessages,
 				contextMessages: messageResult.contextMessages,
-				onMessage: async ({ message, threadId }) => {
-					const responseMessage = this.prepareResponseMessage({
-						content: message,
-						threadId,
+				onMessage: async ({ newMessagePartial, existingMessageId }) => {
+					const newMessage = await this.sendResponse({
+						chatRoomId: chatRoomQueueItem.roomId,
+						message: newMessagePartial,
+						existingMessageId: existingMessageId ?? null,
 					});
-					
-					const newMessage = await this.sendResponse(
-						chatRoomQueueItem.roomId,
-						responseMessage,
-					);
-					
+
 					newAgentMessages.push(newMessage);
 					console.log("[processNewMessages] onMessage", newMessage);
 
@@ -199,9 +196,14 @@ export class AgentDurableObject extends DurableObject<Env> {
 			});
 		}
 
+		const newAgentMessagesDeduplicated = newAgentMessages.filter(
+			(message, index, self) =>
+				index === self.findIndex((t) => t.id === message.id),
+		);
+
 		const highestMessageId = Math.max(
 			...messageResult.newMessages.map((msg) => msg.id),
-			...newAgentMessages.map((msg) => msg.id),
+			...newAgentMessagesDeduplicated.map((msg) => msg.id),
 		);
 
 		if (highestMessageId > 0) {
@@ -335,17 +337,17 @@ export class AgentDurableObject extends DurableObject<Env> {
 		newMessages: ChatRoomMessage[];
 		contextMessages: ChatRoomMessage[];
 		onMessage: ({
-			message,
-			threadId,
+			newMessagePartial,
+			existingMessageId,
 		}: {
-			message: string;
-			threadId: number | null;
+			newMessagePartial: ChatRoomMessagePartial;
+			existingMessageId?: number | null;
 		}) => Promise<ChatRoomMessage>;
 	}) {
 		console.log("[formulateResponse] chatRoomId", chatRoomId);
 		const agentConfig = await this.dbServices.getAgentConfig();
 		const chatRoom = await this.dbServices.getChatRoom(chatRoomId);
-		
+
 		/* const groqClient = createGroq({
 			baseURL: this.env.AI_GATEWAY_GROQ_URL,
 			apiKey: this.env.GROQ_API_KEY,
@@ -355,7 +357,7 @@ export class AgentDurableObject extends DurableObject<Env> {
 			baseURL: this.env.AI_GATEWAY_OPENAI_URL,
 			apiKey: this.env.OPENAI_API_KEY,
 		});
-		
+
 		let sendMessageThreadId: number | null = originalThreadId;
 		console.log("[formulateResponse] sendMessageThreadId", sendMessageThreadId);
 
@@ -404,31 +406,87 @@ export class AgentDurableObject extends DurableObject<Env> {
 
 		//console.log("MESSAGES PROMPT///////////////////////", messages);
 
-		await generateText({
+		let currentMessage: ChatRoomMessage | null = null;
+
+		const stream = streamText({
 			model: openAIClient("gpt-4o"),
 			system: systemPrompt,
 			tools: agentToolSet,
 			messages,
 			maxSteps: 10,
-			onStepFinish: async ({ text, request }) => {
-				console.log("STEP ///////////////////////");
-				const requestBodyParsed = request.body
-					? JSON.parse(request.body)
-					: null;
-				console.log(
-					"REQUEST BODY///////////////////////",
-					requestBodyParsed.messages,
-				);
-
-				if (text.trim().length > 0) {
-					await onMessage({
-						message: text,
-						threadId: sendMessageThreadId,
-					});
-				}
-				console.log("STEP FINISH///////////////////////");
-			},
+			experimental_transform: smoothStream({
+				//delayInMs: 200,
+				chunking: "line",
+			}),
 		});
+		for await (const chunk of stream.fullStream) {
+			switch (chunk.type) {
+				case "step-start": {
+					const newMessage = await onMessage({
+						newMessagePartial: this.prepareResponseMessage({
+							content: "",
+							threadId: sendMessageThreadId,
+						}),
+					});
+					console.log(
+						`Starting new step ${currentMessage?.id}`,
+						JSON.parse(
+							JSON.stringify({
+								messageId: currentMessage?.id,
+								content: currentMessage?.content,
+							}),
+						),
+					);
+					currentMessage = newMessage;
+					break;
+				}
+
+				case "text-delta": {
+					/* console.log(
+						"Received text delta:",
+						JSON.parse(
+							JSON.stringify({
+								messageId: currentMessageId,
+								content: currentStepText,
+							}),
+						),
+					); */
+					if (currentMessage) {
+						console.log(
+							"Received text delta:",
+							JSON.parse(
+								JSON.stringify({
+									messageId: currentMessage.id,
+									content: chunk.textDelta,
+								}),
+							),
+						);
+						const newMessage = await onMessage({
+							newMessagePartial: this.prepareResponseMessage({
+								content: currentMessage.content + chunk.textDelta,
+								threadId: sendMessageThreadId,
+							}),
+							existingMessageId: currentMessage.id,
+						});
+						currentMessage = newMessage;
+					}
+
+					break;
+				}
+
+				case "step-finish":
+					console.log("Step finished", currentMessage);
+					currentMessage = null;
+					break;
+
+				case "finish":
+					// Handle any remaining text that wasn't part of a step
+
+					console.log("Stream finished", currentMessage);
+
+					break;
+			}
+		}
 	}
 
 	private prepareResponseMessage({
@@ -439,7 +497,7 @@ export class AgentDurableObject extends DurableObject<Env> {
 		threadId: number | null;
 	}): ChatRoomMessagePartial {
 		return {
-			id: Date.now() + Math.random() * 1000000,
+			id: Number(customAlphabet("0123456789", 20)()),
 			content,
 			mentions: [],
 			createdAt: Date.now(),
@@ -447,20 +505,24 @@ export class AgentDurableObject extends DurableObject<Env> {
 		};
 	}
 
-	private async sendResponse(
-		chatRoomId: string,
-		message: ChatRoomMessagePartial,
-	) {
+	private async sendResponse({
+		chatRoomId,
+		message,
+		existingMessageId,
+	}: {
+		chatRoomId: string;
+		message: ChatRoomMessagePartial;
+		existingMessageId: number | null;
+	}) {
 		const chatRoomDoId = this.env.CHAT_DURABLE_OBJECT.idFromString(chatRoomId);
 		const chatRoomDO = this.env.CHAT_DURABLE_OBJECT.get(chatRoomDoId);
 
-		const chatRoomMessage = await chatRoomDO.receiveChatRoomMessage(
-			this.ctx.id.toString(),
+		const chatRoomMessage = await chatRoomDO.receiveChatRoomMessage({
+			memberId: this.ctx.id.toString(),
 			message,
-			{
-				notifyAgents: false,
-			},
-		);
+			existingMessageId,
+			notifyAgents: false,
+		});
 
 		return chatRoomMessage;
 	}
