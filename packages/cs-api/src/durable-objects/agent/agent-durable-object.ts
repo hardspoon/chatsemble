@@ -632,10 +632,6 @@ export class AgentDurableObject extends DurableObject<Env> {
 					break;
 			}
 		}
-
-		const [toolCalls] = await stream.toolResults;
-
-		console.log("TOOL CALLS", toolCalls);
 	}
 
 	private prepareResponseMessage({
