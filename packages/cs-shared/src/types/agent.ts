@@ -1,48 +1,36 @@
 import { z } from "zod";
 
-const agentSchema = z.object({
-	id: z.string(),
+export interface Agent {
+	id: string;
+	name: string;
+	image: string;
+	systemPrompt: string;
+	createdAt: number;
+	organizationId: string;
+}
+
+export const createAgentSchema = z.object({
 	name: z.string(),
 	image: z.string(),
 	systemPrompt: z.string(),
-	createdAt: z.number(),
-	organizationId: z.string(),
 });
-
-export const createAgentSchema = agentSchema.omit({
-	id: true,
-	createdAt: true,
-	organizationId: true,
-});
-
-export type Agent = z.infer<typeof agentSchema>;
 
 // AgentTool
+export interface AgentToolPartial {
+	toolCallId: string;
+	toolName: string;
+	// biome-ignore lint/suspicious/noExplicitAny: <explanation>
+	args: Record<string, any>;
+}
 
-const agentToolPartialSchema = z.object({
-	toolCallId: z.string(),
-	toolName: z.string(),
-	args: z.record(z.any()),
-});
+export interface AgentToolCall extends AgentToolPartial {
+	type: "tool-call";
+}
 
-export type AgentToolPartial = z.infer<typeof agentToolPartialSchema>;
+export interface AgentToolResult extends AgentToolPartial {
+	type: "tool-result";
+	// biome-ignore lint/suspicious/noExplicitAny: <explanation>
+	result: any;
+}
 
-export const agentToolCallSchema = agentToolPartialSchema.extend({
-	type: z.literal("tool-call"),
-});
-
-export type AgentToolCall = z.infer<typeof agentToolCallSchema>;
-
-export const agentToolResultSchema = agentToolPartialSchema.extend({
-	type: z.literal("tool-result"),
-	result: z.any(),
-});
-
-export type AgentToolResult = z.infer<typeof agentToolResultSchema>;
-
-export const agentToolUseSchema = z.union([
-	agentToolCallSchema,
-	agentToolResultSchema,
-]);
-
-export type AgentToolUse = z.infer<typeof agentToolUseSchema>;
+export type AgentToolUse = AgentToolCall | AgentToolResult;
