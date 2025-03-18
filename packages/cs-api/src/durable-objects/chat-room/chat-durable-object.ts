@@ -168,7 +168,7 @@ export class ChatDurableObject extends DurableObject<Env> {
 		message: ChatRoomMessagePartial;
 		existingMessageId: number | null;
 		notifyAgents: boolean;
-	}) {
+	}): Promise<ChatRoomMessage> {
 		let chatRoomMessage: ChatRoomMessage;
 
 		if (existingMessageId) {
@@ -176,12 +176,14 @@ export class ChatDurableObject extends DurableObject<Env> {
 				id: existingMessageId,
 				content: message.content,
 				mentions: message.mentions,
+				toolUses: message.toolUses,
 			});
 		} else {
 			chatRoomMessage = await this.dbServices.insertMessage({
 				memberId,
 				content: message.content,
 				mentions: message.mentions,
+				toolUses: message.toolUses,
 				threadId: message.threadId,
 				metadata: {
 					optimisticData: {

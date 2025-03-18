@@ -1,4 +1,4 @@
-import m0000 from "./0000_wise_mysterio.sql";
+import m0000 from "./0000_ambiguous_forgotten_one.sql";
 import journal from "./meta/_journal.json";
 
 export default {

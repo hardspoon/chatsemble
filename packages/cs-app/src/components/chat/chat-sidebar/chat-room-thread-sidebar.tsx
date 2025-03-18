@@ -72,6 +72,10 @@ export function ChatRoomThreadSidebarContent({ user }: { user: User }) {
 		handleSubmit({ value, threadId });
 	};
 
+	useEffect(() => {
+		console.log("MESSAGES", activeThread.messages);
+	}, [activeThread.messages]);
+
 	return (
 		<SidebarRight>
 			<SidebarHeader className="flex flex-row h-16 items-center justify-between border-b px-4">

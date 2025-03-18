@@ -2,6 +2,7 @@ CREATE TABLE `chat_message` (
 	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
 	`content` text NOT NULL,
 	`mentions` text NOT NULL,
+	`tool_uses` text NOT NULL,
 	`member_id` text NOT NULL,
 	`created_at` integer DEFAULT (unixepoch() * 1000) NOT NULL,
 	`metadata` text NOT NULL,

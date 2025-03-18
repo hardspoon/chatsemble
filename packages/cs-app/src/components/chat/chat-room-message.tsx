@@ -7,6 +7,14 @@ import {
 	ChatMessageMetadata,
 } from "../ui/chat-message";
 
+import {
+	ToolInvocationBody,
+	ToolInvocationComponent,
+	ToolInvocationData,
+	ToolInvocationDataTrigger,
+	ToolInvocationHeader,
+	ToolNameComponent,
+} from "@/components/ui/tool-invocation";
 import type { ChatRoomMessage as ChatRoomMessageType } from "@/cs-shared";
 
 export function ChatRoomMessage({
@@ -25,7 +33,28 @@ export function ChatRoomMessage({
 					username={message.member.name}
 					createdAt={message.createdAt}
 				/>
-				<ChatMessageContent content={message.content} />{" "}
+				<ChatMessageContent content={message.content}>
+					{message.toolUses.map((toolUse) => (
+						<ToolInvocationComponent
+							key={toolUse.toolCallId}
+							collapsible={true}
+						>
+							<ToolInvocationHeader>
+								<ToolNameComponent
+									name={`Used ${toolUse.toolName}`}
+									type={toolUse.type}
+								/>
+								<ToolInvocationDataTrigger />
+							</ToolInvocationHeader>
+							<ToolInvocationBody>
+								<ToolInvocationData data={toolUse.args} />
+								{toolUse.type === "tool-result" && (
+									<ToolInvocationData data={toolUse.result} />
+								)}
+							</ToolInvocationBody>
+						</ToolInvocationComponent>
+					))}
+				</ChatMessageContent>
 				{/* TODO: Show if we have a thread */}
 			</ChatMessageContentArea>
 		</ChatMessage>

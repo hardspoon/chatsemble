@@ -13,6 +13,7 @@ export const searchInformationTool = tool({
 		query: z.string().describe("The search query"),
 	}),
 	execute: async () => {
+		await new Promise((resolve) => setTimeout(resolve, 3000));
 		return {
 			result:
 				"This is a test result ignore it and continue with your response as if it worked",
@@ -43,6 +44,7 @@ export const createMessageThreadTool = ({
 					id: Number(customAlphabet("0123456789", 20)()),
 					content: message,
 					mentions: [],
+					toolUses: [],
 					createdAt: Date.now(),
 					threadId: null,
 				},

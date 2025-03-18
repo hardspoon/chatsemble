@@ -2,7 +2,11 @@
 /// <reference types="../../../worker-configuration" />
 
 import { DurableObject } from "cloudflare:workers";
-import type { ChatRoomMessage, ChatRoomMessagePartial } from "@/cs-shared";
+import type {
+	AgentToolUse,
+	ChatRoomMessage,
+	ChatRoomMessagePartial,
+} from "@/cs-shared";
 //import { createOpenAI } from "@ai-sdk/openai";
 import { createGroq } from "@ai-sdk/groq";
 import { createOpenAI } from "@ai-sdk/openai";
@@ -176,6 +180,7 @@ export class AgentDurableObject extends DurableObject<Env> {
 		const newAgentMessages: ChatRoomMessage[] = [];
 
 		if (needsResponse) {
+			// @ts-ignore Type error: Type instantiation is excessively deep and possibly infinite.
 			await this.formulateResponse({
 				chatRoomId: chatRoomQueueItem.roomId,
 				threadId: chatRoomQueueItem.threadId,
@@ -187,9 +192,9 @@ export class AgentDurableObject extends DurableObject<Env> {
 						message: newMessagePartial,
 						existingMessageId: existingMessageId ?? null,
 					});
-
+					
 					newAgentMessages.push(newMessage);
-
+					
 					return newMessage;
 				},
 			});
@@ -234,7 +239,7 @@ export class AgentDurableObject extends DurableObject<Env> {
 		const chatRoomDoId = this.env.CHAT_DURABLE_OBJECT.idFromString(chatRoomId);
 		const chatRoomDO = this.env.CHAT_DURABLE_OBJECT.get(chatRoomDoId);
 
-		const newMessages = lastProcessedId
+		const newMessages: ChatRoomMessage[] = lastProcessedId
 			? await chatRoomDO.getMessages({
 					threadId,
 					afterId: lastProcessedId,
@@ -416,75 +421,214 @@ export class AgentDurableObject extends DurableObject<Env> {
 			}),
 		});
 
-		let currentMessage: ChatRoomMessage | null = null;
+		const streamedMessages: Omit<ChatRoomMessage, "member">[] = [];
 
 		for await (const chunk of stream.fullStream) {
 			switch (chunk.type) {
 				case "step-start": {
 					console.log(`Starting new step ${chunk.messageId}`);
-					currentMessage = null;
+					const newPartialMessage = this.prepareResponseMessage({
+						content: "",
+						toolUses: [],
+						threadId: sendMessageThreadId,
+					});
+
+					streamedMessages.push({
+						...newPartialMessage,
+						metadata: {
+							optimisticData: {
+								id: newPartialMessage.id,
+								createdAt: newPartialMessage.createdAt,
+							},
+						},
+					});
 					break;
 				}
 
 				case "text-delta": {
-					if (chunk.textDelta.length > 0) {
-						console.log(
-							"Received text delta:",
-							JSON.parse(
-								JSON.stringify({
-									messageId: currentMessage?.id,
-									content: chunk.textDelta,
-								}),
-							),
-						);
-						const newContent =
-							(currentMessage?.content ?? "") + chunk.textDelta;
+					console.log("Text delta", JSON.parse(JSON.stringify(chunk)));
+					const currentMessage = streamedMessages[streamedMessages.length - 1];
+					if (!currentMessage) {
+						throw new Error("No current message found");
+					}
+
+					const haventSentCurrentMessage =
+						currentMessage.id === currentMessage.metadata.optimisticData?.id;
+
+					const newContent = currentMessage.content + chunk.textDelta;
+					const newMessage = await onMessage({
+						newMessagePartial: {
+							id: currentMessage.id,
+							content: newContent,
+							mentions: currentMessage.mentions,
+							toolUses: currentMessage.toolUses,
+							threadId: sendMessageThreadId,
+							createdAt: currentMessage.createdAt,
+						},
+						existingMessageId: haventSentCurrentMessage
+							? null
+							: currentMessage.id,
+					});
+					streamedMessages[streamedMessages.length - 1] = newMessage;
+
+					break;
+				}
+
+				case "tool-call": {
+					console.log("Tool call", JSON.parse(JSON.stringify(chunk)));
+					if (chunk.toolName !== "createMessageThread") {
+						const currentMessage =
+							streamedMessages[streamedMessages.length - 1];
+						if (!currentMessage) {
+							throw new Error("No current message found");
+						}
+
+						const haventSentCurrentMessage =
+							currentMessage.id === currentMessage.metadata.optimisticData?.id;
+
+						const toolIsAlreadyInMessageIndex =
+							currentMessage.toolUses.findIndex(
+								(toolUse) => toolUse.toolCallId === chunk.toolCallId,
+							);
+
+						const newToolUses = [...currentMessage.toolUses];
+
+						if (toolIsAlreadyInMessageIndex === -1) {
+							newToolUses.push({
+								type: "tool-call",
+								toolCallId: chunk.toolCallId,
+								toolName: chunk.toolName,
+								args: chunk.args,
+							});
+							console.log(
+								"TOOL CALL NEW",
+								JSON.parse(
+									JSON.stringify({
+										type: "tool-call",
+										toolCallId: chunk.toolCallId,
+										toolName: chunk.toolName,
+										args: chunk.args,
+									}),
+								),
+							);
+						} else {
+							newToolUses[toolIsAlreadyInMessageIndex] = {
+								...newToolUses[toolIsAlreadyInMessageIndex],
+								type: "tool-call",
+								args: chunk.args,
+							};
+							console.log(
+								"TOOL CALL UPDATE",
+								JSON.parse(
+									JSON.stringify({
+										type: "tool-call",
+										args: chunk.args,
+									}),
+								),
+							);
+						}
+
 						const newMessage = await onMessage({
-							newMessagePartial: this.prepareResponseMessage({
-								content: newContent,
+							newMessagePartial: {
+								id: currentMessage.id,
+								content: currentMessage.content,
+								mentions: currentMessage.mentions,
+								toolUses: newToolUses,
 								threadId: sendMessageThreadId,
-							}),
-							existingMessageId: currentMessage?.id,
+								createdAt: currentMessage.createdAt,
+							},
+							existingMessageId: haventSentCurrentMessage
+								? null
+								: currentMessage.id,
 						});
-						currentMessage = newMessage;
+						streamedMessages[streamedMessages.length - 1] = newMessage;
+					}
+					break;
+				}
+
+				case "tool-result": {
+					console.log("Tool result", JSON.parse(JSON.stringify(chunk)));
+					if (chunk.toolName !== "createMessageThread") {
+						const currentMessage =
+							streamedMessages[streamedMessages.length - 1];
+						if (!currentMessage) {
+							throw new Error("No current message found");
+						}
+
+						const haventSentCurrentMessage =
+							currentMessage.id === currentMessage.metadata.optimisticData?.id;
+
+						const toolIsAlreadyInMessageIndex =
+							currentMessage.toolUses.findIndex(
+								(toolUse) => toolUse.toolCallId === chunk.toolCallId,
+							);
+
+						const newToolUses = [...currentMessage.toolUses];
+
+						if (toolIsAlreadyInMessageIndex === -1) {
+							newToolUses.push({
+								type: "tool-result",
+								toolCallId: chunk.toolCallId,
+								toolName: chunk.toolName,
+								args: chunk.args,
+								result: chunk.result,
+							});
+							console.log(
+								"TOOL RESULT NEW",
+								JSON.parse(
+									JSON.stringify({
+										type: "tool-result",
+										toolCallId: chunk.toolCallId,
+										toolName: chunk.toolName,
+										args: chunk.args,
+										result: chunk.result,
+									}),
+								),
+							);
+						} else {
+							console.log(
+								"TOOL RESULT UPDATE",
+								JSON.parse(
+									JSON.stringify({
+										...newToolUses[toolIsAlreadyInMessageIndex],
+										type: "tool-result",
+										args: chunk.args,
+										result: chunk.result,
+									}),
+								),
+							);
+							newToolUses[toolIsAlreadyInMessageIndex] = {
+								...newToolUses[toolIsAlreadyInMessageIndex],
+								type: "tool-result",
+								args: chunk.args,
+								result: chunk.result,
+							};
+						}
+
+						const newMessage = await onMessage({
+							newMessagePartial: {
+								id: currentMessage.id,
+								content: currentMessage.content,
+								mentions: currentMessage.mentions,
+								toolUses: newToolUses,
+								threadId: sendMessageThreadId,
+								createdAt: currentMessage.createdAt,
+							},
+							existingMessageId: haventSentCurrentMessage
+								? null
+								: currentMessage.id,
+						});
+						streamedMessages[streamedMessages.length - 1] = newMessage;
 					}
 					break;
 				}
 
 				case "step-finish":
-					console.log("Step finished", currentMessage);
-					currentMessage = null;
-					break;
-
-				case "tool-call":
-					console.log(
-						"Tool call",
-						JSON.parse(
-							JSON.stringify({
-								args: chunk.args,
-								toolName: chunk.toolName,
-								toolCallId: chunk.toolCallId,
-							}),
-						),
-					);
-					break;
-
-				case "tool-result":
-					console.log(
-						"Tool result",
-						JSON.parse(
-							JSON.stringify({
-								args: chunk.args,
-								toolName: chunk.toolName,
-								toolCallId: chunk.toolCallId,
-								result: chunk.result,
-							}),
-						),
-					);
+					console.log("Step finished", streamedMessages);
 					break;
 
 				case "finish":
-					console.log("Stream finished", currentMessage);
+					console.log("Stream finished", streamedMessages);
 					break;
 			}
 		}
@@ -499,12 +643,14 @@ export class AgentDurableObject extends DurableObject<Env> {
 		threadId,
 	}: {
 		content: string;
+		toolUses: AgentToolUse[];
 		threadId: number | null;
 	}): ChatRoomMessagePartial {
 		return {
 			id: Number(customAlphabet("0123456789", 20)()),
 			content,
 			mentions: [],
+			toolUses: [],
 			createdAt: Date.now(),
 			threadId,
 		};

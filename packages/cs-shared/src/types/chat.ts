@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { agentToolUseSchema } from "./agent";
 
 export type ChatMessageMetadata = {
 	optimisticData?: {
@@ -31,10 +32,11 @@ export type ChatInputValue = z.infer<typeof chatInputValueSchema>;
 
 // ChatRoomMessage
 
-export const chatMessagePartialSchema = z.object({
+export const chatMessagePartialSchema = z.object({ // TODO: Check if we are using zod schema for message and if not then remove zod schema
 	id: z.number(),
 	content: z.string().min(1),
 	mentions: chatMentionsSchema,
+	toolUses: z.array(agentToolUseSchema),
 	createdAt: z.number(),
 	threadId: z.number().nullable(),
 });
