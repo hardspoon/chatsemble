@@ -12,6 +12,7 @@ export function createChatRoomMessageService(db: DrizzleSqliteDODatabase) {
 				id: chatMessage.id,
 				content: chatMessage.content,
 				mentions: chatMessage.mentions,
+				toolUses: chatMessage.toolUses,
 				memberId: chatMessage.memberId,
 				createdAt: chatMessage.createdAt,
 				metadata: chatMessage.metadata,
@@ -39,6 +40,7 @@ export function createChatRoomMessageService(db: DrizzleSqliteDODatabase) {
 		typeof chatMessage.$inferSelect,
 		"createdAt" | "memberId" | "metadata" | "threadId"
 	>): Promise<ChatRoomMessage> {
+		// TODO: Add toolUses to the update getting the current toolUses from the database
 		const [updatedMessage] = await db
 			.update(chatMessage)
 			.set(message)
@@ -90,6 +92,7 @@ export function createChatRoomMessageService(db: DrizzleSqliteDODatabase) {
 				id: chatMessage.id,
 				content: chatMessage.content,
 				mentions: chatMessage.mentions,
+				toolUses: chatMessage.toolUses,
 				memberId: chatMessage.memberId,
 				createdAt: chatMessage.createdAt,
 				metadata: chatMessage.metadata,

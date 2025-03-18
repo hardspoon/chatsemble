@@ -11,8 +11,8 @@ import type {
 	WsMessageThreadInitRequest,
 } from "@/cs-shared";
 import type { User } from "better-auth";
-import { useCallback, useEffect, useReducer, useRef } from "react";
 import { customAlphabet } from "nanoid";
+import { useCallback, useEffect, useReducer, useRef } from "react";
 
 // Define the chat state interface with separate message collections
 interface ChatState {
@@ -422,6 +422,7 @@ export function useChatWS({ roomId, threadId, user }: UseChatWSProps) {
 				id: Number(customAlphabet("0123456789", 20)()),
 				content: value.content,
 				mentions: value.mentions,
+				toolUses: [],
 				createdAt: Date.now(),
 				threadId,
 			};

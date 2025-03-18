@@ -1,4 +1,5 @@
 import type {
+	AgentToolUse,
 	ChatMentions,
 	ChatMessageMetadata,
 	ChatRoomMemberRole,
@@ -22,6 +23,9 @@ export const chatMessage = sqliteTable("chat_message", {
 	id: integer("id").primaryKey({ autoIncrement: true }),
 	content: text("content").notNull(),
 	mentions: text("mentions", { mode: "json" }).$type<ChatMentions>().notNull(),
+	toolUses: text("tool_uses", { mode: "json" })
+		.$type<AgentToolUse[]>()
+		.notNull(),
 	memberId: text("member_id")
 		.notNull()
 		.references(() => chatRoomMember.id),
