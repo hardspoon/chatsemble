@@ -24,6 +24,7 @@ import {
 } from "../../lib/ai/prompts/agent-prompt";
 import {
 	createMessageThreadTool,
+	deepResearchTool,
 	searchInformationTool,
 } from "../../lib/ai/tools";
 import migrations from "./db/migrations/migrations";
@@ -192,9 +193,9 @@ export class AgentDurableObject extends DurableObject<Env> {
 						message: newMessagePartial,
 						existingMessageId: existingMessageId ?? null,
 					});
-					
+
 					newAgentMessages.push(newMessage);
-					
+
 					return newMessage;
 				},
 			});
@@ -366,7 +367,12 @@ export class AgentDurableObject extends DurableObject<Env> {
 		console.log("[formulateResponse] sendMessageThreadId", sendMessageThreadId);
 
 		const agentToolSet = {
-			searchInformation: searchInformationTool,
+			searchInformation: searchInformationTool({
+				braveApiKey: this.env.BRAVE_API_KEY,
+			}),
+			deepResearch: deepResearchTool({
+				firecrawlApiKey: this.env.FIRECRAWL_API_KEY,
+			}),
 			createMessageThread: createMessageThreadTool({
 				onMessage,
 				onNewThread: (newThreadId) => {

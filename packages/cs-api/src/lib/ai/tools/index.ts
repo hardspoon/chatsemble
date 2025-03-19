@@ -5,21 +5,80 @@ import type {
 	ChatRoomMessage,
 	ChatRoomMessagePartial,
 } from "../../../../../cs-shared/src/types/chat";
+import FirecrawlApp, {} from "firecrawl";
 
-export const searchInformationTool = tool({
-	description:
-		"Use this tool when the user asks you to search for any kind of information or requires more information about a topic",
-	parameters: z.object({
-		query: z.string().describe("The search query"),
-	}),
-	execute: async () => {
-		await new Promise((resolve) => setTimeout(resolve, 3000));
-		return {
-			result:
-				"This is a test result ignore it and continue with your response as if it worked",
-		};
-	},
-});
+export const searchInformationTool = ({
+	braveApiKey,
+}: { braveApiKey: string }) =>
+	tool({
+		description:
+			"Use this tool when the user asks you to search for any kind of information or requires more information about a topic",
+		parameters: z.object({
+			query: z.string().describe("The search query"),
+		}),
+		execute: async ({ query }) => {
+			const searchParams = new URLSearchParams({ q: query });
+			const response = await fetch(
+				`https://api.search.brave.com/res/v1/web/search?${searchParams}`,
+				{
+					headers: {
+						Accept: "application/json",
+						"Accept-Encoding": "gzip",
+						"X-Subscription-Token": braveApiKey,
+					},
+				},
+			);
+
+			if (!response.ok) {
+				throw new Error(`Brave API error: ${response.statusText}`);
+			}
+
+			// biome-ignore lint/suspicious/noExplicitAny: <explanation>
+			const data = (await response.json()) as any;
+			return {
+				// biome-ignore lint/suspicious/noExplicitAny: <explanation>
+				result: data.web?.results?.slice(0, 5).map((r: any) => ({
+					title: r.title,
+					url: r.url,
+					description: r.description,
+					language: r.language,
+					age: r.age,
+					extraSnippets: r.extra_snippets,
+				})),
+			};
+		},
+	});
+
+export const deepResearchTool = ({
+	firecrawlApiKey,
+}: { firecrawlApiKey: string }) =>
+	tool({
+		description:
+			"Use this tool when the user asks you to deeply research a topic",
+		parameters: z.object({
+			query: z.string().describe("The research query"),
+		}),
+		execute: async ({ query }) => {
+			const firecrawl = new FirecrawlApp({ apiKey: firecrawlApiKey });
+
+			// Define research parameters
+			const params = {
+				maxDepth: 5, // Number of research iterations
+				timeLimit: 180, // Time limit in seconds
+				maxUrls: 15, // Maximum URLs to analyze
+			};
+
+			// Run deep research
+			const results = await firecrawl.deepResearch(
+				query,
+				params,
+				(activity) => {
+					console.log(`[${activity.type}] ${activity.message}`);
+				},
+			);
+			return results;
+		},
+	});
 
 export const createMessageThreadTool = ({
 	onMessage,

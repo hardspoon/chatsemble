@@ -6,6 +6,7 @@ interface Env {
 	OPENAI_API_KEY: string;
 	GROQ_API_KEY: string;
 	BRAVE_API_KEY: string;
+	FIRECRAWL_API_KEY: string;
 	BETTER_AUTH_URL: string;
 	BETTER_AUTH_SECRET: string;
 	BETTER_AUTH_DOMAIN: string;

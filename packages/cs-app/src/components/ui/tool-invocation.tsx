@@ -60,14 +60,16 @@ export function ToolNameComponent({
 }
 
 function renderObjectAsListItems(obj: unknown, level = 0) {
+	// Handle non-object values (e.g., strings, numbers)
 	if (typeof obj !== "object" || obj === null) {
-		return <span>{String(obj)}</span>;
+		return <span className="break-words">{String(obj)}</span>;
 	}
 
+	// Render object as a list
 	return (
-		<ul className={`list-disc ${level === 0 ? "" : "ml-4"}`}>
+		<ul className={`list-disc ${level === 0 ? "" : "ml-4"} break-words`}>
 			{Object.entries(obj).map(([key, value]) => (
-				<li key={key} className="mt-1">
+				<li key={key} className="mt-1 break-words">
 					<span className="font-medium">{idToReadableText(key)}:</span>{" "}
 					{renderObjectAsListItems(value, level + 1)}
 				</li>
@@ -140,8 +142,8 @@ export function ToolInvocationComponent({
 	if (collapsible) {
 		return (
 			<ToolInvocationContext.Provider value={contextValue}>
-				<Collapsible defaultOpen={defaultOpen}>
-					<Card className="w-fit pt-3 px-4 flex flex-col gap-2 pb-0">
+				<Collapsible defaultOpen={defaultOpen} className="max-w-[23rem]">
+					<Card className="max-w-full pt-3 px-4 flex flex-col gap-2 pb-0">
 						{children}
 					</Card>
 				</Collapsible>
@@ -150,7 +152,7 @@ export function ToolInvocationComponent({
 	}
 	return (
 		<ToolInvocationContext.Provider value={contextValue}>
-			<Card className="w-fit pt-3 px-4 flex flex-col gap-2 pb-0">
+			<Card className="max-w-[23rem] pt-3 px-4 flex flex-col gap-2 pb-0">
 				{children}
 			</Card>
 		</ToolInvocationContext.Provider>
