@@ -6,6 +6,7 @@ import type {
 	ChatRoomMessagePartial,
 } from "../../../../../cs-shared/src/types/chat";
 import FirecrawlApp, {} from "firecrawl";
+import { env } from "cloudflare:workers";
 
 export const searchInformationTool = ({
 	braveApiKey,
@@ -49,9 +50,7 @@ export const searchInformationTool = ({
 		},
 	});
 
-export const deepResearchTool = ({
-	firecrawlApiKey,
-}: { firecrawlApiKey: string }) =>
+export const deepResearchTool = () =>
 	tool({
 		description:
 			"Use this tool when the user asks you to deeply research a topic",
@@ -59,7 +58,7 @@ export const deepResearchTool = ({
 			query: z.string().describe("The research query"),
 		}),
 		execute: async ({ query }) => {
-			const firecrawl = new FirecrawlApp({ apiKey: firecrawlApiKey });
+			const firecrawl = new FirecrawlApp({ apiKey: env.FIRECRAWL_API_KEY });
 
 			// Define research parameters
 			const params = {
