@@ -1,5 +1,4 @@
-/// <reference types="@cloudflare/workers-types" />
-/// <reference types="../../../worker-configuration" />
+/// <reference types="../../../worker-configuration.d.ts" />
 
 import { DurableObject } from "cloudflare:workers";
 import type {
@@ -370,9 +369,7 @@ export class AgentDurableObject extends DurableObject<Env> {
 			searchInformation: searchInformationTool({
 				braveApiKey: this.env.BRAVE_API_KEY,
 			}),
-			deepResearch: deepResearchTool({
-				firecrawlApiKey: this.env.FIRECRAWL_API_KEY,
-			}),
+			deepResearch: deepResearchTool(),
 			createMessageThread: createMessageThreadTool({
 				onMessage,
 				onNewThread: (newThreadId) => {

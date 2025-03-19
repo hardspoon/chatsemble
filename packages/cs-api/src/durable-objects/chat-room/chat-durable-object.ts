@@ -1,3 +1,5 @@
+/// <reference types="../../../worker-configuration.d.ts" />
+
 import { DurableObject } from "cloudflare:workers";
 import type {
 	ChatRoomMember,
@@ -6,8 +8,7 @@ import type {
 	WsChatIncomingMessage,
 	WsChatOutgoingMessage,
 } from "@/cs-shared";
-/// <reference types="@cloudflare/workers-types" />
-/// <reference types="../../../worker-configuration" />
+
 import { drizzle } from "drizzle-orm/durable-sqlite";
 import type { DrizzleSqliteDODatabase } from "drizzle-orm/durable-sqlite";
 import { migrate } from "drizzle-orm/durable-sqlite/migrator";
