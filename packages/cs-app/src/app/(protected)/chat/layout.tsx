@@ -12,7 +12,7 @@ export default function ChatRoomLayout({
 			<AppSidebar>
 				<ChatRoomList />
 			</AppSidebar>
-			<SidebarInset>{children}</SidebarInset>
+			<SidebarInset variant="inset">{children}</SidebarInset>
 		</SidebarProvider>
 	);
 }

@@ -41,17 +41,25 @@ export function AppSidebar({ children }: React.ComponentProps<typeof Sidebar>) {
 	const pathname = usePathname();
 
 	return (
-		<Sidebar variant="inset">
+		<Sidebar variant="inset" collapsible="icon">
 			<SidebarHeader>
-				<div className="flex items-center gap-2 px-2 py-1">
-					<LogoIcon className="size-6" />
-					<span className="text-base font-semibold">Chatsemble</span>
-				</div>
+				<SidebarMenu>
+					<SidebarMenuItem>
+						<SidebarMenuButton asChild>
+							<a href="/">
+								<LogoIcon className="!size-6" />
+								<span className="flex-1 text-left text-sm leading-tight font-semibold">
+									Chatsemble
+								</span>
+							</a>
+						</SidebarMenuButton>
+					</SidebarMenuItem>
+				</SidebarMenu>
 			</SidebarHeader>
 			<SidebarContent>
 				<SidebarSeparator />
 				<NavMain currentPath={pathname} />
-				<SidebarSeparator />
+				<SidebarSeparator className="group-data-[collapsible=icon]:hidden" />
 				{children}
 				<NavSecondary currentPath={pathname} className="mt-auto" />
 			</SidebarContent>

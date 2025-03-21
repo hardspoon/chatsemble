@@ -9,6 +9,11 @@ import {
 	useChatParams,
 } from "@/components/chat/providers/chat-params-provider";
 import { ChatRoomNotSelected } from "@/components/chat/layout/chat-room-not-selected";
+import { ResizableHandle } from "@/components/ui/resizable";
+import { ResizablePanel } from "@/components/ui/resizable";
+import { ResizablePanelGroup } from "@/components/ui/resizable";
+import { ChatRoomThreadDisplay } from "@/components/chat/layout/sidebar/chat-room-thread-display";
+import { ChatRoomThreadHeader } from "@/components/chat/layout/chat-room-thread-header";
 
 export function ChatRoom({ user }: { user: User }) {
 	return (
@@ -29,7 +34,7 @@ function ChatRoomWithParams() {
 }
 
 function ChatRoomContent() {
-	const { roomId } = useChatParams();
+	const { roomId, threadId } = useChatParams();
 
 	if (!roomId) {
 		return <ChatRoomNotSelected />;
@@ -37,8 +42,33 @@ function ChatRoomContent() {
 
 	return (
 		<>
-			<ChatRoomMainHeader />
-			<ChatRoomMainDisplay />
+			<ResizablePanelGroup direction="horizontal">
+				<ResizablePanel
+					id="main-panel"
+					order={1}
+					defaultSize={threadId ? 50 : 100}
+					minSize={35}
+				>
+					<div className="flex-1 flex flex-col h-full">
+						<ChatRoomMainHeader />
+						<ChatRoomMainDisplay />
+					</div>
+				</ResizablePanel>
+				{threadId && <ResizableHandle className="bg-transparent" />}
+				{threadId && (
+					<ResizablePanel
+						id="thread-panel"
+						order={2}
+						defaultSize={50}
+						minSize={35}
+					>
+						<div className="flex-1 flex flex-col h-full border-border border-l rounded-l-xl shadow">
+							<ChatRoomThreadHeader />
+							<ChatRoomThreadDisplay />
+						</div>
+					</ResizablePanel>
+				)}
+			</ResizablePanelGroup>
 		</>
 	);
 }
