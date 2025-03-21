@@ -38,6 +38,7 @@ export function ChatRoomMessage({
 						<ToolInvocationComponent
 							key={toolUse.toolCallId}
 							collapsible={true}
+							defaultOpen={false}
 						>
 							<ToolInvocationHeader>
 								<ToolNameComponent

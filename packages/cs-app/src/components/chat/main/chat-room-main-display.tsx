@@ -76,7 +76,7 @@ export function ChatRoomMainDisplay() {
 					)}
 				</div>
 			</ChatMessageArea>
-			<div className="px-2 py-4 max-w-2xl mx-auto w-full">
+			<div className="p-4 max-w-2xl mx-auto w-full">
 				<ChatInput
 					onSubmit={(value) => {
 						handleSubmit({

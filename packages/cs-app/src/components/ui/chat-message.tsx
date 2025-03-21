@@ -272,7 +272,7 @@ const ChatMessageMetadata = React.forwardRef<
 			className={cn(chatMessageMetadataVariants({ type, className }))}
 			{...props}
 		>
-			<span className="font-bold text-foreground">{username}</span>
+			<span className="font-medium text-foreground">{username}</span>
 			<TooltipProvider>
 				<Tooltip>
 					<TooltipTrigger asChild>
