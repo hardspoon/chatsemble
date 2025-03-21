@@ -14,10 +14,10 @@ import type { ChatInputValue } from "@/cs-shared";
 import type { User } from "better-auth";
 import { X } from "lucide-react";
 import { useEffect, useMemo } from "react";
-import { useChatParams } from "../chat-main/chat-params-provider";
-import { useChatWsContext } from "../chat-main/chat-ws-provider";
-import { ChatMessageSkeleton, ChatRoomMessage } from "../chat-room-message";
-import { ChatMessagesSkeleton } from "../chat-room-message";
+import { useChatParams } from "../../providers/chat-params-provider";
+import { useChatWsContext } from "../../providers/chat-ws-provider";
+import { ChatMessageSkeleton, ChatRoomMessage } from "../../chat-room-message";
+import { ChatMessagesSkeleton } from "../../chat-room-message";
 
 export function ChatRoomThreadSidebar({ user }: { user: User }) {
 	const { setOpen: setSidebarRightOpen, open: sidebarRightOpen } =

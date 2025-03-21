@@ -2,7 +2,7 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { createContext, useCallback, useContext, useMemo } from "react";
-
+import type { User } from "better-auth";
 interface ChatParamsContextType {
 	roomId: string | null;
 	threadId: number | null;
@@ -10,6 +10,7 @@ interface ChatParamsContextType {
 	setThreadId: (threadId: number | null) => void;
 	clearThreadId: () => void;
 	updateParams: (params: { roomId?: string; threadId?: number | null }) => void;
+	user: User;
 }
 
 const ChatParamsContext = createContext<ChatParamsContextType | undefined>(
@@ -17,8 +18,10 @@ const ChatParamsContext = createContext<ChatParamsContextType | undefined>(
 );
 
 export function ChatParamsProvider({
+	user,
 	children,
 }: {
+	user: User;
 	children: React.ReactNode;
 }) {
 	const router = useRouter();
@@ -80,7 +83,7 @@ export function ChatParamsProvider({
 	);
 
 	return (
-		<ChatParamsContext.Provider value={value}>
+		<ChatParamsContext.Provider value={{ ...value, user }}>
 			{children}
 		</ChatParamsContext.Provider>
 	);

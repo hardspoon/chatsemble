@@ -1,5 +1,5 @@
 import { ChatMemberCombobox } from "@/components/chat-member/chat-member-combobox";
-import { useChatWsContext } from "@/components/chat/chat-main/chat-ws-provider";
+import { useChatWsContext } from "@/components/chat/providers/chat-ws-provider";
 import { Button } from "@/components/ui/button";
 import {
 	DialogDescription,

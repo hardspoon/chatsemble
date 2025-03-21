@@ -8,7 +8,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Info, UserPlus } from "lucide-react";
-import { useChatWsContext } from "../chat-main/chat-ws-provider";
+import { useChatWsContext } from "@/components/chat/providers/chat-ws-provider";
 import { ChatDetailsMembersSection } from "./chat-details-members-section";
 import { ChatDetailsSection } from "./chat-details-section";
 

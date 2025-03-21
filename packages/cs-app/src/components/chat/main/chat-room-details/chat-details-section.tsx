@@ -2,7 +2,7 @@ import { ChatRoomTypeBadge } from "@/components/chat/chat-room-type-badge";
 import { Separator } from "@/components/ui/separator";
 import { CalendarIcon } from "lucide-react";
 import { UsersIcon } from "lucide-react";
-import { useChatWsContext } from "../chat-main/chat-ws-provider";
+import { useChatWsContext } from "@/components/chat/providers/chat-ws-provider";
 
 export function ChatDetailsSection() {
 	const { room, members } = useChatWsContext();
@@ -14,7 +14,7 @@ export function ChatDetailsSection() {
 	return (
 		<div className="h-full border rounded-lg p-4 space-y-4">
 			<div className="space-y-2">
-				<h3 className="text-2xl font-semibold tracking-tight">{room.name}</h3>
+				<h3 className="text-xl font-semibold tracking-tight">{room.name}</h3>
 				<ChatRoomTypeBadge type={room.type} />
 			</div>
 
