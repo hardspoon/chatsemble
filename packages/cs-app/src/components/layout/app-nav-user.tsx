@@ -20,9 +20,8 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { authClient } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
-import { Separator } from "../ui/separator";
 
-export function NavUser() {
+export function AppNavUser() {
 	const { isMobile } = useSidebar();
 	const router = useRouter();
 
@@ -45,7 +44,7 @@ export function NavUser() {
 		return (
 			<SidebarMenu>
 				<SidebarMenuItem>
-					<SidebarMenuButton size="lg" className="md:h-8 md:p-0">
+					<SidebarMenuButton size="lg">
 						<Skeleton className="h-full w-full rounded-lg" />
 					</SidebarMenuButton>
 				</SidebarMenuItem>
@@ -62,7 +61,7 @@ export function NavUser() {
 					<DropdownMenuTrigger asChild>
 						<SidebarMenuButton
 							size="lg"
-							className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground md:h-8 md:p-0"
+							className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
 						>
 							<Avatar className="h-8 w-8 rounded-lg">
 								<AvatarImage src={user.image ?? undefined} alt={user.name} />
@@ -96,16 +95,16 @@ export function NavUser() {
 									<span className="truncate text-xs">{user.email}</span>
 								</div>
 							</div>
-							<Separator className="w-[96%] mx-auto" />
-							<div className="px-2 py-2 flex items-center justify-start gap-2">
-								<span className="text-xs font-medium text-muted-foreground">
-									Organization:
-								</span>
-								<span className="truncate font-semibold">
-									{activeOrganization?.name}
-								</span>
-							</div>
 						</DropdownMenuLabel>
+						<DropdownMenuSeparator />
+						<div className="px-2 py-2 flex items-center justify-start gap-2">
+							<span className="text-sm font-medium text-muted-foreground">
+								Organization:
+							</span>
+							<span className="truncate font-semibold text-sm">
+								{activeOrganization?.name}
+							</span>
+						</div>
 						<DropdownMenuSeparator />
 						<DropdownMenuItem onClick={handleSignOut}>
 							<LogOut className="mr-2 size-4" />

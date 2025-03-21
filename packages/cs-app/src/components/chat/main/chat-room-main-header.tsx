@@ -1,8 +1,6 @@
-import { useChatWsContext } from "@/components/chat/chat-main/chat-ws-provider";
+import { useChatWsContext } from "@/components/chat/providers/chat-ws-provider";
 
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
-import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
 	Tooltip,
@@ -12,25 +10,26 @@ import {
 import { cn } from "@/lib/utils";
 import { Users } from "lucide-react";
 import { type Dispatch, type SetStateAction, useState } from "react";
-import { ChatDetailsDialog } from "../chat-details/chat-details-dialog";
-import type { ChatDetailsDialogOpen } from "../chat-details/chat-details-dialog";
+import { ChatDetailsDialog } from "@/components/chat/main/chat-room-details/chat-details-dialog";
+import type { ChatDetailsDialogOpen } from "@/components/chat/main/chat-room-details/chat-details-dialog";
+import { ChatRoomHeader } from "@/components/chat/layout/chat-room-header";
 
-export function ChatHeader() {
+export function ChatRoomMainHeader() {
 	const [openChatDetailsDialog, setOpenChatDetailsDialog] =
 		useState<ChatDetailsDialogOpen>(null);
 
 	const { connectionStatus } = useChatWsContext();
 
 	return (
-		<header className="h-16 sticky top-0 flex shrink-0 items-center gap-2 border-b bg-background p-4">
-			<SidebarTrigger />
-			<Separator orientation="vertical" className="-mr-1 ml-1 h-4" />
+		<ChatRoomHeader>
 			{connectionStatus === "ready" ? (
 				<>
-					<ChatName setOpenChatDetailsDialog={setOpenChatDetailsDialog} />
+					<ChatRoomName setOpenChatDetailsDialog={setOpenChatDetailsDialog} />
 					<div className="ml-auto flex items-center gap-2">
-						<ChatMembers setOpenChatDetailsDialog={setOpenChatDetailsDialog} />
-						<WsConnectionStatus />
+						<ChatRoomMembers
+							setOpenChatDetailsDialog={setOpenChatDetailsDialog}
+						/>
+						<ChatRoomConnectionStatus />
 					</div>
 					<ChatDetailsDialog
 						open={openChatDetailsDialog}
@@ -43,11 +42,11 @@ export function ChatHeader() {
 					<Skeleton className="ml-auto h-4 w-28" />
 				</>
 			)}
-		</header>
+		</ChatRoomHeader>
 	);
 }
 
-function ChatName({
+function ChatRoomName({
 	setOpenChatDetailsDialog,
 }: {
 	setOpenChatDetailsDialog: Dispatch<SetStateAction<ChatDetailsDialogOpen>>;
@@ -57,7 +56,8 @@ function ChatName({
 	return (
 		<Button
 			variant="ghost"
-			className="text-base"
+			size="sm"
+			className="text-base h-7"
 			onClick={() =>
 				setOpenChatDetailsDialog({
 					view: "details",
@@ -69,7 +69,7 @@ function ChatName({
 	);
 }
 
-function ChatMembers({
+function ChatRoomMembers({
 	setOpenChatDetailsDialog,
 }: {
 	setOpenChatDetailsDialog: Dispatch<SetStateAction<ChatDetailsDialogOpen>>;
@@ -80,7 +80,7 @@ function ChatMembers({
 		<Button
 			variant="ghost"
 			size="sm"
-			className="gap-2"
+			className="gap-2 h-7"
 			onClick={() =>
 				setOpenChatDetailsDialog({
 					view: "members",
@@ -93,7 +93,7 @@ function ChatMembers({
 	);
 }
 
-function WsConnectionStatus() {
+function ChatRoomConnectionStatus() {
 	const { connectionStatus } = useChatWsContext();
 
 	return (

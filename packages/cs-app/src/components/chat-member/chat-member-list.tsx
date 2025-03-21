@@ -1,7 +1,7 @@
 import { ChatMemberAddDialog } from "@/components/chat-member/chat-member-add/chat-member-add-dialog";
 import { ChatMemberBadge } from "@/components/chat-member/chat-member-badge";
 import { ChatMemberRemoveButton } from "@/components/chat-member/chat-member-remove-button";
-import { useChatWsContext } from "@/components/chat/chat-main/chat-ws-provider";
+import { useChatWsContext } from "@/components/chat/providers/chat-ws-provider";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import type { ChatRoomMember } from "@/cs-shared";
 import { authClient } from "@/lib/auth-client";

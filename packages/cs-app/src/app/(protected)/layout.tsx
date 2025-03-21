@@ -1,5 +1,4 @@
 import { getAuth } from "@/auth";
-import AppLayout from "@/components/layout/app-layout";
 import { globalSchema } from "@/cs-shared";
 import { getDB } from "@/server/db";
 import { eq } from "drizzle-orm";
@@ -38,7 +37,7 @@ export default async function RootLayout({
 			return redirect("/auth/create-organization");
 		}
 
-		auth.api.setActiveOrganization({
+		await auth.api.setActiveOrganization({
 			headers: headersList,
 			body: {
 				organizationId: orgSession?.organizationId,
@@ -46,7 +45,7 @@ export default async function RootLayout({
 		});
 	}
 
-	return <AppLayout>{children}</AppLayout>;
+	return children;
 }
 
 export const dynamic = "force-dynamic";

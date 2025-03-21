@@ -1,5 +1,5 @@
 import { ChatMemberAddForm } from "@/components/chat-member/chat-member-add/chat-member-add-form";
-import { useChatWsContext } from "@/components/chat/chat-main/chat-ws-provider";
+import { useChatWsContext } from "@/components/chat/providers/chat-ws-provider";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { Plus } from "lucide-react";

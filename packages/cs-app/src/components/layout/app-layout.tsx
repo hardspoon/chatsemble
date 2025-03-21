@@ -1,15 +1,9 @@
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 
-export default function AppLayout({ children }: { children: React.ReactNode }) {
+export function AppLayout({ children }: { children: React.ReactNode }) {
 	return (
-		<SidebarProvider
-			style={
-				{
-					"--sidebar-width": "350px",
-				} as React.CSSProperties
-			}
-		>
+		<SidebarProvider>
 			<AppSidebar />
 			<SidebarInset>{children}</SidebarInset>
 		</SidebarProvider>

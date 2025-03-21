@@ -1,13 +1,13 @@
 "use client";
 
-import { useChatWsContext } from "@/components/chat/chat-main/chat-ws-provider";
+import { useChatWsContext } from "@/components/chat/providers/chat-ws-provider";
 import {
 	ChatMessageAction,
 	ChatMessageActionsArea,
 } from "@/components/ui/chat-message";
 import { ChatMessageArea } from "@/components/ui/chat-message-area";
 
-import { useChatParams } from "@/components/chat/chat-main/chat-params-provider";
+import { useChatParams } from "@/components/chat/providers/chat-params-provider";
 import {
 	ChatMessagesSkeleton,
 	ChatRoomMessage,
@@ -17,15 +17,14 @@ import {
 	ChatInputSubmit,
 	ChatInputTiptap,
 } from "@/components/ui/tiptap-chat-input";
-import type { User } from "better-auth";
 import { BookmarkIcon, MessageSquareIcon } from "lucide-react";
 import { useMemo } from "react";
 
-export function ChatContent({ user }: { user: User }) {
+export function ChatRoomMainDisplay() {
 	const { topLevelMessages, handleSubmit, connectionStatus, members } =
 		useChatWsContext();
 
-	const { setThreadId } = useChatParams();
+	const { setThreadId, user } = useChatParams();
 
 	const isLoading =
 		connectionStatus !== "ready" || topLevelMessages.status !== "success";
