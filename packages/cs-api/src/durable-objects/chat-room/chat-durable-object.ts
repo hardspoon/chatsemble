@@ -43,7 +43,7 @@ export class ChatDurableObject extends DurableObject<Env> {
 	}
 
 	async migrate() {
-		migrate(this.db, migrations); // TODO: Check when to migrate for later changes
+		migrate(this.db, migrations);
 	}
 
 	async delete() {

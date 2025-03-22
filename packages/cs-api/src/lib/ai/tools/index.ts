@@ -114,3 +114,9 @@ export const createMessageThreadTool = ({
 			};
 		},
 	});
+
+export type AgentToolSet = {
+	searchInformation: ReturnType<typeof searchInformationTool>;
+	deepResearch: ReturnType<typeof deepResearchTool>;
+	createMessageThread: ReturnType<typeof createMessageThreadTool>;
+};

@@ -1,22 +1,21 @@
 /// <reference types="../../../worker-configuration.d.ts" />
 
 import { DurableObject } from "cloudflare:workers";
-import type {
-	AgentToolUse,
-	ChatRoomMessage,
-	ChatRoomMessagePartial,
-} from "@/cs-shared";
+import type { ChatRoomMessage, ChatRoomMessagePartial } from "@/cs-shared";
 //import { createOpenAI } from "@ai-sdk/openai";
 import { createGroq } from "@ai-sdk/groq";
 import { createOpenAI } from "@ai-sdk/openai";
-import { type CoreMessage, generateObject, smoothStream, streamText } from "ai";
+import { generateObject, smoothStream, streamText } from "ai";
 import {
 	type DrizzleSqliteDODatabase,
 	drizzle,
 } from "drizzle-orm/durable-sqlite";
 import { migrate } from "drizzle-orm/durable-sqlite/migrator";
-import { customAlphabet } from "nanoid";
-import { chatRoomMessagesToAgentMessages } from "../../lib/ai/ai-utils";
+import {
+	agentMessagesToContextCoreMessages,
+	chatRoomMessagesToAgentMessages,
+	processStream,
+} from "../../lib/ai/ai-utils";
 import {
 	agentSystemPrompt,
 	checkIfMessagesAreRelevantSystemPrompt,
@@ -355,11 +354,6 @@ export class AgentDurableObject extends DurableObject<Env> {
 		const agentConfig = await this.dbServices.getAgentConfig();
 		const chatRoom = await this.dbServices.getChatRoom(chatRoomId);
 
-		/* const groqClient = createGroq({
-			baseURL: this.env.AI_GATEWAY_GROQ_URL,
-			apiKey: this.env.GROQ_API_KEY,
-			}); */
-
 		const openAIClient = createOpenAI({
 			baseURL: this.env.AI_GATEWAY_OPENAI_URL,
 			apiKey: this.env.OPENAI_API_KEY,
@@ -376,8 +370,14 @@ export class AgentDurableObject extends DurableObject<Env> {
 			createMessageThread: createMessageThreadTool({
 				onMessage,
 				onNewThread: (newThreadId) => {
+					console.log("[formulateResponse] onNewThread", newThreadId);
 					sendMessageThreadId = newThreadId;
 					// TODO: We also need to create a queue item for the new thread
+					/* this.dbServices.createOrUpdateChatRoomQueueItem({
+						chatRoomId,
+						threadId: newThreadId,
+						processAt: Date.now() + ALARM_TIME_IN_MS,
+					}); */
 				},
 			}),
 		};
@@ -391,30 +391,10 @@ export class AgentDurableObject extends DurableObject<Env> {
 			},
 		});
 
-		const agentMessagesContext =
-			chatRoomMessagesToAgentMessages(contextMessages);
-		const agentMessagesNew = chatRoomMessagesToAgentMessages(newMessages);
-
-		const messages: CoreMessage[] = [
-			{
-				role: "system",
-				content: `
-				<conversation_history_context>
-				${JSON.stringify(agentMessagesContext)}
-				</conversation_history_context>
-				`,
-			},
-			{
-				role: "user",
-				content: `
-				<new_messages_to_process>
-				${JSON.stringify(agentMessagesNew)}
-				</new_messages_to_process>
-				`,
-			},
-		];
-
-		//console.log("MESSAGES PROMPT///////////////////////", messages);
+		const messages = agentMessagesToContextCoreMessages(
+			contextMessages,
+			newMessages,
+		);
 
 		const stream = streamText({
 			model: openAIClient("gpt-4o"),
@@ -427,235 +407,12 @@ export class AgentDurableObject extends DurableObject<Env> {
 			}),
 		});
 
-		const streamedMessages: Omit<ChatRoomMessage, "member">[] = [];
-
-		for await (const chunk of stream.fullStream) {
-			switch (chunk.type) {
-				case "step-start": {
-					console.log(`Starting new step ${chunk.messageId}`);
-					const newPartialMessage = this.prepareResponseMessage({
-						content: "",
-						toolUses: [],
-						threadId: sendMessageThreadId,
-					});
-
-					streamedMessages.push({
-						...newPartialMessage,
-						metadata: {
-							optimisticData: {
-								id: newPartialMessage.id,
-								createdAt: newPartialMessage.createdAt,
-							},
-						},
-					});
-					break;
-				}
-
-				case "text-delta": {
-					console.log("Text delta", JSON.parse(JSON.stringify(chunk)));
-					const currentMessage = streamedMessages[streamedMessages.length - 1];
-					if (!currentMessage) {
-						throw new Error("No current message found");
-					}
-
-					const haventSentCurrentMessage =
-						currentMessage.id === currentMessage.metadata.optimisticData?.id;
-
-					const newContent = currentMessage.content + chunk.textDelta;
-					const newMessage = await onMessage({
-						newMessagePartial: {
-							id: currentMessage.id,
-							content: newContent,
-							mentions: currentMessage.mentions,
-							toolUses: currentMessage.toolUses,
-							threadId: sendMessageThreadId,
-							createdAt: currentMessage.createdAt,
-						},
-						existingMessageId: haventSentCurrentMessage
-							? null
-							: currentMessage.id,
-					});
-					streamedMessages[streamedMessages.length - 1] = newMessage;
-
-					break;
-				}
-
-				case "tool-call": {
-					console.log("Tool call", JSON.parse(JSON.stringify(chunk)));
-					if (chunk.toolName !== "createMessageThread") {
-						const currentMessage =
-							streamedMessages[streamedMessages.length - 1];
-						if (!currentMessage) {
-							throw new Error("No current message found");
-						}
-
-						const haventSentCurrentMessage =
-							currentMessage.id === currentMessage.metadata.optimisticData?.id;
-
-						const toolIsAlreadyInMessageIndex =
-							currentMessage.toolUses.findIndex(
-								(toolUse) => toolUse.toolCallId === chunk.toolCallId,
-							);
-
-						const newToolUses = [...currentMessage.toolUses];
-
-						if (toolIsAlreadyInMessageIndex === -1) {
-							newToolUses.push({
-								type: "tool-call",
-								toolCallId: chunk.toolCallId,
-								toolName: chunk.toolName,
-								args: chunk.args,
-							});
-							console.log(
-								"TOOL CALL NEW",
-								JSON.parse(
-									JSON.stringify({
-										type: "tool-call",
-										toolCallId: chunk.toolCallId,
-										toolName: chunk.toolName,
-										args: chunk.args,
-									}),
-								),
-							);
-						} else {
-							newToolUses[toolIsAlreadyInMessageIndex] = {
-								...newToolUses[toolIsAlreadyInMessageIndex],
-								type: "tool-call",
-								args: chunk.args,
-							};
-							console.log(
-								"TOOL CALL UPDATE",
-								JSON.parse(
-									JSON.stringify({
-										type: "tool-call",
-										args: chunk.args,
-									}),
-								),
-							);
-						}
-
-						const newMessage = await onMessage({
-							newMessagePartial: {
-								id: currentMessage.id,
-								content: currentMessage.content,
-								mentions: currentMessage.mentions,
-								toolUses: newToolUses,
-								threadId: sendMessageThreadId,
-								createdAt: currentMessage.createdAt,
-							},
-							existingMessageId: haventSentCurrentMessage
-								? null
-								: currentMessage.id,
-						});
-						streamedMessages[streamedMessages.length - 1] = newMessage;
-					}
-					break;
-				}
-
-				case "tool-result": {
-					console.log("Tool result", JSON.parse(JSON.stringify(chunk)));
-					if (chunk.toolName !== "createMessageThread") {
-						const currentMessage =
-							streamedMessages[streamedMessages.length - 1];
-						if (!currentMessage) {
-							throw new Error("No current message found");
-						}
-
-						const haventSentCurrentMessage =
-							currentMessage.id === currentMessage.metadata.optimisticData?.id;
-
-						const toolIsAlreadyInMessageIndex =
-							currentMessage.toolUses.findIndex(
-								(toolUse) => toolUse.toolCallId === chunk.toolCallId,
-							);
-
-						const newToolUses = [...currentMessage.toolUses];
-
-						if (toolIsAlreadyInMessageIndex === -1) {
-							newToolUses.push({
-								type: "tool-result",
-								toolCallId: chunk.toolCallId,
-								toolName: chunk.toolName,
-								args: chunk.args,
-								result: chunk.result,
-							});
-							console.log(
-								"TOOL RESULT NEW",
-								JSON.parse(
-									JSON.stringify({
-										type: "tool-result",
-										toolCallId: chunk.toolCallId,
-										toolName: chunk.toolName,
-										args: chunk.args,
-										result: chunk.result,
-									}),
-								),
-							);
-						} else {
-							console.log(
-								"TOOL RESULT UPDATE",
-								JSON.parse(
-									JSON.stringify({
-										...newToolUses[toolIsAlreadyInMessageIndex],
-										type: "tool-result",
-										args: chunk.args,
-										result: chunk.result,
-									}),
-								),
-							);
-							newToolUses[toolIsAlreadyInMessageIndex] = {
-								...newToolUses[toolIsAlreadyInMessageIndex],
-								type: "tool-result",
-								args: chunk.args,
-								result: chunk.result,
-							};
-						}
-
-						const newMessage = await onMessage({
-							newMessagePartial: {
-								id: currentMessage.id,
-								content: currentMessage.content,
-								mentions: currentMessage.mentions,
-								toolUses: newToolUses,
-								threadId: sendMessageThreadId,
-								createdAt: currentMessage.createdAt,
-							},
-							existingMessageId: haventSentCurrentMessage
-								? null
-								: currentMessage.id,
-						});
-						streamedMessages[streamedMessages.length - 1] = newMessage;
-					}
-					break;
-				}
-
-				case "step-finish":
-					console.log("Step finished", streamedMessages);
-					break;
-
-				case "finish":
-					console.log("Stream finished", streamedMessages);
-					break;
-			}
-		}
-	}
-
-	private prepareResponseMessage({
-		content,
-		threadId,
-	}: {
-		content: string;
-		toolUses: AgentToolUse[];
-		threadId: number | null;
-	}): ChatRoomMessagePartial {
-		return {
-			id: Number(customAlphabet("0123456789", 20)()),
-			content,
-			mentions: [],
-			toolUses: [],
-			createdAt: Date.now(),
-			threadId,
-		};
+		await processStream({
+			fullStream: stream.fullStream,
+			getThreadId: () => sendMessageThreadId,
+			omitSendingTool: ["createMessageThread"],
+			onMessageSend: onMessage,
+		});
 	}
 
 	private async sendResponse({
