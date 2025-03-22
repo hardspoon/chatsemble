@@ -6,11 +6,12 @@ export type ChatMessageMetadata = {
 		createdAt: number;
 		id: number;
 	};
-	thread?: {
-		lastMessage: ChatRoomMessage;
-		messageCount: number;
-	}
 };
+
+export type ChatMessageThreadMetadata = {
+	lastMessage: ChatRoomMessage;
+	messageCount: number;
+} | null;
 
 // ChatMention
 export type ChatMention = {
@@ -39,6 +40,7 @@ export interface ChatRoomMessagePartial {
 export interface ChatRoomMessage extends ChatRoomMessagePartial {
 	member: ChatRoomMember;
 	metadata: ChatMessageMetadata;
+	threadMetadata?: ChatMessageThreadMetadata;
 }
 
 // ChatRoomMember

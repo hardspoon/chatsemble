@@ -6,10 +6,12 @@ import {
 	TooltipProvider,
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
+import type { ChatMessageThreadMetadata } from "@/cs-shared";
+import { dateToPrettyTimeAgo } from "@/lib/date";
 import { cn } from "@/lib/utils";
 import { type VariantProps, cva } from "class-variance-authority";
-import { SparklesIcon, UserIcon } from "lucide-react";
-import React, { type ReactNode } from "react";
+import { ChevronRight, SparklesIcon, UserIcon } from "lucide-react";
+import React, { type ReactNode, useState, useEffect } from "react";
 import { Card } from "./card";
 
 const chatMessageVariants = cva("flex gap-4 w-full", {
@@ -345,6 +347,57 @@ const ChatMessageActionsArea = React.forwardRef<
 ));
 ChatMessageActionsArea.displayName = "ChatMessageActionsArea";
 
+interface ChatMessageThreadAreaProps
+	extends React.ComponentProps<typeof Button> {
+	threadMetadata: NonNullable<ChatMessageThreadMetadata>;
+}
+
+function ChatMessageThread({
+	className,
+	threadMetadata,
+	...props
+}: ChatMessageThreadAreaProps) {
+	const [timeAgo, setTimeAgo] = useState(
+		dateToPrettyTimeAgo(new Date(threadMetadata.lastMessage.createdAt)),
+	);
+
+	useEffect(() => {
+		const interval = setInterval(() => {
+			setTimeAgo(
+				dateToPrettyTimeAgo(new Date(threadMetadata.lastMessage.createdAt)),
+			);
+		}, 60_000); // Update every minute
+
+		return () => clearInterval(interval);
+	}, [threadMetadata.lastMessage.createdAt]);
+
+	return (
+		<Button
+			variant="ghost"
+			className={cn(
+				"group/button flex items-center px-1 gap-2 w-full justify-start transition-all",
+				"hover:border hover:border-input hover:bg-background hover:shadow-sm",
+				className,
+			)}
+			{...props}
+		>
+			<ChatMessageAvatar
+				className="w-6 h-6"
+				imageSrc={threadMetadata.lastMessage.member.image ?? undefined}
+			/>
+			<span className="text-sm">{threadMetadata.messageCount} replies</span>
+			<span className="text-sm text-muted-foreground block group-hover/button:hidden">
+				Last reply {timeAgo}
+			</span>
+			<span className="text-sm text-muted-foreground hidden group-hover/button:flex items-center gap-1 w-full">
+				View thread
+				<ChevronRight className="ml-auto h-4 w-4" />
+			</span>
+		</Button>
+	);
+}
+ChatMessageThread.displayName = "ChatMessageThread";
+
 export {
 	ChatMessage,
 	ChatMessageAvatar,
@@ -353,4 +406,5 @@ export {
 	ChatMessageMetadata,
 	ChatMessageActionsArea,
 	ChatMessageAction,
+	ChatMessageThread,
 };
