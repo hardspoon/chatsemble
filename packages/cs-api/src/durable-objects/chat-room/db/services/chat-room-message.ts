@@ -33,14 +33,15 @@ export function createChatRoomMessageService(db: DrizzleSqliteDODatabase) {
 			.get();
 	}
 
-	async function updateMessage({
-		id,
-		...message
-	}: Omit<
-		typeof chatMessage.$inferSelect,
-		"createdAt" | "memberId" | "metadata" | "threadId"
-	>): Promise<ChatRoomMessage> {
-		// TODO: Add toolUses to the update getting the current toolUses from the database
+	async function updateMessage(
+		id: number,
+		{
+			...message
+		}: Omit<
+			typeof chatMessage.$inferSelect,
+			"id" | "createdAt" | "memberId" | "metadata" | "threadId"
+		>,
+	): Promise<ChatRoomMessage> {
 		const [updatedMessage] = await db
 			.update(chatMessage)
 			.set(message)
@@ -58,6 +59,40 @@ export function createChatRoomMessageService(db: DrizzleSqliteDODatabase) {
 		}
 
 		return messageWithMember;
+	}
+
+	async function updateMessageThreadMetadata(
+		id: number,
+		newMessage: ChatRoomMessage,
+	) {
+		const currentMessage = await getMessageById(id);
+
+		if (!currentMessage) {
+			throw new Error("Message not found");
+		}
+
+		const messageCount = currentMessage.metadata.thread?.messageCount ?? 0;
+
+		const metadataToUpdate = {
+			...currentMessage.metadata,
+			thread: {
+				lastMessage: newMessage,
+				messageCount: messageCount + 1,
+			},
+		};
+
+		await db
+			.update(chatMessage)
+			.set({ metadata: metadataToUpdate })
+			.where(eq(chatMessage.id, id));
+
+		const updatedMessage = await getMessageById(id);
+
+		if (!updatedMessage) {
+			throw new Error("Failed to fetch updated message");
+		}
+
+		return updatedMessage;
 	}
 
 	async function insertMessage(
@@ -142,6 +177,7 @@ export function createChatRoomMessageService(db: DrizzleSqliteDODatabase) {
 	return {
 		insertMessage,
 		updateMessage,
+		updateMessageThreadMetadata,
 		getMessageById,
 		getMessages,
 	};

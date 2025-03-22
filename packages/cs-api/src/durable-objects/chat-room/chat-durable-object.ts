@@ -27,6 +27,11 @@ export class ChatDurableObject extends DurableObject<Env> {
 		this.storage = ctx.storage;
 		this.db = drizzle(this.storage, { logger: false });
 		this.sessions = new Map();
+
+		this.ctx.blockConcurrencyWhile(async () => {
+			await this.migrate();
+		});
+
 		this.dbServices = createChatRoomDbServices(this.db, this.ctx.id.toString());
 
 		// Restore any existing WebSocket sessions
@@ -173,8 +178,7 @@ export class ChatDurableObject extends DurableObject<Env> {
 		let chatRoomMessage: ChatRoomMessage;
 
 		if (existingMessageId) {
-			chatRoomMessage = await this.dbServices.updateMessage({
-				id: existingMessageId,
+			chatRoomMessage = await this.dbServices.updateMessage(existingMessageId, {
 				content: message.content,
 				mentions: message.mentions,
 				toolUses: message.toolUses,
@@ -193,6 +197,20 @@ export class ChatDurableObject extends DurableObject<Env> {
 					},
 				},
 			});
+
+			if (message.threadId) {
+				const updatedThreadMessage =
+					await this.dbServices.updateMessageThreadMetadata(
+						message.threadId,
+						chatRoomMessage,
+					);
+
+				this.broadcastWebSocketMessage({
+					type: "message-broadcast",
+					threadId: updatedThreadMessage.threadId,
+					message: updatedThreadMessage,
+				});
+			}
 		}
 
 		this.broadcastWebSocketMessage({
