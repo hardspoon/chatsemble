@@ -1,17 +1,38 @@
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+"use client";
+
 import {
-	SidebarContent,
 	SidebarGroup,
-	SidebarGroupContent,
-	SidebarHeader,
+	SidebarGroupAction,
+	SidebarGroupLabel,
+	SidebarMenu,
+	SidebarMenuAction,
+	SidebarMenuButton,
+	SidebarMenuItem,
+	SidebarMenuSkeleton,
 	useSidebar,
 } from "@/components/ui/sidebar";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { Agent } from "@/cs-shared";
 import { client } from "@/lib/api-client";
 import { useQuery } from "@tanstack/react-query";
-import { AlertCircle } from "lucide-react";
-import { useRouter } from "next/navigation";
+import {
+	AlertCircle,
+	MoreHorizontal,
+	Plus,
+	StarOff,
+	Trash2,
+} from "lucide-react";
+import Link from "next/link";
+import { useSearchParams } from "next/navigation";
+import { useState } from "react";
+import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuSeparator,
+	DropdownMenuTrigger,
+} from "../ui/dropdown-menu";
 import { NewAgentDialog } from "./new-agent-dialog";
 
 export function AgentsSidebar() {
@@ -31,52 +52,87 @@ export function AgentsSidebar() {
 
 	return (
 		<>
-			<SidebarHeader className="gap-3.5 border-b p-4">
-				<div className="flex w-full items-center justify-between">
-					<div className="text-base font-medium text-foreground">Agents</div>
-					<NewAgentDialog />
-				</div>
-			</SidebarHeader>
-			<SidebarContent>
-				<SidebarGroup className="px-0 py-0">
-					<SidebarGroupContent>
-						{isLoading ? (
-							<AgentsSkeleton />
-						) : error ? (
-							<AgentsError />
-						) : agentsData && agentsData.length > 0 ? (
-							agentsData.map((agent) => (
-								<AgentSidebarItem key={agent.id} agent={agent} />
-							))
-						) : (
-							<AgentsEmpty />
-						)}
-					</SidebarGroupContent>
-				</SidebarGroup>
-			</SidebarContent>
+			{isLoading ? (
+				<SkeletonGroup listLength={2} />
+			) : error ? (
+				<AgentsError />
+			) : agentsData && agentsData.length > 0 ? (
+				<AgentGroup agents={agentsData} />
+			) : (
+				<AgentsEmpty />
+			)}
 		</>
 	);
 }
 
-function AgentSidebarItem({ agent }: { agent: Agent }) {
-	const router = useRouter();
-	const { setOpenMobile } = useSidebar();
+function AgentGroup({
+	agents,
+}: {
+	agents: Agent[];
+}) {
+	const queryParams = useSearchParams();
+	const selectedAgentId = queryParams.get("agentId");
+	const { isMobile } = useSidebar();
+	const [newAgentDialogOpen, setNewAgentDialogOpen] = useState(false);
 
 	return (
-		<button
-			type="button"
-			onClick={() => {
-				router.push(`/agents?agentId=${agent.id}`);
-				setOpenMobile(false);
-			}}
-			className="flex w-full items-center justify-between border-b px-4 py-3 text-sm hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-		>
-			<span className="font-medium">{agent.name}</span>
-			<Avatar>
-				<AvatarImage src={agent.image} />
-				<AvatarFallback>{agent.name.charAt(0)}</AvatarFallback>
-			</Avatar>
-		</button>
+		<>
+			<NewAgentDialog
+				open={newAgentDialogOpen}
+				setOpen={setNewAgentDialogOpen}
+			/>
+			<SidebarGroup className="group-data-[collapsible=icon]:hidden">
+				<SidebarGroupLabel>Agents</SidebarGroupLabel>
+				<SidebarGroupAction
+					title="Add Project"
+					onClick={() => setNewAgentDialogOpen(true)}
+				>
+					<Plus /> <span className="sr-only">Add Agent</span>
+				</SidebarGroupAction>
+				<SidebarMenu>
+					{agents.map((agent) => (
+						<SidebarMenuItem key={agent.id}>
+							<SidebarMenuButton
+								asChild
+								isActive={selectedAgentId === agent.id}
+							>
+								<Link href={`/agents?agentId=${agent.id}`} title={agent.name}>
+									<Avatar className="size-5">
+										<AvatarImage src={agent.image} />
+										<AvatarFallback>{agent.name.slice(0, 2)}</AvatarFallback>
+									</Avatar>
+									<span>{agent.name}</span>
+								</Link>
+							</SidebarMenuButton>
+							<DropdownMenu>
+								<DropdownMenuTrigger asChild>
+									<SidebarMenuAction showOnHover>
+										<MoreHorizontal />
+										<span className="sr-only">More</span>
+									</SidebarMenuAction>
+								</DropdownMenuTrigger>
+								<DropdownMenuContent
+									className="w-56 rounded-lg"
+									side={isMobile ? "bottom" : "right"}
+									align={isMobile ? "end" : "start"}
+								>
+									<DropdownMenuItem>
+										<StarOff className="text-muted-foreground" />
+										<span>Remove from Favorites</span>
+									</DropdownMenuItem>
+
+									<DropdownMenuSeparator />
+									<DropdownMenuItem>
+										<Trash2 className="text-muted-foreground" />
+										<span>Delete</span>
+									</DropdownMenuItem>
+								</DropdownMenuContent>
+							</DropdownMenu>
+						</SidebarMenuItem>
+					))}
+				</SidebarMenu>
+			</SidebarGroup>
+		</>
 	);
 }
 
@@ -97,30 +153,23 @@ function AgentsError() {
 	);
 }
 
-function AgentsSkeleton() {
+function SkeletonGroup({ listLength }: { listLength: number }) {
 	return (
-		<div>
-			<div className="flex flex-col gap-1 border-b px-4 py-3">
-				<div className="flex items-center justify-between">
-					<Skeleton className="h-4 w-24" />
-					<Skeleton className="h-3 w-12" />
-				</div>
-				<Skeleton className="h-3 w-16" />
-			</div>
-			<div className="flex flex-col gap-1 border-b px-4 py-3">
-				<div className="flex items-center justify-between">
-					<Skeleton className="h-4 w-24" />
-					<Skeleton className="h-3 w-12" />
-				</div>
-				<Skeleton className="h-3 w-16" />
-			</div>
-			<div className="flex flex-col gap-1 border-b px-4 py-3">
-				<div className="flex items-center justify-between">
-					<Skeleton className="h-4 w-24" />
-					<Skeleton className="h-3 w-12" />
-				</div>
-				<Skeleton className="h-3 w-16" />
-			</div>
-		</div>
+		<SidebarGroup className="group-data-[collapsible=icon]:hidden">
+			<SidebarGroupLabel>
+				<Skeleton className="h-4 w-32" />
+			</SidebarGroupLabel>
+			<SidebarGroupAction>
+				<Skeleton className="size-4" />
+			</SidebarGroupAction>
+			<SidebarMenu>
+				{Array.from({ length: listLength }).map((_, index) => (
+					// biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
+					<SidebarMenuItem key={index}>
+						<SidebarMenuSkeleton />
+					</SidebarMenuItem>
+				))}
+			</SidebarMenu>
+		</SidebarGroup>
 	);
 }

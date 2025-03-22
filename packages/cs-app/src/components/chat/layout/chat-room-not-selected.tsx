@@ -1,9 +1,9 @@
-import { ChatRoomHeader } from "@/components/chat/layout/chat-room-header";
+import { AppHeader } from "@/components/layout/app-header";
 
 export function ChatRoomNotSelected() {
 	return (
 		<>
-			<ChatRoomHeader />
+			<AppHeader />
 			<div className="flex flex-1 flex-col items-center justify-center">
 				<div className="max-w-md text-center">
 					<h2 className="mb-2 text-xl font-bold">No chat room selected</h2>

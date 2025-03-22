@@ -12,7 +12,6 @@ import {
 	DialogFooter,
 	DialogHeader,
 	DialogTitle,
-	DialogTrigger,
 } from "@/components/ui/dialog";
 import {
 	Form,
@@ -27,14 +26,17 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { createAgentSchema } from "@/cs-shared";
 import { client } from "@/lib/api-client";
-import { Plus } from "lucide-react";
-import { useState } from "react";
 import { AgentAvatarPicker } from "./agent-avatar-picker";
 
 export type FormValues = z.infer<typeof createAgentSchema>;
 
-export function NewAgentDialog() {
-	const [open, setOpen] = useState(false);
+export function NewAgentDialog({
+	open,
+	setOpen,
+}: {
+	open: boolean;
+	setOpen: (open: boolean) => void;
+}) {
 	const router = useRouter();
 	const queryClient = useQueryClient();
 	const form = useForm<FormValues>({
@@ -66,12 +68,6 @@ export function NewAgentDialog() {
 
 	return (
 		<Dialog open={open} onOpenChange={setOpen}>
-			<DialogTrigger asChild>
-				<Button variant="outline" size="sm">
-					<Plus className="h-4 w-4" />
-					New Agent
-				</Button>
-			</DialogTrigger>
 			<DialogContent className="sm:max-w-[525px]">
 				<DialogHeader>
 					<DialogTitle>Create New Agent</DialogTitle>

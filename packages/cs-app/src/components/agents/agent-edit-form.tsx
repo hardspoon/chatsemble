@@ -8,7 +8,7 @@ import type { z } from "zod";
 import { AgentPlaceholderNotFound } from "@/components/agents/agent-placeholder";
 import { AgentSkeleton } from "@/components/agents/agent-skeleton";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
 	Form,
 	FormControl,
@@ -90,7 +90,7 @@ export function AgentEditForm({ agentId }: AgentEditFormProps) {
 
 	return (
 		<div className="container mx-auto p-4">
-			<Card>
+			<div>
 				<Form {...form}>
 					<form onSubmit={form.handleSubmit(onSubmit)}>
 						<CardHeader className="flex flex-row items-center justify-between">
@@ -144,7 +144,7 @@ export function AgentEditForm({ agentId }: AgentEditFormProps) {
 						</CardContent>
 					</form>
 				</Form>
-			</Card>
+			</div>
 		</div>
 	);
 }
