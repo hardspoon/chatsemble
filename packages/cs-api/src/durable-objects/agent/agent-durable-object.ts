@@ -40,6 +40,9 @@ export class AgentDurableObject extends DurableObject<Env> {
 		super(ctx, env);
 		this.storage = ctx.storage;
 		this.db = drizzle(this.storage, { logger: false });
+		this.ctx.blockConcurrencyWhile(async () => {
+			await this.migrate();
+		});
 		this.dbServices = createAgentDbServices(this.db, this.ctx.id.toString());
 	}
 

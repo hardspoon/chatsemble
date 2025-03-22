@@ -6,6 +6,10 @@ export type ChatMessageMetadata = {
 		createdAt: number;
 		id: number;
 	};
+	thread?: {
+		lastMessage: ChatRoomMessage;
+		messageCount: number;
+	}
 };
 
 // ChatMention
