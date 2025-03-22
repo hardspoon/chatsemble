@@ -3,30 +3,33 @@
 import { CopyButton } from "@/components/copy-button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "@/hooks/use-toast";
 import { authClient } from "@/lib/auth-client";
-import type { ActiveOrganization, Session } from "@/types/auth";
+import type { ActiveOrganization } from "@/types/auth";
 import { Loader2 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { InviteMemberDialog } from "./invite-member-dialog";
 
-export function OrganizationForm({
-	session,
-	activeOrganization,
-}: {
-	session: Session;
-	activeOrganization: ActiveOrganization;
-}) {
+export function OrganizationForm() {
 	const [optimisticOrg, setOptimisticOrg] = useState<ActiveOrganization | null>(
-		activeOrganization,
+		null,
 	);
 
 	const [isRevoking, setIsRevoking] = useState<string[]>([]);
 
+	const session = authClient.useSession();
+	const activeOrganization = authClient.useActiveOrganization();
+
+	useEffect(() => {
+		if (activeOrganization.data) {
+			// @ts-expect-error // TODO: fix this
+			setOptimisticOrg(activeOrganization.data);
+		}
+	}, [activeOrganization.data]);
+
 	const currentMember = optimisticOrg?.members.find(
-		(member) => member.userId === session?.user.id,
+		(member) => member.userId === session?.data?.user.id,
 	);
 
 	const pendingInvitations = useMemo(() => {
@@ -76,9 +79,11 @@ export function OrganizationForm({
 	};
 
 	return (
-		<Card>
-			<CardHeader className="gap-2">
-				<CardTitle>Your current organization</CardTitle>
+		<div>
+			<div className="flex flex-col space-y-1.5 p-6 gap-2">
+				<h3 className="font-semibold leading-none tracking-tight">
+					Your current organization
+				</h3>
 				<div className="flex items-center gap-2">
 					<Avatar>
 						<AvatarImage
@@ -96,8 +101,8 @@ export function OrganizationForm({
 						</p>
 					</div>
 				</div>
-			</CardHeader>
-			<CardContent>
+			</div>
+			<div className="p-6 pt-0">
 				<div className="flex flex-col xl:flex-row gap-8">
 					<div className="flex flex-col gap-2 flex-grow">
 						<p className="font-medium py-1">Members</p>
@@ -147,13 +152,13 @@ export function OrganizationForm({
 								<div>
 									<div className="flex items-center gap-2">
 										<Avatar>
-											<AvatarImage src={session?.user.image || ""} />
+											<AvatarImage src={session?.data?.user.image || ""} />
 											<AvatarFallback>
-												{session?.user.name?.charAt(0)}
+												{session?.data?.user.name?.charAt(0)}
 											</AvatarFallback>
 										</Avatar>
 										<div>
-											<p className="text-sm">{session?.user.name}</p>
+											<p className="text-sm">{session?.data?.user.name}</p>
 											<p className="text-xs text-muted-foreground">Owner</p>
 										</div>
 									</div>
@@ -214,7 +219,7 @@ export function OrganizationForm({
 						</div>
 					</div>
 				</div>
-			</CardContent>
-		</Card>
+			</div>
+		</div>
 	);
 }

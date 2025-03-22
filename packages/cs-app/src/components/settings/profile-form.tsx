@@ -35,7 +35,7 @@ const profileFormSchema = z.object({
 
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
 
-// This can come from your database or API.
+// TODO: Implement profile editing
 const defaultValues: Partial<ProfileFormValues> = {
 	username: "john-doe",
 	email: "john@example.com",
@@ -61,7 +61,7 @@ export function ProfileForm() {
 
 	return (
 		<Form {...form}>
-			<form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+			<form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 p-6">
 				<FormField
 					control={form.control}
 					name="username"

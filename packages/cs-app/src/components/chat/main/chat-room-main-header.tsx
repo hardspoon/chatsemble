@@ -1,8 +1,8 @@
 import { useChatWsContext } from "@/components/chat/providers/chat-ws-provider";
 
-import { ChatRoomHeader } from "@/components/chat/layout/chat-room-header";
 import { ChatDetailsDialog } from "@/components/chat/main/chat-room-details/chat-details-dialog";
 import type { ChatDetailsDialogOpen } from "@/components/chat/main/chat-room-details/chat-details-dialog";
+import { AppHeader } from "@/components/layout/app-header";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -21,7 +21,7 @@ export function ChatRoomMainHeader() {
 	const { connectionStatus } = useChatWsContext();
 
 	return (
-		<ChatRoomHeader>
+		<AppHeader>
 			{connectionStatus === "ready" ? (
 				<>
 					<ChatRoomName setOpenChatDetailsDialog={setOpenChatDetailsDialog} />
@@ -42,7 +42,7 @@ export function ChatRoomMainHeader() {
 					<Skeleton className="ml-auto h-4 w-28" />
 				</>
 			)}
-		</ChatRoomHeader>
+		</AppHeader>
 	);
 }
 

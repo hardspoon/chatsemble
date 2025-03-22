@@ -1,6 +1,6 @@
 "use client";
 
-import { Bot, MessageSquare, Settings } from "lucide-react";
+import { Bot, MessagesSquare, Settings } from "lucide-react";
 import { usePathname } from "next/navigation";
 import type * as React from "react";
 
@@ -18,7 +18,9 @@ import {
 	SidebarSeparator,
 } from "@/components/ui/sidebar";
 import Link from "next/link";
+import { useState } from "react";
 import { LogoIcon } from "../icons/logo-icon";
+import { type SettingIds, SettingsDialog } from "../settings/settings-dialog";
 import { ThemeToggle } from "../theme-toggle";
 
 // Updated sample data with activeMatch regex
@@ -26,7 +28,7 @@ const navMain = [
 	{
 		title: "Chats",
 		url: "/chat", // Redirect URL
-		icon: MessageSquare,
+		icon: MessagesSquare,
 		activeMatch: /^\/chat/, // Exact match for home
 	},
 	{
@@ -101,27 +103,34 @@ function NavSecondary({
 }: { currentPath: string } & React.ComponentPropsWithoutRef<
 	typeof SidebarGroup
 >) {
+	const [openedSettingsId, setOpenedSettingsId] = useState<SettingIds | null>(
+		null,
+	);
 	return (
-		<SidebarGroup {...props}>
-			<SidebarGroupContent>
-				<SidebarMenu>
-					<SidebarMenuItem>
-						<SidebarMenuButton
-							asChild
-							size="sm"
-							isActive={currentPath === "/settings/profile"}
-						>
-							<a href="/settings/profile">
+		<>
+			<SettingsDialog
+				openedSettingsId={openedSettingsId}
+				setOpenedSettingsId={setOpenedSettingsId}
+			/>
+			<SidebarGroup {...props}>
+				<SidebarGroupContent>
+					<SidebarMenu>
+						<SidebarMenuItem>
+							<SidebarMenuButton
+								size="sm"
+								isActive={!!openedSettingsId}
+								onClick={() => setOpenedSettingsId("profile")}
+							>
 								<Settings />
 								<span>Settings</span>
-							</a>
-						</SidebarMenuButton>
-					</SidebarMenuItem>
-					<SidebarMenuItem>
-						<ThemeToggle />
-					</SidebarMenuItem>
-				</SidebarMenu>
-			</SidebarGroupContent>
-		</SidebarGroup>
+							</SidebarMenuButton>
+						</SidebarMenuItem>
+						<SidebarMenuItem>
+							<ThemeToggle />
+						</SidebarMenuItem>
+					</SidebarMenu>
+				</SidebarGroupContent>
+			</SidebarGroup>
+		</>
 	);
 }
