@@ -1,5 +1,8 @@
 import { useChatWsContext } from "@/components/chat/providers/chat-ws-provider";
 
+import { ChatRoomHeader } from "@/components/chat/layout/chat-room-header";
+import { ChatDetailsDialog } from "@/components/chat/main/chat-room-details/chat-details-dialog";
+import type { ChatDetailsDialogOpen } from "@/components/chat/main/chat-room-details/chat-details-dialog";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -10,9 +13,6 @@ import {
 import { cn } from "@/lib/utils";
 import { Users } from "lucide-react";
 import { type Dispatch, type SetStateAction, useState } from "react";
-import { ChatDetailsDialog } from "@/components/chat/main/chat-room-details/chat-details-dialog";
-import type { ChatDetailsDialogOpen } from "@/components/chat/main/chat-room-details/chat-details-dialog";
-import { ChatRoomHeader } from "@/components/chat/layout/chat-room-header";
 
 export function ChatRoomMainHeader() {
 	const [openChatDetailsDialog, setOpenChatDetailsDialog] =

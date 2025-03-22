@@ -7,11 +7,11 @@ import {
 } from "@/components/ui/chat-message";
 import { ChatMessageArea } from "@/components/ui/chat-message-area";
 
-import { useChatParams } from "@/components/chat/providers/chat-params-provider";
 import {
 	ChatMessagesSkeleton,
 	ChatRoomMessage,
 } from "@/components/chat/chat-room-message";
+import { useChatParams } from "@/components/chat/providers/chat-params-provider";
 import {
 	ChatInput,
 	ChatInputSubmit,

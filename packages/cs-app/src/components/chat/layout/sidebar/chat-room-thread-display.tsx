@@ -9,10 +9,10 @@ import {
 } from "@/components/ui/tiptap-chat-input";
 import type { ChatInputValue } from "@/cs-shared";
 import { useMemo } from "react";
-import { useChatParams } from "../../providers/chat-params-provider";
-import { useChatWsContext } from "../../providers/chat-ws-provider";
 import { ChatMessageSkeleton, ChatRoomMessage } from "../../chat-room-message";
 import { ChatMessagesSkeleton } from "../../chat-room-message";
+import { useChatParams } from "../../providers/chat-params-provider";
+import { useChatWsContext } from "../../providers/chat-ws-provider";
 
 export function ChatRoomThreadDisplay() {
 	const { activeThread, handleSubmit, connectionStatus, members } =
