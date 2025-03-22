@@ -20,10 +20,19 @@ import type { ChatRoomMessage as ChatRoomMessageType } from "@/cs-shared";
 export function ChatRoomMessage({
 	message,
 	actionArea,
+	threadArea,
 }: {
 	message: ChatRoomMessageType;
 	actionArea?: React.ReactNode;
+	threadArea?: (
+		message: ChatRoomMessageType,
+		threadMetadata: NonNullable<ChatRoomMessageType["threadMetadata"]>,
+	) => React.ReactNode;
 }) {
+	const threadAreaComponent =
+		threadArea && message.threadMetadata
+			? threadArea(message, message.threadMetadata)
+			: null;
 	return (
 		<ChatMessage key={String(message.id)} id={String(message.id)}>
 			{actionArea}
@@ -55,8 +64,8 @@ export function ChatRoomMessage({
 							</ToolInvocationBody>
 						</ToolInvocationComponent>
 					))}
+					{threadAreaComponent}
 				</ChatMessageContent>
-				{/* TODO: Show if we have a thread */}
 			</ChatMessageContentArea>
 		</ChatMessage>
 	);

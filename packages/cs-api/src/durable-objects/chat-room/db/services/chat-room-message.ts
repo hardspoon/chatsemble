@@ -17,6 +17,7 @@ export function createChatRoomMessageService(db: DrizzleSqliteDODatabase) {
 				createdAt: chatMessage.createdAt,
 				metadata: chatMessage.metadata,
 				threadId: chatMessage.threadId,
+				threadMetadata: chatMessage.threadMetadata,
 				member: {
 					id: chatRoomMember.id,
 					roomId: chatRoomMember.roomId,
@@ -39,7 +40,12 @@ export function createChatRoomMessageService(db: DrizzleSqliteDODatabase) {
 			...message
 		}: Omit<
 			typeof chatMessage.$inferSelect,
-			"id" | "createdAt" | "memberId" | "metadata" | "threadId"
+			| "id"
+			| "createdAt"
+			| "memberId"
+			| "metadata"
+			| "threadId"
+			| "threadMetadata"
 		>,
 	): Promise<ChatRoomMessage> {
 		const [updatedMessage] = await db
@@ -71,19 +77,16 @@ export function createChatRoomMessageService(db: DrizzleSqliteDODatabase) {
 			throw new Error("Message not found");
 		}
 
-		const messageCount = currentMessage.metadata.thread?.messageCount ?? 0;
-
-		const metadataToUpdate = {
-			...currentMessage.metadata,
-			thread: {
-				lastMessage: newMessage,
-				messageCount: messageCount + 1,
-			},
-		};
+		const messageCount = currentMessage.threadMetadata?.messageCount ?? 0;
 
 		await db
 			.update(chatMessage)
-			.set({ metadata: metadataToUpdate })
+			.set({
+				threadMetadata: {
+					lastMessage: newMessage,
+					messageCount: messageCount + 1,
+				},
+			})
 			.where(eq(chatMessage.id, id));
 
 		const updatedMessage = await getMessageById(id);
@@ -132,6 +135,7 @@ export function createChatRoomMessageService(db: DrizzleSqliteDODatabase) {
 				createdAt: chatMessage.createdAt,
 				metadata: chatMessage.metadata,
 				threadId: chatMessage.threadId,
+				threadMetadata: chatMessage.threadMetadata,
 				member: {
 					id: chatRoomMember.id,
 					roomId: chatRoomMember.roomId,

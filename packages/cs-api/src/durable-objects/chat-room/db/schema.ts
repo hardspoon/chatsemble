@@ -2,6 +2,7 @@ import type {
 	AgentToolUse,
 	ChatMentions,
 	ChatMessageMetadata,
+	ChatMessageThreadMetadata,
 	ChatRoomMemberRole,
 	ChatRoomMemberType,
 	ChatRoomType,
@@ -35,11 +36,14 @@ export const chatMessage = sqliteTable("chat_message", {
 	metadata: text("metadata", { mode: "json" })
 		.$type<ChatMessageMetadata>()
 		.notNull(),
+	threadMetadata: text("thread_metadata", {
+		mode: "json",
+	}).$type<ChatMessageThreadMetadata>(),
 	threadId: integer("thread_id"),
 });
 
 export const chatRoomMember = sqliteTable("chat_room_member", {
-	id: text("id").primaryKey(), // User ID or Agent ID // TODO: Check about using branded types
+	id: text("id").primaryKey(), // User ID or Agent ID
 	roomId: text("room_id").notNull(),
 	type: text("type").$type<ChatRoomMemberType>().notNull(),
 	role: text("role").$type<ChatRoomMemberRole>().notNull(),

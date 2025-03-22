@@ -29,6 +29,7 @@ export class ChatDurableObject extends DurableObject<Env> {
 		this.sessions = new Map();
 
 		this.ctx.blockConcurrencyWhile(async () => {
+			console.log("Migrating chat room", this.ctx.id.toString());
 			await this.migrate();
 		});
 
@@ -196,6 +197,7 @@ export class ChatDurableObject extends DurableObject<Env> {
 						id: message.id,
 					},
 				},
+				threadMetadata: null,
 			});
 
 			if (message.threadId) {

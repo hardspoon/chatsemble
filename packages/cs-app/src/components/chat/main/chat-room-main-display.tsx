@@ -4,6 +4,7 @@ import { useChatWsContext } from "@/components/chat/providers/chat-ws-provider";
 import {
 	ChatMessageAction,
 	ChatMessageActionsArea,
+	ChatMessageThread,
 } from "@/components/ui/chat-message";
 import { ChatMessageArea } from "@/components/ui/chat-message-area";
 
@@ -66,6 +67,14 @@ export function ChatRoomMainDisplay() {
 											</ChatMessageAction>
 										</ChatMessageActionsArea>
 									}
+									threadArea={({ id }, threadMetadata) => (
+										<ChatMessageThread
+											threadMetadata={threadMetadata}
+											onClick={() => {
+												setThreadId(id);
+											}}
+										/>
+									)}
 								/>
 							);
 						})

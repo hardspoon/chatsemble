@@ -1,12 +1,12 @@
+import { env } from "cloudflare:workers";
 import { tool } from "ai";
+import FirecrawlApp, {} from "firecrawl";
 import { customAlphabet } from "nanoid";
 import { z } from "zod";
 import type {
 	ChatRoomMessage,
 	ChatRoomMessagePartial,
 } from "../../../../../cs-shared/src/types/chat";
-import FirecrawlApp, {} from "firecrawl";
-import { env } from "cloudflare:workers";
 
 export const searchInformationTool = ({
 	braveApiKey,
