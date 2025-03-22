@@ -1,8 +1,8 @@
 "use client";
 
+import type { User } from "better-auth";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createContext, useCallback, useContext, useMemo } from "react";
-import type { User } from "better-auth";
 interface ChatParamsContextType {
 	roomId: string | null;
 	threadId: number | null;

@@ -1,8 +1,8 @@
 import { ChatRoomTypeBadge } from "@/components/chat/chat-room-type-badge";
+import { useChatWsContext } from "@/components/chat/providers/chat-ws-provider";
 import { Separator } from "@/components/ui/separator";
 import { CalendarIcon } from "lucide-react";
 import { UsersIcon } from "lucide-react";
-import { useChatWsContext } from "@/components/chat/providers/chat-ws-provider";
 
 export function ChatDetailsSection() {
 	const { room, members } = useChatWsContext();

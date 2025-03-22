@@ -1,19 +1,19 @@
 "use client";
 
+import { ChatRoomNotSelected } from "@/components/chat/layout/chat-room-not-selected";
+import { ChatRoomThreadHeader } from "@/components/chat/layout/chat-room-thread-header";
+import { ChatRoomThreadDisplay } from "@/components/chat/layout/sidebar/chat-room-thread-display";
 import { ChatRoomMainDisplay } from "@/components/chat/main/chat-room-main-display";
 import { ChatRoomMainHeader } from "@/components/chat/main/chat-room-main-header";
-import { ChatWsProvider } from "@/components/chat/providers/chat-ws-provider";
-import type { User } from "better-auth";
 import {
 	ChatParamsProvider,
 	useChatParams,
 } from "@/components/chat/providers/chat-params-provider";
-import { ChatRoomNotSelected } from "@/components/chat/layout/chat-room-not-selected";
+import { ChatWsProvider } from "@/components/chat/providers/chat-ws-provider";
 import { ResizableHandle } from "@/components/ui/resizable";
 import { ResizablePanel } from "@/components/ui/resizable";
 import { ResizablePanelGroup } from "@/components/ui/resizable";
-import { ChatRoomThreadDisplay } from "@/components/chat/layout/sidebar/chat-room-thread-display";
-import { ChatRoomThreadHeader } from "@/components/chat/layout/chat-room-thread-header";
+import type { User } from "better-auth";
 
 export function ChatRoom({ user }: { user: User }) {
 	return (

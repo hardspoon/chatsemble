@@ -9,16 +9,16 @@ import {
 	Sidebar,
 	SidebarContent,
 	SidebarFooter,
-	SidebarGroupContent,
 	SidebarGroup,
+	SidebarGroupContent,
 	SidebarHeader,
 	SidebarMenu,
 	SidebarMenuButton,
 	SidebarMenuItem,
 	SidebarSeparator,
 } from "@/components/ui/sidebar";
-import { LogoIcon } from "../icons/logo-icon";
 import Link from "next/link";
+import { LogoIcon } from "../icons/logo-icon";
 import { ThemeToggle } from "../theme-toggle";
 
 // Updated sample data with activeMatch regex
