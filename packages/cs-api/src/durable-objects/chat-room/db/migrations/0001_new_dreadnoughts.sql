@@ -1,1 +1,0 @@
-ALTER TABLE `chat_message` ADD `thread_metadata` text DEFAULT 'null';

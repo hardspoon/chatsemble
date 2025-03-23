@@ -1,13 +1,19 @@
 CREATE TABLE `agent` (
 	`id` text PRIMARY KEY NOT NULL,
+	`email` text NOT NULL,
 	`name` text NOT NULL,
 	`image` text NOT NULL,
-	`system_prompt` text NOT NULL,
+	`description` text NOT NULL,
+	`tone` text NOT NULL,
+	`verbosity` text NOT NULL,
+	`emoji_usage` text NOT NULL,
+	`language_style` text NOT NULL,
 	`organization_id` text NOT NULL,
 	`created_at` integer DEFAULT (unixepoch() * 1000) NOT NULL,
 	FOREIGN KEY (`organization_id`) REFERENCES `organization`(`id`) ON UPDATE no action ON DELETE no action
 );
 --> statement-breakpoint
+CREATE UNIQUE INDEX `agent_email_unique` ON `agent` (`email`);--> statement-breakpoint
 CREATE TABLE `account` (
 	`id` text PRIMARY KEY NOT NULL,
 	`user_id` text NOT NULL,

@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "f8607618-16ba-48f3-a4f0-e9856bcb6742",
+  "id": "8bb47a11-504b-4e52-9f7f-d4b9bdf17edb",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "agent": {
@@ -11,6 +11,13 @@
           "name": "id",
           "type": "text",
           "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "email": {
+          "name": "email",
+          "type": "text",
+          "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
@@ -28,8 +35,36 @@
           "notNull": true,
           "autoincrement": false
         },
-        "system_prompt": {
-          "name": "system_prompt",
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "tone": {
+          "name": "tone",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "verbosity": {
+          "name": "verbosity",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "emoji_usage": {
+          "name": "emoji_usage",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "language_style": {
+          "name": "language_style",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
@@ -51,7 +86,15 @@
           "default": "(unixepoch() * 1000)"
         }
       },
-      "indexes": {},
+      "indexes": {
+        "agent_email_unique": {
+          "name": "agent_email_unique",
+          "columns": [
+            "email"
+          ],
+          "isUnique": true
+        }
+      },
       "foreignKeys": {
         "agent_organization_id_organization_id_fk": {
           "name": "agent_organization_id_organization_id_fk",

@@ -2,7 +2,7 @@ import { Hono } from "hono";
 
 import { type Agent, createAgentSchema, globalSchema } from "@/cs-shared";
 import { zValidator } from "@hono/zod-validator";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import type { HonoContextWithAuth } from "../../types/hono";
 
 // TODO: Add permissions check to agents routes
@@ -13,7 +13,15 @@ const app = new Hono<HonoContextWithAuth>()
 		const db = c.get("db");
 		const session = c.get("session");
 		const { activeOrganizationId } = session;
-		const { name, image, systemPrompt } = c.req.valid("json");
+		const {
+			name,
+			image,
+			description,
+			tone,
+			verbosity,
+			emojiUsage,
+			languageStyle,
+		} = c.req.valid("json");
 
 		if (!activeOrganizationId) {
 			throw new Error("Organization not set");
@@ -24,19 +32,31 @@ const app = new Hono<HonoContextWithAuth>()
 
 		const agentDo = AGENT_DURABLE_OBJECT.get(agentDoId);
 
+		const email = `${agentDoId.toString()}@chatsemble.com`;
+
 		await agentDo.migrate();
-		await agentDo.upsertAgentConfig({
+		await agentDo.insertAgentConfig({
+			email,
 			name,
 			image,
-			systemPrompt,
+			description,
+			tone,
+			verbosity,
+			emojiUsage,
+			languageStyle,
 			organizationId: activeOrganizationId,
 		});
 
 		await db.insert(globalSchema.agent).values({
 			id: agentDoId.toString(),
+			email,
 			name,
 			image,
-			systemPrompt,
+			description,
+			tone,
+			verbosity,
+			emojiUsage,
+			languageStyle,
 			organizationId: activeOrganizationId,
 		});
 
@@ -47,7 +67,15 @@ const app = new Hono<HonoContextWithAuth>()
 		const db = c.get("db");
 		const session = c.get("session");
 		const { activeOrganizationId } = session;
-		const { name, image, systemPrompt } = c.req.valid("json");
+		const {
+			name,
+			image,
+			description,
+			tone,
+			verbosity,
+			emojiUsage,
+			languageStyle,
+		} = c.req.valid("json");
 		const { id } = c.req.param();
 
 		if (!activeOrganizationId) {
@@ -57,11 +85,14 @@ const app = new Hono<HonoContextWithAuth>()
 		const agentId = AGENT_DURABLE_OBJECT.idFromString(id);
 		const agent = AGENT_DURABLE_OBJECT.get(agentId);
 
-		await agent.upsertAgentConfig({
+		await agent.updateAgentConfig({
 			name,
 			image,
-			systemPrompt,
-			organizationId: activeOrganizationId,
+			description,
+			tone,
+			verbosity,
+			emojiUsage,
+			languageStyle,
 		});
 
 		// Update agent record in D1
@@ -70,11 +101,17 @@ const app = new Hono<HonoContextWithAuth>()
 			.set({
 				name,
 				image,
-				systemPrompt,
+				description,
+				tone,
+				verbosity,
+				emojiUsage,
+				languageStyle,
 			})
 			.where(
-				eq(globalSchema.agent.id, id) &&
+				and(
+					eq(globalSchema.agent.id, id),
 					eq(globalSchema.agent.organizationId, activeOrganizationId),
+				),
 			);
 
 		return c.json({ success: true });
@@ -101,6 +138,8 @@ const app = new Hono<HonoContextWithAuth>()
 		const { activeOrganizationId } = session;
 		const { id } = c.req.param();
 
+		console.log("[GET] /agent/:id", id);
+
 		if (!activeOrganizationId) {
 			throw new Error("Organization not set");
 		}
@@ -109,13 +148,17 @@ const app = new Hono<HonoContextWithAuth>()
 			.select()
 			.from(globalSchema.agent)
 			.where(
-				eq(globalSchema.agent.id, id) &&
+				and(
+					eq(globalSchema.agent.id, id),
 					eq(globalSchema.agent.organizationId, activeOrganizationId),
+				),
 			)
 			.get();
 
+		console.log("[GET] /agent/:id result", agent);
+
 		if (!agent) {
-			return c.json({ error: "Agent not found" }, 404);
+			throw new Error("Agent not found");
 		}
 
 		return c.json(agent);

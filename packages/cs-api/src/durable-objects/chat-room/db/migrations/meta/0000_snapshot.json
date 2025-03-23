@@ -1,7 +1,7 @@
 {
 	"version": "6",
 	"dialect": "sqlite",
-	"id": "61d29b31-892c-42f2-bf32-a4dd68ebcc18",
+	"id": "28ee728b-295b-4d2f-b346-8fd37936522e",
 	"prevId": "00000000-0000-0000-0000-000000000000",
 	"tables": {
 		"chat_message": {
@@ -55,6 +55,13 @@
 					"type": "text",
 					"primaryKey": false,
 					"notNull": true,
+					"autoincrement": false
+				},
+				"thread_metadata": {
+					"name": "thread_metadata",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false,
 					"autoincrement": false
 				},
 				"thread_id": {
