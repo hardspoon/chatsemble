@@ -446,10 +446,16 @@ export class AgentDurableObject extends DurableObject<Env> {
 		return chatRoomMessage;
 	}
 
-	async upsertAgentConfig(
-		agentConfigData: Parameters<typeof this.dbServices.upsertAgentConfig>[0],
+	async insertAgentConfig(
+		agentConfigData: Parameters<typeof this.dbServices.insertAgentConfig>[0],
 	) {
-		await this.dbServices.upsertAgentConfig(agentConfigData);
+		await this.dbServices.insertAgentConfig(agentConfigData);
+	}
+
+	async updateAgentConfig(
+		agentConfigData: Parameters<typeof this.dbServices.updateAgentConfig>[0],
+	) {
+		await this.dbServices.updateAgentConfig(agentConfigData);
 	}
 
 	async addChatRoom(

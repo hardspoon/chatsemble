@@ -56,10 +56,8 @@ export function AgentsSidebar() {
 				<SkeletonGroup listLength={2} />
 			) : error ? (
 				<AgentsError />
-			) : agentsData && agentsData.length > 0 ? (
-				<AgentGroup agents={agentsData} />
 			) : (
-				<AgentsEmpty />
+				agentsData && <AgentGroup agents={agentsData} />
 			)}
 		</>
 	);
@@ -90,46 +88,50 @@ function AgentGroup({
 					<Plus /> <span className="sr-only">Add Agent</span>
 				</SidebarGroupAction>
 				<SidebarMenu>
-					{agents.map((agent) => (
-						<SidebarMenuItem key={agent.id}>
-							<SidebarMenuButton
-								asChild
-								isActive={selectedAgentId === agent.id}
-							>
-								<Link href={`/agents?agentId=${agent.id}`} title={agent.name}>
-									<Avatar className="size-5">
-										<AvatarImage src={agent.image} />
-										<AvatarFallback>{agent.name.slice(0, 2)}</AvatarFallback>
-									</Avatar>
-									<span>{agent.name}</span>
-								</Link>
-							</SidebarMenuButton>
-							<DropdownMenu>
-								<DropdownMenuTrigger asChild>
-									<SidebarMenuAction showOnHover>
-										<MoreHorizontal />
-										<span className="sr-only">More</span>
-									</SidebarMenuAction>
-								</DropdownMenuTrigger>
-								<DropdownMenuContent
-									className="w-56 rounded-lg"
-									side={isMobile ? "bottom" : "right"}
-									align={isMobile ? "end" : "start"}
+					{agents.length > 0 ? (
+						agents.map((agent) => (
+							<SidebarMenuItem key={agent.id}>
+								<SidebarMenuButton
+									asChild
+									isActive={selectedAgentId === agent.id}
 								>
-									<DropdownMenuItem>
-										<StarOff className="text-muted-foreground" />
-										<span>Remove from Favorites</span>
-									</DropdownMenuItem>
+									<Link href={`/agents?agentId=${agent.id}`} title={agent.name}>
+										<Avatar className="size-5">
+											<AvatarImage src={agent.image} />
+											<AvatarFallback>{agent.name.slice(0, 2)}</AvatarFallback>
+										</Avatar>
+										<span>{agent.name}</span>
+									</Link>
+								</SidebarMenuButton>
+								<DropdownMenu>
+									<DropdownMenuTrigger asChild>
+										<SidebarMenuAction showOnHover>
+											<MoreHorizontal />
+											<span className="sr-only">More</span>
+										</SidebarMenuAction>
+									</DropdownMenuTrigger>
+									<DropdownMenuContent
+										className="w-56 rounded-lg"
+										side={isMobile ? "bottom" : "right"}
+										align={isMobile ? "end" : "start"}
+									>
+										<DropdownMenuItem>
+											<StarOff className="text-muted-foreground" />
+											<span>Remove from Favorites</span>
+										</DropdownMenuItem>
 
-									<DropdownMenuSeparator />
-									<DropdownMenuItem>
-										<Trash2 className="text-muted-foreground" />
-										<span>Delete</span>
-									</DropdownMenuItem>
-								</DropdownMenuContent>
-							</DropdownMenu>
-						</SidebarMenuItem>
-					))}
+										<DropdownMenuSeparator />
+										<DropdownMenuItem>
+											<Trash2 className="text-muted-foreground" />
+											<span>Delete</span>
+										</DropdownMenuItem>
+									</DropdownMenuContent>
+								</DropdownMenu>
+							</SidebarMenuItem>
+						))
+					) : (
+						<AgentsEmpty />
+					)}
 				</SidebarMenu>
 			</SidebarGroup>
 		</>

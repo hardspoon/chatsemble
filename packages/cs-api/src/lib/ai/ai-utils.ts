@@ -105,6 +105,7 @@ export async function processDataStream({
 	const streamedMessages: Omit<ChatRoomMessage, "member">[] = [];
 	const decoder = new TextDecoder();
 
+	// @ts-ignore
 	// biome-ignore lint/style/noNonNullAssertion: Response body is guaranteed to exist
 	for await (const chunk of response.body!) {
 		const text = decoder.decode(chunk).trim();

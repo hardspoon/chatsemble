@@ -15,3 +15,11 @@ export function AppHeader({ children }: React.ComponentProps<"div">) {
 		</header>
 	);
 }
+
+export function AppHeaderTitle({ children }: React.ComponentProps<"span">) {
+	return (
+		<span className="text-lg font-medium flex items-center gap-3 [&_svg]:size-5">
+			{children}
+		</span>
+	);
+}

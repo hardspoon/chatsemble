@@ -7,12 +7,28 @@ export const toneOptions = [
 	"professional",
 ] as const;
 export type Tone = (typeof toneOptions)[number];
+export const toneDescriptions: Record<Tone, string> = {
+	formal: "Structured language with proper grammar",
+	casual: "Relaxed, conversational language, possibly with colloquialisms",
+	friendly: "Warm, approachable, and encouraging",
+	professional: "Business-like, efficient demeanor",
+};
 
 export const verbosityOptions = ["concise", "detailed", "adaptive"] as const;
 export type Verbosity = (typeof verbosityOptions)[number];
+export const verbosityDescriptions: Record<Verbosity, string> = {
+	concise: "Brief, to-the-point answers focusing on key information",
+	detailed: "Thorough explanations with background and context",
+	adaptive: "Adjusts to complexity",
+};
 
 export const emojiUsageOptions = ["none", "occasional", "frequent"] as const;
 export type EmojiUsage = (typeof emojiUsageOptions)[number];
+export const emojiUsageDescriptions: Record<EmojiUsage, string> = {
+	none: "No emojis in responses",
+	occasional: "Sparingly used to enhance meaning or emotion",
+	frequent: "Regular emoji use to add personality and visual interest",
+};
 
 export const languageStyleOptions = [
 	"simple",
@@ -20,6 +36,12 @@ export const languageStyleOptions = [
 	"industry-specific",
 ] as const;
 export type LanguageStyle = (typeof languageStyleOptions)[number];
+export const languageStyleDescriptions: Record<LanguageStyle, string> = {
+	simple: "Clear, straightforward language anyone can understand",
+	technical: "Include technical terms and concepts for an expert audience",
+	// biome-ignore lint/complexity/useLiteralKeys: Cannot be simplified
+	["industry-specific"]: "Domain-specific terminology",
+};
 
 export interface Agent {
 	id: string;

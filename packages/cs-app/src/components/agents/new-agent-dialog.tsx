@@ -2,7 +2,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
-import type { z } from "zod";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -13,22 +12,10 @@ import {
 	DialogHeader,
 	DialogTitle,
 } from "@/components/ui/dialog";
-import {
-	Form,
-	FormControl,
-	FormDescription,
-	FormField,
-	FormItem,
-	FormLabel,
-	FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { createAgentSchema } from "@/cs-shared";
+import { Form } from "@/components/ui/form";
+import { type AgentFormValues, createAgentSchema } from "@/cs-shared";
 import { client } from "@/lib/api-client";
-import { AgentAvatarPicker } from "./agent-avatar-picker";
-
-export type FormValues = z.infer<typeof createAgentSchema>;
+import { AgentForm } from "./agent-form";
 
 export function NewAgentDialog({
 	open,
@@ -37,18 +24,37 @@ export function NewAgentDialog({
 	open: boolean;
 	setOpen: (open: boolean) => void;
 }) {
+	return (
+		<Dialog open={open} onOpenChange={setOpen}>
+			<DialogContent className="max-w-[96vw] md:max-w-screen-lg w-full max-h-[90vh] flex flex-col p-0">
+				{open && <NewAgentDialogContent setOpen={setOpen} />}
+			</DialogContent>
+		</Dialog>
+	);
+}
+
+function NewAgentDialogContent({
+	setOpen,
+}: {
+	setOpen: (open: boolean) => void;
+}) {
 	const router = useRouter();
 	const queryClient = useQueryClient();
-	const form = useForm<FormValues>({
+	const form = useForm<AgentFormValues>({
 		resolver: zodResolver(createAgentSchema),
 		defaultValues: {
 			name: "",
 			image: "/notion-avatars/avatar-01.svg",
+			description: "",
+			tone: "formal",
+			verbosity: "concise",
+			emojiUsage: "occasional",
+			languageStyle: "simple",
 		},
 	});
 
 	const createChatMutation = useMutation({
-		mutationFn: async (values: FormValues) => {
+		mutationFn: async (values: AgentFormValues) => {
 			const response = await client.protected.agents.$post({
 				json: values,
 			});
@@ -62,63 +68,32 @@ export function NewAgentDialog({
 		},
 	});
 
-	const onSubmit = (values: FormValues) => {
+	const onSubmit = (values: AgentFormValues) => {
 		createChatMutation.mutate(values);
 	};
 
 	return (
-		<Dialog open={open} onOpenChange={setOpen}>
-			<DialogContent className="sm:max-w-[525px]">
-				<DialogHeader>
-					<DialogTitle>Create New Agent</DialogTitle>
-					<DialogDescription>
-						Create a new agent to start conversations with your team.
-					</DialogDescription>
-				</DialogHeader>
-				<Form {...form}>
-					<form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-						<AgentAvatarPicker control={form.control} />
-						<FormField
-							control={form.control}
-							name="name"
-							render={({ field }) => (
-								<FormItem>
-									<FormLabel>Name</FormLabel>
-									<FormControl>
-										<Input placeholder="Enter agent name" {...field} />
-									</FormControl>
-									<FormDescription>
-										This is the name that will be displayed for your agent.
-									</FormDescription>
-									<FormMessage />
-								</FormItem>
-							)}
-						/>
-						<FormField
-							control={form.control}
-							name="systemPrompt"
-							render={({ field }) => (
-								<FormItem>
-									<FormLabel>System Prompt</FormLabel>
-									<FormControl>
-										<Textarea placeholder="Enter system prompt" {...field} />
-									</FormControl>
-									<FormDescription>
-										This is the s ystem prompt that will be used for your agent.
-									</FormDescription>
-									<FormMessage />
-								</FormItem>
-							)}
-						/>
+		<>
+			<DialogHeader className="p-4 pb-0">
+				<DialogTitle>Create New Agent</DialogTitle>
+				<DialogDescription>
+					Create a new agent to start conversations with your team.
+				</DialogDescription>
+			</DialogHeader>
+			<Form {...form}>
+				<form
+					onSubmit={form.handleSubmit(onSubmit)}
+					className="flex-1 flex flex-col overflow-y-auto"
+				>
+					<AgentForm className="flex-1 flex flex-col gap-6 p-4 px-6 overflow-y-auto" />
 
-						<DialogFooter>
-							<Button type="submit" disabled={createChatMutation.isPending}>
-								{createChatMutation.isPending ? "Creating..." : "Create Agent"}
-							</Button>
-						</DialogFooter>
-					</form>
-				</Form>
-			</DialogContent>
-		</Dialog>
+					<DialogFooter className="p-4">
+						<Button type="submit" disabled={createChatMutation.isPending}>
+							{createChatMutation.isPending ? "Creating..." : "Create Agent"}
+						</Button>
+					</DialogFooter>
+				</form>
+			</Form>
+		</>
 	);
 }

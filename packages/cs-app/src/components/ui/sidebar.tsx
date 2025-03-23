@@ -291,6 +291,7 @@ const SidebarTrigger = React.forwardRef<
 			data-sidebar="trigger"
 			variant="ghost"
 			size="icon"
+			type="button"
 			className={cn("h-7 w-7", className)}
 			onClick={(event) => {
 				onClick?.(event);
@@ -341,7 +342,7 @@ const SidebarInset = React.forwardRef<
 	}
 >(({ className, variant = "sidebar", ...props }, ref) => {
 	return (
-		<div className="h-svh relative flex w-full flex-1 flex-col md:peer-data-[variant=inset]:p-2 md:peer-data-[state=collapsed]:peer-data-[variant=inset]:pl-2 md:peer-data-[variant=inset]:pl-0">
+		<div className="h-svh relative flex w-full flex-1 flex-col md:peer-data-[variant=inset]:p-2 md:peer-data-[state=collapsed]:peer-data-[variant=inset]:pl-2 md:peer-data-[variant=inset]:pl-0.5 overflow-hidden">
 			<main
 				ref={ref}
 				className={cn(

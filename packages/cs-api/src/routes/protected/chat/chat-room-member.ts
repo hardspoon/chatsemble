@@ -70,7 +70,7 @@ const app = new Hono<HonoContextWithAuth>()
 			let member: {
 				memberId: string;
 				name: string;
-				email?: string;
+				email: string;
 				image: string | null;
 			} | null = null;
 
@@ -126,6 +126,7 @@ const app = new Hono<HonoContextWithAuth>()
 				member = {
 					memberId: agent.id,
 					name: agent.name,
+					email: agent.email,
 					image: agent.image,
 				};
 			}
@@ -141,7 +142,7 @@ const app = new Hono<HonoContextWithAuth>()
 					role,
 					type,
 					name: member.name,
-					email: member.email ?? "agent@chatsemble.com",
+					email: member.email,
 					image: member.image,
 				},
 			]);

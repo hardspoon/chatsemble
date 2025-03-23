@@ -20,7 +20,7 @@ export function createAgentConfigService(
 			return config;
 		},
 
-		async upsertAgentConfig(
+		async insertAgentConfig(
 			agentConfigData: Omit<
 				typeof agentConfig.$inferSelect,
 				"id" | "createdAt"
@@ -37,9 +37,24 @@ export function createAgentConfigService(
 					set: {
 						image: agentConfigData.image,
 						name: agentConfigData.name,
-						systemPrompt: agentConfigData.systemPrompt,
+						description: agentConfigData.description,
+						tone: agentConfigData.tone,
+						verbosity: agentConfigData.verbosity,
+						emojiUsage: agentConfigData.emojiUsage,
+						languageStyle: agentConfigData.languageStyle,
 					},
 				});
+		},
+
+		async updateAgentConfig(
+			agentConfigData: Partial<
+				Omit<typeof agentConfig.$inferSelect, "id" | "createdAt">
+			>,
+		) {
+			await db
+				.update(agentConfig)
+				.set(agentConfigData)
+				.where(eq(agentConfig.id, agentId));
 		},
 	};
 }
