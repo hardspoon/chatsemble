@@ -138,8 +138,6 @@ const app = new Hono<HonoContextWithAuth>()
 		const { activeOrganizationId } = session;
 		const { id } = c.req.param();
 
-		console.log("[GET] /agent/:id", id);
-
 		if (!activeOrganizationId) {
 			throw new Error("Organization not set");
 		}
@@ -154,8 +152,6 @@ const app = new Hono<HonoContextWithAuth>()
 				),
 			)
 			.get();
-
-		console.log("[GET] /agent/:id result", agent);
 
 		if (!agent) {
 			throw new Error("Agent not found");

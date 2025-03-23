@@ -29,7 +29,6 @@ export class ChatDurableObject extends DurableObject<Env> {
 		this.sessions = new Map();
 
 		this.ctx.blockConcurrencyWhile(async () => {
-			console.log("Migrating chat room", this.ctx.id.toString());
 			await this.migrate();
 		});
 

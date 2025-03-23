@@ -1,4 +1,5 @@
 import { getAuth } from "@/auth";
+import { SidebarProvider } from "@/components/ui/sidebar";
 import { globalSchema } from "@/cs-shared";
 import { getDB } from "@/server/db";
 import { eq } from "drizzle-orm";
@@ -45,7 +46,7 @@ export default async function RootLayout({
 		});
 	}
 
-	return children;
+	return <SidebarProvider>{children}</SidebarProvider>;
 }
 
 export const dynamic = "force-dynamic";

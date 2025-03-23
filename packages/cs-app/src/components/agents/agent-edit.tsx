@@ -14,7 +14,12 @@ import { Form } from "@/components/ui/form";
 import { type AgentFormValues, createAgentSchema } from "@/cs-shared";
 import { toast } from "@/hooks/use-toast";
 import { Bot } from "lucide-react";
-import { AppHeader, AppHeaderTitle } from "../layout/app-header";
+import {
+	AppHeader,
+	AppHeaderIcon,
+	AppHeaderSeparator,
+	AppHeaderTitle,
+} from "../layout/app-header";
 
 import { Button } from "../ui/button";
 import { AgentForm } from "./agent-form";
@@ -23,12 +28,10 @@ export function AgentEdit({ agentId }: { agentId: string }) {
 	const { data: agent, isLoading } = useQuery({
 		queryKey: ["agent", agentId],
 		queryFn: async () => {
-			console.log("fetching agent", agentId);
 			const response = await client.protected.agents[":id"].$get({
 				param: { id: agentId },
 			});
 			const agent = await response.json();
-			console.log("fetched agent", JSON.parse(JSON.stringify(agent)));
 			return agent;
 		},
 	});
@@ -76,9 +79,11 @@ export function AgentEdit({ agentId }: { agentId: string }) {
 				className="flex-1 flex flex-col h-full"
 			>
 				<AppHeader>
-					<AppHeaderTitle>
-						<Bot /> Edit Agent
-					</AppHeaderTitle>
+					<AppHeaderIcon>
+						<Bot />
+					</AppHeaderIcon>
+					<AppHeaderSeparator />
+					<AppHeaderTitle>Edit Agent</AppHeaderTitle>
 					<Button type="submit" size="sm" className="ml-auto">
 						Save Changes
 					</Button>

@@ -1,6 +1,6 @@
 "use client";
 
-import { Bot, MessagesSquare, Settings } from "lucide-react";
+import { Bot, MessagesSquare, PanelLeft, Search, Settings } from "lucide-react";
 import { usePathname } from "next/navigation";
 import type * as React from "react";
 
@@ -16,7 +16,9 @@ import {
 	SidebarMenuButton,
 	SidebarMenuItem,
 	SidebarSeparator,
+	useSidebar,
 } from "@/components/ui/sidebar";
+import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { useState } from "react";
 import { LogoIcon } from "../icons/logo-icon";
@@ -41,19 +43,40 @@ const navMain = [
 
 export function AppSidebar({ children }: React.ComponentProps<typeof Sidebar>) {
 	const pathname = usePathname();
+	const { toggleSidebar } = useSidebar();
 
 	return (
 		<Sidebar variant="inset" collapsible="icon">
 			<SidebarHeader>
 				<SidebarMenu>
-					<SidebarMenuItem>
-						<SidebarMenuButton asChild>
-							<a href="/">
-								<LogoIcon className="!size-6" />
-								<span className="flex-1 text-left text-sm leading-tight font-semibold">
-									Chatsemble
-								</span>
-							</a>
+					<SidebarMenuItem className="flex items-center justify-between">
+						<LogoIcon className="size-6 group-data-[collapsible=icon]:hidden" />
+
+						<SidebarMenuButton
+							className="w-fit [&>svg]:size-5 md:flex justify-center hidden"
+							tooltip="Toggle Sidebar"
+							variant="default"
+							onClick={toggleSidebar}
+						>
+							<PanelLeft />
+							<span className="sr-only">Toggle Sidebar</span>
+						</SidebarMenuButton>
+					</SidebarMenuItem>
+				</SidebarMenu>
+				<SidebarMenu>
+					<SidebarMenuItem className="flex items-center justify-between">
+						<SidebarMenuButton
+							tooltip="Search"
+							variant="outline"
+							className={cn(
+								"group-data-[collapsible=icon]:bg-sidebar",
+								"group-data-[collapsible=icon]:hover:bg-sidebar-accent",
+								"group-data-[collapsible=icon]:shadow-none",
+								"group-data-[collapsible=icon]:hover:shadow-none",
+							)}
+						>
+							<Search />
+							<span>Search</span>
 						</SidebarMenuButton>
 					</SidebarMenuItem>
 				</SidebarMenu>
@@ -118,6 +141,7 @@ function NavSecondary({
 						<SidebarMenuItem>
 							<SidebarMenuButton
 								size="sm"
+								tooltip="Settings"
 								isActive={!!openedSettingsId}
 								onClick={() => setOpenedSettingsId("profile")}
 							>

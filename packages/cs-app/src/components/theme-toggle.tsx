@@ -13,7 +13,7 @@ export const ThemeToggle = () => {
 	}, [theme, setTheme]);
 
 	return (
-		<SidebarMenuButton size="sm" onClick={toggleTheme}>
+		<SidebarMenuButton tooltip="Toggle theme" size="sm" onClick={toggleTheme}>
 			<SunIcon className="hidden [html.dark_&]:block" />
 			<MoonIcon className="hidden [html.light_&]:block" />
 			<span>Toggle theme</span>
