@@ -5,7 +5,12 @@ import type { ChatRoomMessage, ChatRoomMessagePartial } from "@/cs-shared";
 //import { createOpenAI } from "@ai-sdk/openai";
 import { createGroq } from "@ai-sdk/groq";
 import { createOpenAI } from "@ai-sdk/openai";
-import { generateObject, smoothStream, streamText } from "ai";
+import {
+	createDataStreamResponse,
+	generateObject,
+	smoothStream,
+	streamText,
+} from "ai";
 import {
 	type DrizzleSqliteDODatabase,
 	drizzle,
@@ -14,7 +19,7 @@ import { migrate } from "drizzle-orm/durable-sqlite/migrator";
 import {
 	agentMessagesToContextCoreMessages,
 	chatRoomMessagesToAgentMessages,
-	processStream,
+	processDataStream,
 } from "../../lib/ai/ai-utils";
 import {
 	agentSystemPrompt,
@@ -396,19 +401,25 @@ export class AgentDurableObject extends DurableObject<Env> {
 			newMessages,
 		);
 
-		const stream = streamText({
-			model: openAIClient("gpt-4o"),
-			system: systemPrompt,
-			tools: agentToolSet,
-			messages,
-			maxSteps: 10,
-			experimental_transform: smoothStream({
-				chunking: "line",
-			}),
+		const dataStreamResponse = createDataStreamResponse({
+			execute: async (dataStream) => {
+				const agentStreamText = streamText({
+					model: openAIClient("gpt-4o"),
+					system: systemPrompt,
+					tools: agentToolSet,
+					messages,
+					maxSteps: 10,
+					experimental_transform: smoothStream({
+						chunking: "line",
+					}),
+				});
+
+				agentStreamText.mergeIntoDataStream(dataStream);
+			},
 		});
 
-		await processStream({
-			fullStream: stream.fullStream,
+		await processDataStream({
+			response: dataStreamResponse,
 			getThreadId: () => sendMessageThreadId,
 			omitSendingTool: ["createMessageThread"],
 			onMessageSend: onMessage,
