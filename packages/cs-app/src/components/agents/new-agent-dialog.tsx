@@ -77,6 +77,7 @@ export function NewAgentDialog({
 				</DialogHeader>
 				<Form {...form}>
 					<form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+						<AgentAvatarPicker control={form.control} />
 						<FormField
 							control={form.control}
 							name="name"
@@ -109,9 +110,6 @@ export function NewAgentDialog({
 								</FormItem>
 							)}
 						/>
-						<div className="rounded-lg border p-4">
-							<AgentAvatarPicker control={form.control} />
-						</div>
 
 						<DialogFooter>
 							<Button type="submit" disabled={createChatMutation.isPending}>

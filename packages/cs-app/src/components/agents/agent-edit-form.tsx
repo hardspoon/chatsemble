@@ -101,6 +101,7 @@ export function AgentEditForm({ agentId }: AgentEditFormProps) {
 						</CardHeader>
 						<CardContent>
 							<div className="space-y-6">
+								<AgentAvatarPicker control={form.control} />
 								<FormField
 									control={form.control}
 									name="name"
@@ -137,9 +138,6 @@ export function AgentEditForm({ agentId }: AgentEditFormProps) {
 										</FormItem>
 									)}
 								/>
-								<div className="rounded-lg border p-4">
-									<AgentAvatarPicker control={form.control} />
-								</div>
 							</div>
 						</CardContent>
 					</form>
