@@ -1,7 +1,7 @@
 {
 	"version": "6",
 	"dialect": "sqlite",
-	"id": "987619fa-2ba7-4dd1-af46-cd4ab539413a",
+	"id": "9e5ef8c7-cc0b-4a21-9e33-a75a71818be0",
 	"prevId": "00000000-0000-0000-0000-000000000000",
 	"tables": {
 		"agent_chat_room": {
@@ -106,6 +106,13 @@
 					"notNull": true,
 					"autoincrement": false
 				},
+				"email": {
+					"name": "email",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true,
+					"autoincrement": false
+				},
 				"name": {
 					"name": "name",
 					"type": "text",
@@ -120,8 +127,36 @@
 					"notNull": true,
 					"autoincrement": false
 				},
-				"system_prompt": {
-					"name": "system_prompt",
+				"description": {
+					"name": "description",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true,
+					"autoincrement": false
+				},
+				"tone": {
+					"name": "tone",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true,
+					"autoincrement": false
+				},
+				"verbosity": {
+					"name": "verbosity",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true,
+					"autoincrement": false
+				},
+				"emoji_usage": {
+					"name": "emoji_usage",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true,
+					"autoincrement": false
+				},
+				"language_style": {
+					"name": "language_style",
 					"type": "text",
 					"primaryKey": false,
 					"notNull": true,
@@ -143,7 +178,13 @@
 					"default": "(unixepoch() * 1000)"
 				}
 			},
-			"indexes": {},
+			"indexes": {
+				"agent_config_email_unique": {
+					"name": "agent_config_email_unique",
+					"columns": ["email"],
+					"isUnique": true
+				}
+			},
 			"foreignKeys": {},
 			"compositePrimaryKeys": {},
 			"uniqueConstraints": {},
