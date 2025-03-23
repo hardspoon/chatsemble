@@ -2,7 +2,11 @@ import { useChatWsContext } from "@/components/chat/providers/chat-ws-provider";
 
 import { ChatDetailsDialog } from "@/components/chat/main/chat-room-details/chat-details-dialog";
 import type { ChatDetailsDialogOpen } from "@/components/chat/main/chat-room-details/chat-details-dialog";
-import { AppHeader } from "@/components/layout/app-header";
+import {
+	AppHeader,
+	AppHeaderIcon,
+	AppHeaderSeparator,
+} from "@/components/layout/app-header";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -11,7 +15,7 @@ import {
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
-import { Users } from "lucide-react";
+import { MessagesSquare, Users } from "lucide-react";
 import { type Dispatch, type SetStateAction, useState } from "react";
 
 export function ChatRoomMainHeader() {
@@ -22,6 +26,10 @@ export function ChatRoomMainHeader() {
 
 	return (
 		<AppHeader>
+			<AppHeaderIcon className="hidden md:flex">
+				<MessagesSquare />
+			</AppHeaderIcon>
+			<AppHeaderSeparator className="hidden md:block" />
 			{connectionStatus === "ready" ? (
 				<>
 					<ChatRoomName setOpenChatDetailsDialog={setOpenChatDetailsDialog} />

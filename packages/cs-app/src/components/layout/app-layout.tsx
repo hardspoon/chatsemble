@@ -1,5 +1,5 @@
 import { AppSidebar } from "@/components/layout/app-sidebar";
-import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
+import { SidebarInset } from "@/components/ui/sidebar";
 
 export function AppLayout({
 	children,
@@ -9,9 +9,9 @@ export function AppLayout({
 	sidebarChildren: React.ReactNode;
 }) {
 	return (
-		<SidebarProvider>
+		<>
 			<AppSidebar>{sidebarChildren}</AppSidebar>
 			<SidebarInset variant="inset">{children}</SidebarInset>
-		</SidebarProvider>
+		</>
 	);
 }
