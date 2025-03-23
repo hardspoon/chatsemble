@@ -403,7 +403,7 @@ export class AgentDurableObject extends DurableObject<Env> {
 
 		const dataStreamResponse = createDataStreamResponse({
 			execute: async (dataStream) => {
-				const agentStreamText = streamText({
+				streamText({
 					model: openAIClient("gpt-4o"),
 					system: systemPrompt,
 					tools: agentToolSet,
@@ -412,9 +412,7 @@ export class AgentDurableObject extends DurableObject<Env> {
 					experimental_transform: smoothStream({
 						chunking: "line",
 					}),
-				});
-
-				agentStreamText.mergeIntoDataStream(dataStream);
+				}).mergeIntoDataStream(dataStream);
 			},
 		});
 
