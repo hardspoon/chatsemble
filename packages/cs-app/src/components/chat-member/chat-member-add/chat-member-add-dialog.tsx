@@ -28,7 +28,9 @@ function ChatMemberAddDialogContent({
 }: {
 	onSuccess: () => void;
 }) {
-	const { room } = useChatWsContext();
+	const {
+		mainChat: { room },
+	} = useChatWsContext();
 
 	if (!room) {
 		return null;
