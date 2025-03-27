@@ -9,6 +9,7 @@ import React, {
 	createContext,
 	forwardRef,
 	useContext,
+	useEffect,
 	useRef,
 	useState,
 } from "react";
@@ -52,16 +53,23 @@ function ChatInput({
 		getValue: () => ChatInputValue;
 	}>(null);
 
+	const onSubmitRef = useRef(onSubmit);
+
+	useEffect(() => {
+		onSubmitRef.current = onSubmit;
+	}, [onSubmit]);
+
 	const handleSubmitInternal = () => {
 		if (editorRef.current) {
 			const currentValue = editorRef.current.getValue();
 			if (!currentValue.content.trim()) {
 				return;
 			}
-			onSubmit(currentValue);
+			onSubmitRef.current(currentValue);
 			editorRef.current.clear();
 		}
 	};
+
 	const contextValue: ChatInputContextValue = {
 		internalValue,
 		setInternalValue,
