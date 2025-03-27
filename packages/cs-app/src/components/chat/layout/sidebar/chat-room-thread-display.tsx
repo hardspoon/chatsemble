@@ -15,13 +15,15 @@ import { useChatParams } from "../../providers/chat-params-provider";
 import { useChatWsContext } from "../../providers/chat-ws-provider";
 
 export function ChatRoomThreadDisplay() {
-	const { activeThread, handleSubmit, connectionStatus, members } =
-		useChatWsContext();
+	const {
+		mainChat: { members },
+		threadChat: { handleSubmit, messages, status, threadMessage },
+		connectionStatus,
+	} = useChatWsContext();
 
 	const { threadId, user } = useChatParams();
 
-	const isLoading =
-		connectionStatus !== "ready" || activeThread.status !== "success";
+	const isLoading = connectionStatus !== "connected" || status !== "success";
 
 	const membersWithoutCurrentUser = useMemo(
 		() => members.filter((member) => member.id !== user.id),
@@ -32,9 +34,8 @@ export function ChatRoomThreadDisplay() {
 		console.log("[ONSUBMIT]", {
 			value,
 			threadId,
-			activeThreadId: activeThread.id,
 		});
-		handleSubmit({ value, threadId });
+		handleSubmit({ value });
 	};
 
 	return (
@@ -42,8 +43,8 @@ export function ChatRoomThreadDisplay() {
 			<ChatMessageArea scrollButtonAlignment="center" className="px-6">
 				<div className="max-w-2xl mx-auto w-full px-4 py-8">
 					<div>
-						{activeThread.threadMessage ? (
-							<ChatRoomMessage message={activeThread.threadMessage} />
+						{threadMessage ? (
+							<ChatRoomMessage message={threadMessage} />
 						) : (
 							isLoading && <ChatMessageSkeleton />
 						)}
@@ -52,8 +53,8 @@ export function ChatRoomThreadDisplay() {
 					<div className="space-y-4">
 						{isLoading ? (
 							<ChatMessagesSkeleton items={2} />
-						) : activeThread.messages.length > 0 ? (
-							activeThread.messages.map((message) => (
+						) : messages.length > 0 ? (
+							messages.map((message) => (
 								<ChatRoomMessage key={String(message.id)} message={message} />
 							))
 						) : (

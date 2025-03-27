@@ -41,7 +41,9 @@ export function ChatMemberAddForm({
 	onSuccess,
 }: ChatMemberAddFormProps) {
 	const queryClient = useQueryClient();
-	const { members } = useChatWsContext();
+	const {
+		mainChat: { members },
+	} = useChatWsContext();
 
 	const form = useForm<FormValues>({
 		resolver: zodResolver(createChatRoomMemberSchema),

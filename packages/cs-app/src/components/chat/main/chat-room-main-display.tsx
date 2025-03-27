@@ -22,13 +22,14 @@ import { BookmarkIcon, MessageSquareIcon } from "lucide-react";
 import { useMemo } from "react";
 
 export function ChatRoomMainDisplay() {
-	const { topLevelMessages, handleSubmit, connectionStatus, members } =
-		useChatWsContext();
+	const {
+		mainChat: { messages, handleSubmit, members, status },
+		connectionStatus,
+	} = useChatWsContext();
 
 	const { setThreadId, user } = useChatParams();
 
-	const isLoading =
-		connectionStatus !== "ready" || topLevelMessages.status !== "success";
+	const isLoading = connectionStatus !== "connected" || status !== "success";
 
 	const membersWithoutCurrentUser = useMemo(
 		() => members.filter((member) => member.id !== user.id),
@@ -41,8 +42,8 @@ export function ChatRoomMainDisplay() {
 				<div className="max-w-2xl mx-auto w-full px-4 py-8 space-y-4">
 					{isLoading ? (
 						<ChatMessagesSkeleton />
-					) : topLevelMessages.data.length > 0 ? (
-						topLevelMessages.data.map((message) => {
+					) : messages.length > 0 ? (
+						messages.map((message) => {
 							return (
 								<ChatRoomMessage
 									key={message.id}
@@ -90,7 +91,6 @@ export function ChatRoomMainDisplay() {
 					onSubmit={(value) => {
 						handleSubmit({
 							value,
-							threadId: null,
 						});
 					}}
 					chatMembers={membersWithoutCurrentUser}

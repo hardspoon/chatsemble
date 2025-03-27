@@ -27,7 +27,9 @@ export function ChatDetailsDialog({
 	open,
 	onOpenChange,
 }: ChatDetailsDialogProps) {
-	const { connectionStatus } = useChatWsContext();
+	const {
+		mainChat: { status },
+	} = useChatWsContext();
 	return (
 		<Dialog
 			open={!!open}
@@ -44,7 +46,7 @@ export function ChatDetailsDialog({
 						Manage your chat room settings and members
 					</DialogDescription>
 				</DialogHeader>
-				{open && connectionStatus === "ready" ? (
+				{open && status === "success" ? (
 					<ChatDetailsDialogContent open={open} onOpenChange={onOpenChange} />
 				) : (
 					<ChatDetailsDialogContentSkeleton />

@@ -22,7 +22,10 @@ export function ChatRoomMainHeader() {
 	const [openChatDetailsDialog, setOpenChatDetailsDialog] =
 		useState<ChatDetailsDialogOpen>(null);
 
-	const { connectionStatus } = useChatWsContext();
+	const {
+		connectionStatus,
+		mainChat: { status },
+	} = useChatWsContext();
 
 	return (
 		<AppHeader>
@@ -30,7 +33,7 @@ export function ChatRoomMainHeader() {
 				<MessagesSquare />
 			</AppHeaderIcon>
 			<AppHeaderSeparator className="hidden md:block" />
-			{connectionStatus === "ready" ? (
+			{connectionStatus === "connected" && status === "success" ? (
 				<>
 					<ChatRoomName setOpenChatDetailsDialog={setOpenChatDetailsDialog} />
 					<div className="ml-auto flex items-center gap-2">
@@ -59,7 +62,9 @@ function ChatRoomName({
 }: {
 	setOpenChatDetailsDialog: Dispatch<SetStateAction<ChatDetailsDialogOpen>>;
 }) {
-	const { room } = useChatWsContext();
+	const {
+		mainChat: { room },
+	} = useChatWsContext();
 
 	return (
 		<Button
@@ -82,7 +87,9 @@ function ChatRoomMembers({
 }: {
 	setOpenChatDetailsDialog: Dispatch<SetStateAction<ChatDetailsDialogOpen>>;
 }) {
-	const { members } = useChatWsContext();
+	const {
+		mainChat: { members },
+	} = useChatWsContext();
 
 	return (
 		<Button
@@ -109,10 +116,9 @@ function ChatRoomConnectionStatus() {
 			<TooltipTrigger>
 				<div
 					className={cn("h-2 w-2 rounded-full transition-colors", {
-						"bg-green-500": connectionStatus === "ready",
-						"bg-yellow-500": connectionStatus === "connected",
-						"bg-orange-500": connectionStatus === "connecting",
-						"bg-gray-600": connectionStatus === "disconnected",
+						"bg-green-500": connectionStatus === "connected",
+						"bg-yellow-500": connectionStatus === "connecting",
+						"bg-orange-500": connectionStatus === "disconnected",
 					})}
 				/>
 			</TooltipTrigger>

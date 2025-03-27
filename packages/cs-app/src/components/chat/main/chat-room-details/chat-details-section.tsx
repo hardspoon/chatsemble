@@ -5,7 +5,9 @@ import { CalendarIcon } from "lucide-react";
 import { UsersIcon } from "lucide-react";
 
 export function ChatDetailsSection() {
-	const { room, members } = useChatWsContext();
+	const {
+		mainChat: { room, members },
+	} = useChatWsContext();
 
 	if (!room) {
 		return null;

@@ -1,10 +1,10 @@
-import type {
-	AgentToolUse,
-	ChatRoomMessage,
-	ChatRoomMessagePartial,
+import {
+	createChatRoomMessagePartial,
+	type AgentToolUse,
+	type ChatRoomMessage,
+	type ChatRoomMessagePartial,
 } from "@/cs-shared";
 import type { CoreMessage } from "ai";
-import { customAlphabet } from "nanoid";
 import type { AgentMessage } from "../../durable-objects/agent/types";
 
 export function chatRoomMessagesToAgentMessages(
@@ -49,25 +49,6 @@ export function agentMessagesToContextCoreMessages(
 			`,
 		},
 	];
-}
-
-export function createChatRoomMessagePartial({
-	content,
-	toolUses,
-	threadId,
-}: {
-	content: string;
-	toolUses: AgentToolUse[];
-	threadId: number | null;
-}): ChatRoomMessagePartial {
-	return {
-		id: Number(customAlphabet("0123456789", 20)()),
-		threadId,
-		content,
-		toolUses,
-		mentions: [],
-		createdAt: Date.now(),
-	};
 }
 
 const dataStreamTypes = {
@@ -129,6 +110,7 @@ export async function processDataStream({
 				const newPartialMessage = createChatRoomMessagePartial({
 					content: "",
 					toolUses: [],
+					mentions: [],
 					threadId: currentThreadId,
 				});
 				streamedMessages.push({

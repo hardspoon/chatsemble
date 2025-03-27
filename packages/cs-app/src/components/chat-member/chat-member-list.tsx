@@ -15,7 +15,9 @@ export function ChatMemberList({
 	members,
 	showRemoveButton = false,
 }: ChatMemberListProps) {
-	const { room } = useChatWsContext();
+	const {
+		mainChat: { room },
+	} = useChatWsContext();
 
 	const { data: session, isPending: isSessionPending } =
 		authClient.useSession();
