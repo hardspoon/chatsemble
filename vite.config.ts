@@ -13,7 +13,6 @@ export default defineConfig({
 			autoCodeSplitting: true,
 			routesDirectory: "src/client/routes",
 			generatedRouteTree: "src/client/routeTree.gen.ts",
-
 		}),
 		react(),
 		cloudflare(),
@@ -22,6 +21,7 @@ export default defineConfig({
 	resolve: {
 		alias: {
 			"@": path.resolve(__dirname, "./src/client"),
+			"@/shared": path.resolve(__dirname, "./src/shared"),
 		},
 	},
 });
