@@ -1,0 +1,21 @@
+{
+	"name": "chatsemble",
+	"compatibility_date": "2025-02-04",
+	"compatibility_flags": [
+		"nodejs_compat",
+		"nodejs_compat_populate_process_env"
+	],
+	"main": "./src/server/index.ts",
+	"assets": {
+		"not_found_handling": "single-page-application",
+		"binding": "ASSETS"
+	},
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "chatsemble-db",
+			"database_id": "my-database-id",
+			"migrations_dir": "src/server/db/migrations"
+		}
+	]
+}
