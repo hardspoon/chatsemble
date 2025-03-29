@@ -4,6 +4,7 @@ import { cloudflare } from "@cloudflare/vite-plugin";
 import { TanStackRouterVite } from "@tanstack/router-plugin/vite";
 import tailwindcss from "@tailwindcss/vite";
 import path from "node:path";
+import rawPlugin from "vite-raw-plugin";
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -17,6 +18,9 @@ export default defineConfig({
 		react(),
 		cloudflare(),
 		tailwindcss(),
+		rawPlugin({
+			fileRegex: /\.sql$/,
+		}),
 	],
 	resolve: {
 		alias: {

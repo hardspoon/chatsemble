@@ -2,12 +2,14 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { auth } from "../auth";
 import type { HonoContext } from "../types/hono";
-import users from "./user";
+import protectedRoutes from "./protected";
+import websocketRoutes from "./websocket/chat-room";
+import { env } from "cloudflare:workers";
 
 export const app = new Hono<HonoContext>().use(
-	"*",
+	"/api/*",
 	cors({
-		origin: "http://localhost:5173",
+		origin: env.BETTER_AUTH_URL,
 		allowMethods: ["GET", "POST", "OPTIONS", "PUT", "DELETE"],
 		allowHeaders: ["Content-Type", "Authorization"],
 		exposeHeaders: ["Content-Length"],
@@ -18,7 +20,9 @@ export const app = new Hono<HonoContext>().use(
 
 app.on(["POST", "GET"], "/api/auth/**", (c) => auth.handler(c.req.raw));
 
-const routes = app.route("/api/users", users);
+const routes = app
+	.route("/api", protectedRoutes)
+	.route("/websocket", websocketRoutes);
 
 app.all("*", async (c) => {
 	return c.env.ASSETS.fetch(c.req.raw);

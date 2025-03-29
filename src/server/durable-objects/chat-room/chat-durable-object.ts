@@ -19,7 +19,7 @@ import {
 	routeMessageToAgentUserPrompt,
 } from "../../ai/prompts/router-prompt";
 import type { Session } from "../../types/session";
-import migrations from "./db/migrations/migrations";
+import migrations from "./db/migrations/migrations.js";
 import { createChatRoomDbServices } from "./db/services";
 
 export class ChatDurableObject extends DurableObject<Env> {
