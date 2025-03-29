@@ -22,7 +22,7 @@ import {
 	deepResearchTool,
 	searchInformationTool,
 } from "../../ai/tools";
-import migrations from "./db/migrations/migrations";
+import migrations from "./db/migrations/migrations.js";
 import { createAgentDbServices } from "./db/services";
 
 export class AgentDurableObject extends DurableObject<Env> {
