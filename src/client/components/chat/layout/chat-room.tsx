@@ -10,23 +10,24 @@ import {
 	useChatParams,
 } from "@/components/chat/providers/chat-params-provider";
 import { ChatWsProvider } from "@/components/chat/providers/chat-ws-provider";
+import { useUser } from "@/components/providers/auth-provider";
 import {
 	ResizableHandle,
 	ResizablePanel,
 	ResizablePanelGroup,
 } from "@/components/ui/resizable";
-import type { User } from "better-auth";
 
-export function ChatRoom({ user }: { user: User }) {
+export function ChatRoom() {
 	return (
-		<ChatParamsProvider user={user}>
+		<ChatParamsProvider>
 			<ChatRoomWithParams />
 		</ChatParamsProvider>
 	);
 }
 
 function ChatRoomWithParams() {
-	const { roomId, threadId, user } = useChatParams();
+	const { roomId, threadId } = useChatParams();
+	const user = useUser();
 
 	return (
 		<ChatWsProvider roomId={roomId} threadId={threadId} user={user}>
@@ -37,6 +38,9 @@ function ChatRoomWithParams() {
 
 function ChatRoomContent() {
 	const { roomId, threadId } = useChatParams();
+
+	console.log("roomId", roomId);
+	console.log("threadId", threadId);
 
 	if (!roomId) {
 		return <ChatRoomNotSelected />;
@@ -56,7 +60,7 @@ function ChatRoomContent() {
 						<ChatRoomMainDisplay />
 					</div>
 				</ResizablePanel>
-				{threadId && <ResizableHandle className="bg-transparent" />}
+				{/* {threadId && <ResizableHandle className="bg-transparent" />}
 				{threadId && (
 					<ResizablePanel
 						id="thread-panel"
@@ -69,7 +73,7 @@ function ChatRoomContent() {
 							<ChatRoomThreadDisplay />
 						</div>
 					</ResizablePanel>
-				)}
+				)} */}
 			</ResizablePanelGroup>
 		</>
 	);

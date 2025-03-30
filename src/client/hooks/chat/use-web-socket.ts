@@ -2,7 +2,7 @@ import type {
 	WsChatIncomingMessage,
 	WsChatOutgoingMessage,
 	WsMessageChatInitRequest,
-} from "@/cs-shared";
+} from "@/shared/types";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 export type UseWebSocketConnectionStatus =
@@ -33,9 +33,9 @@ export function useWebSocket({ roomId, onMessage }: UseWebSocketProps) {
 
 		setConnectionStatus("connecting");
 
-		const apiHost =
-			process.env.NEXT_PUBLIC_DO_CHAT_API_HOST?.replace(/^https?:\/\//, "") ??
-			"";
+		const appUrl = import.meta.env.VITE_APP_URL;
+
+		const apiHost = appUrl?.replace(/^https?:\/\//, "") ?? "";
 		const wsProtocol = window.location.protocol === "https:" ? "wss" : "ws";
 		const ws = new WebSocket(
 			`${wsProtocol}://${apiHost}/websocket/chat-rooms/${roomId}`,

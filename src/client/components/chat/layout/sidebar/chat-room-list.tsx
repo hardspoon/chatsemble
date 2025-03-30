@@ -35,8 +35,7 @@ import {
 	StarOff,
 	Trash2,
 } from "lucide-react";
-import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { Link } from "@tanstack/react-router";
 import { type Dispatch, type SetStateAction, useMemo, useState } from "react";
 
 export function ChatRoomList() {
@@ -84,9 +83,7 @@ function ChatRoomsGroups({
 	chatRooms: ChatRoom[];
 	setDialogState: Dispatch<SetStateAction<DialogState>>;
 }) {
-	const queryParams = useSearchParams();
-	const selectedChatRoomId = queryParams.get("roomId");
-
+	const selectedChatRoomId = null; // TODO: Add this
 	// Group chat rooms by type
 	const groupChats = useMemo(
 		() =>
@@ -158,7 +155,8 @@ function ChatRoomsGroup({
 								isActive={selectedChatRoomId === chatRoom.id}
 							>
 								<Link
-									href={`/chat?roomId=${chatRoom.id}`}
+									to="/chat"
+									search={{ roomId: chatRoom.id }}
 									title={chatRoom.name}
 								>
 									<MessageSquareIcon />

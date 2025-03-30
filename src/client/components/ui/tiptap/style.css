@@ -1,8 +1,7 @@
-.tiptap {
+/* .tiptap {
 	@apply text-foreground p-2 max-h-[500px] overflow-y-auto;
 }
 
-/* Add this focus state rule */
 .tiptap:focus {
 	@apply outline-none;
 }
@@ -11,7 +10,6 @@
 	@apply mt-0;
 }
 
-/* List styles */
 .tiptap ul,
 .tiptap ol {
 	@apply px-4 my-5 mx-4;
@@ -39,7 +37,6 @@
 	@apply text-muted-foreground;
 }
 
-/* Heading styles */
 .tiptap h1,
 .tiptap h2,
 .tiptap h3,
@@ -72,7 +69,6 @@
 	@apply text-base;
 }
 
-/* Code and preformatted text styles */
 .tiptap code {
 	@apply bg-accent text-accent-foreground rounded-sm text-sm px-1.5 py-1;
 }
@@ -96,3 +92,4 @@
 .tiptap .mention {
 	@apply bg-accent text-accent-foreground rounded-sm px-2 py-0.5;
 }
+ */

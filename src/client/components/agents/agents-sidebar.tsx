@@ -12,8 +12,8 @@ import {
 	useSidebar,
 } from "@/components/ui/sidebar";
 import { Skeleton } from "@/components/ui/skeleton";
-import type { Agent } from "@/cs-shared";
-import { client } from "@/lib/api-client";
+import type { Agent } from "@/shared/types";
+import { honoClient } from "@/lib/api-client";
 import { useQuery } from "@tanstack/react-query";
 import {
 	AlertCircle,
@@ -22,8 +22,7 @@ import {
 	StarOff,
 	Trash2,
 } from "lucide-react";
-import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import {
@@ -43,7 +42,7 @@ export function AgentsSidebar() {
 	} = useQuery({
 		queryKey: ["agents"],
 		queryFn: async () => {
-			const response = await client.protected.agents.$get();
+			const response = await honoClient.api.agents.$get();
 
 			const data = await response.json();
 			return data;
@@ -68,8 +67,8 @@ function AgentGroup({
 }: {
 	agents: Agent[];
 }) {
-	const queryParams = useSearchParams();
-	const selectedAgentId = queryParams.get("agentId");
+	//const queryParams = useSearchParams();
+	//const selectedAgentId = queryParams.get("agentId");
 	const { isMobile } = useSidebar();
 	const [newAgentDialogOpen, setNewAgentDialogOpen] = useState(false);
 
@@ -93,9 +92,9 @@ function AgentGroup({
 							<SidebarMenuItem key={agent.id}>
 								<SidebarMenuButton
 									asChild
-									isActive={selectedAgentId === agent.id}
+									/* isActive={selectedAgentId === agent.id} */ // TODO: Add this
 								>
-									<Link href={`/agents?agentId=${agent.id}`} title={agent.name}>
+									<Link to="/" title={agent.name}>
 										<Avatar className="size-5">
 											<AvatarImage src={agent.image} />
 											<AvatarFallback>{agent.name.slice(0, 2)}</AvatarFallback>

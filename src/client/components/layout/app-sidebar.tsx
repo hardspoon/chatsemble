@@ -1,7 +1,6 @@
 "use client";
 
 import { Bot, MessagesSquare, PanelLeft, Search, Settings } from "lucide-react";
-import { usePathname } from "next/navigation";
 import type * as React from "react";
 
 import { AppNavUser } from "@/components/layout/app-nav-user";
@@ -19,7 +18,7 @@ import {
 	useSidebar,
 } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
-import Link from "next/link";
+import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { LogoIcon } from "../icons/logo-icon";
 import { type SettingIds, SettingsDialog } from "../settings/settings-dialog";
@@ -42,7 +41,7 @@ const navMain = [
 ];
 
 export function AppSidebar({ children }: React.ComponentProps<typeof Sidebar>) {
-	const pathname = usePathname();
+	/* const pathname = usePathname(); */
 	const { toggleSidebar } = useSidebar();
 
 	return (
@@ -81,12 +80,12 @@ export function AppSidebar({ children }: React.ComponentProps<typeof Sidebar>) {
 					</SidebarMenuItem>
 				</SidebarMenu>
 			</SidebarHeader>
-			<SidebarContent>
+			<SidebarContent className="overflow-x-hidden">
 				<SidebarSeparator />
-				<NavMain currentPath={pathname} />
+				<NavMain currentPath={""} /> {/* TODO: Add this */}
 				<SidebarSeparator className="group-data-[collapsible=icon]:hidden" />
 				{children}
-				<NavSecondary currentPath={pathname} className="mt-auto" />
+				<NavSecondary currentPath={""} className="mt-auto" />
 			</SidebarContent>
 			<SidebarFooter>
 				<AppNavUser />
@@ -107,7 +106,7 @@ function NavMain({ currentPath }: { currentPath: string }) {
 								isActive={item.activeMatch.test(currentPath)}
 								asChild
 							>
-								<Link href={item.url}>
+								<Link to={item.url}>
 									{item.icon && <item.icon />}
 									<span>{item.title}</span>
 								</Link>

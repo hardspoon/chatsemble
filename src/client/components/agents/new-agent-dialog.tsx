@@ -1,6 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 
 import { Button } from "@/components/ui/button";
@@ -13,8 +12,8 @@ import {
 	DialogTitle,
 } from "@/components/ui/dialog";
 import { Form } from "@/components/ui/form";
-import { type AgentFormValues, createAgentSchema } from "@/cs-shared";
-import { client } from "@/lib/api-client";
+import { type AgentFormValues, createAgentSchema } from "@/shared/types";
+import { honoClient } from "@/lib/api-client";
 import { AgentForm } from "./agent-form";
 
 export function NewAgentDialog({
@@ -38,7 +37,6 @@ function NewAgentDialogContent({
 }: {
 	setOpen: (open: boolean) => void;
 }) {
-	const router = useRouter();
 	const queryClient = useQueryClient();
 	const form = useForm<AgentFormValues>({
 		resolver: zodResolver(createAgentSchema),
@@ -55,7 +53,7 @@ function NewAgentDialogContent({
 
 	const createChatMutation = useMutation({
 		mutationFn: async (values: AgentFormValues) => {
-			const response = await client.protected.agents.$post({
+			const response = await honoClient.api.agents.$post({
 				json: values,
 			});
 			const data = await response.json();
@@ -63,7 +61,7 @@ function NewAgentDialogContent({
 		},
 		onSuccess: (data) => {
 			queryClient.invalidateQueries({ queryKey: ["agents"] });
-			router.push(`/agents?agentId=${data.agentId}`);
+			//router.push(`/agents?agentId=${data.agentId}`); // TODO: Add this
 			setOpen(false);
 		},
 	});

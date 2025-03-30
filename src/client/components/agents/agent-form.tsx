@@ -19,7 +19,7 @@ import {
 	toneOptions,
 	verbosityDescriptions,
 	verbosityOptions,
-} from "@/cs-shared";
+} from "@/shared/types";
 import { cn } from "@/lib/utils";
 import {
 	AlignJustify,

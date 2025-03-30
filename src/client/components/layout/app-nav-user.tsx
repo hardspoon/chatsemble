@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/sidebar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { authClient } from "@/lib/auth-client";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@tanstack/react-router";
 
 export function AppNavUser() {
 	const { isMobile } = useSidebar();
@@ -34,7 +34,7 @@ export function AppNavUser() {
 		await authClient.signOut({
 			fetchOptions: {
 				onSuccess: () => {
-					router.push("/auth/login"); // redirect to login page
+					router.navigate({ to: "/auth/signin" }); // redirect to login page
 				},
 			},
 		});

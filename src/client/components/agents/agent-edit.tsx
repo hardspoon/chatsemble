@@ -2,7 +2,7 @@
 
 import { AgentNotFound } from "@/components/agents/agent-placeholder";
 
-import { client } from "@/lib/api-client";
+import { honoClient } from "@/lib/api-client";
 import { useQuery } from "@tanstack/react-query";
 import { AgentSkeleton } from "./agent-skeleton";
 
@@ -11,8 +11,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 
 import { Form } from "@/components/ui/form";
-import { type AgentFormValues, createAgentSchema } from "@/cs-shared";
-import { toast } from "@/hooks/use-toast";
+import { type AgentFormValues, createAgentSchema } from "@/shared/types";
 import { Bot } from "lucide-react";
 import {
 	AppHeader,
@@ -23,12 +22,13 @@ import {
 
 import { Button } from "../ui/button";
 import { AgentForm } from "./agent-form";
+import { toast } from "sonner";
 
 export function AgentEdit({ agentId }: { agentId: string }) {
 	const { data: agent, isLoading } = useQuery({
 		queryKey: ["agent", agentId],
 		queryFn: async () => {
-			const response = await client.protected.agents[":id"].$get({
+			const response = await honoClient.api.agents[":id"].$get({
 				param: { id: agentId },
 			});
 			const agent = await response.json();
@@ -53,7 +53,7 @@ export function AgentEdit({ agentId }: { agentId: string }) {
 
 	const updateAgentMutation = useMutation({
 		mutationFn: async (values: AgentFormValues) => {
-			const response = await client.protected.agents[":id"].$put({
+			const response = await honoClient.api.agents[":id"].$put({
 				param: { id: agentId },
 				json: values,
 			});
@@ -62,9 +62,7 @@ export function AgentEdit({ agentId }: { agentId: string }) {
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["agents"] });
 			queryClient.invalidateQueries({ queryKey: ["agent", agentId] });
-			toast({
-				title: "Agent updated successfully",
-			});
+			toast.success("Agent updated successfully");
 		},
 	});
 
