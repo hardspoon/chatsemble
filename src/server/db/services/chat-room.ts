@@ -1,6 +1,6 @@
-import * as globalSchema from "../schema";
 import { and, eq } from "drizzle-orm";
 import { db } from "..";
+import * as globalSchema from "../schema";
 
 export async function getChatRoom(params: {
 	chatRoomId: string;

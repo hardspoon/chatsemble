@@ -1,12 +1,12 @@
 import { createAccessControl } from "better-auth/plugins/access";
 
 import type { ChatRoomType } from "@/shared/types";
+import { auth } from ".";
 import { dbServices } from "../db/services";
 import {
-	chatRoomPermissionTypes,
 	chatRoomMemberPermissionTypes,
+	chatRoomPermissionTypes,
 } from "./organization-permissions";
-import { auth } from ".";
 
 // Permissions for org role member for chat room
 

@@ -1,11 +1,11 @@
 import { Hono } from "hono";
 
-import { type Agent, createAgentSchema } from "../../../shared/types";
 import { zValidator } from "@hono/zod-validator";
 import { and, eq } from "drizzle-orm";
-import type { HonoContextWithAuth } from "../../types/hono";
+import { type Agent, createAgentSchema } from "../../../shared/types";
 import { db } from "../../db";
 import { agent as agentSchema } from "../../db/schema";
+import type { HonoContextWithAuth } from "../../types/hono";
 
 // TODO: Add permissions check to agents routes
 

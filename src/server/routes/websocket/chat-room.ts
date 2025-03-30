@@ -1,11 +1,11 @@
-import { dbServices } from "../../db/services";
 import { Hono } from "hono";
+import { dbServices } from "../../db/services";
 
-import type { HonoContextWithAuth } from "../../types/hono";
 import {
 	honoAuthCheckMiddleware,
 	honoAuthMiddleware,
 } from "../../middleware/auth";
+import type { HonoContextWithAuth } from "../../types/hono";
 
 const app = new Hono<HonoContextWithAuth>()
 	.use(honoAuthMiddleware)

@@ -1,13 +1,13 @@
 import { Hono } from "hono";
 
-import { createChatRoomMemberSchema } from "../../../../shared/types";
 import { zValidator } from "@hono/zod-validator";
 import { and, eq } from "drizzle-orm";
-import type { HonoContextWithAuth } from "../../../types/hono";
+import { createChatRoomMemberSchema } from "../../../../shared/types";
+import { chatRoomMemberHasMemberPermission } from "../../../auth/chat-room-permissions";
 import { db } from "../../../db";
 import * as globalSchema from "../../../db/schema";
 import { dbServices } from "../../../db/services";
-import { chatRoomMemberHasMemberPermission } from "../../../auth/chat-room-permissions";
+import type { HonoContextWithAuth } from "../../../types/hono";
 
 const app = new Hono<HonoContextWithAuth>()
 	.post(

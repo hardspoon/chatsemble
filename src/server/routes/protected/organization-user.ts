@@ -1,10 +1,10 @@
-import * as globalSchema from "../../db/schema";
 import { zValidator } from "@hono/zod-validator";
 import { and, eq, not } from "drizzle-orm";
 import { Hono } from "hono";
 import { z } from "zod";
-import type { HonoContextWithAuth } from "../../types/hono";
 import { db } from "../../db";
+import * as globalSchema from "../../db/schema";
+import type { HonoContextWithAuth } from "../../types/hono";
 
 const app = new Hono<HonoContextWithAuth>().get(
 	"/users",

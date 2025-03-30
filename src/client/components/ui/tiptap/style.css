@@ -1,0 +1,98 @@
+.tiptap {
+	@apply text-foreground p-2 max-h-[500px] overflow-y-auto;
+}
+
+/* Add this focus state rule */
+.tiptap:focus {
+	@apply outline-none;
+}
+
+.tiptap :first-child {
+	@apply mt-0;
+}
+
+/* List styles */
+.tiptap ul,
+.tiptap ol {
+	@apply px-4 my-5 mx-4;
+}
+
+.tiptap ul {
+	@apply list-disc;
+}
+
+.tiptap ol {
+	@apply list-decimal;
+}
+
+.tiptap li {
+	@apply my-2 leading-6;
+}
+
+.tiptap ul li p,
+.tiptap ol li p {
+	@apply my-1;
+}
+
+.tiptap ul li::marker,
+.tiptap ol li::marker {
+	@apply text-muted-foreground;
+}
+
+/* Heading styles */
+.tiptap h1,
+.tiptap h2,
+.tiptap h3,
+.tiptap h4,
+.tiptap h5,
+.tiptap h6 {
+	@apply leading-tight mt-10 text-pretty;
+}
+
+.tiptap h1,
+.tiptap h2 {
+	@apply mt-14 mb-6;
+}
+
+.tiptap h1 {
+	@apply text-2xl;
+}
+
+.tiptap h2 {
+	@apply text-xl;
+}
+
+.tiptap h3 {
+	@apply text-lg;
+}
+
+.tiptap h4,
+.tiptap h5,
+.tiptap h6 {
+	@apply text-base;
+}
+
+/* Code and preformatted text styles */
+.tiptap code {
+	@apply bg-accent text-accent-foreground rounded-sm text-sm px-1.5 py-1;
+}
+
+.tiptap pre {
+	@apply bg-background text-foreground rounded-lg border my-6 px-4 py-3 font-mono;
+}
+
+.tiptap pre code {
+	@apply bg-transparent text-sm p-0;
+}
+
+.tiptap blockquote {
+	@apply border-l-4 border-border my-6 pl-4;
+}
+
+.tiptap hr {
+	@apply border-t border-border my-8;
+}
+
+.tiptap .mention {
+	@apply bg-accent text-accent-foreground rounded-sm px-2 py-0.5;
+}
