@@ -1,8 +1,8 @@
-import { ChatMemberBadge } from "@/components/chat-member/chat-member-badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
-import type { ChatRoomMember } from "@/shared/types";
+import { ChatMemberBadge } from "@client/components/chat-member/chat-member-badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@client/components/ui/avatar";
+import { Button } from "@client/components/ui/button";
+import { cn } from "@client/lib/utils";
+import type { ChatRoomMember } from "@shared/types";
 import { forwardRef, useEffect, useImperativeHandle, useState } from "react";
 import type { TiptapMentionItem } from "./tiptap";
 

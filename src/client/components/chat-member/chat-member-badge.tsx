@@ -1,6 +1,6 @@
-import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
-import type { ChatRoomMemberType } from "@/shared/types";
+import { Badge } from "@client/components/ui/badge";
+import { cn } from "@client/lib/utils";
+import type { ChatRoomMemberType } from "@shared/types";
 
 interface ChatMemberBadgeProps {
 	type: ChatRoomMemberType;

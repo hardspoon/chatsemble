@@ -6,7 +6,7 @@ import type {
 	ChatRoomMessagePartial,
 	WsChatIncomingMessage,
 	WsChatOutgoingMessage,
-} from "@/shared/types";
+} from "@shared/types";
 import { createOpenAI } from "@ai-sdk/openai";
 import { generateObject } from "ai";
 

@@ -2,7 +2,7 @@
 
 import { ChevronsUpDown, LogOut } from "lucide-react";
 
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@client/components/ui/avatar";
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -10,15 +10,15 @@ import {
 	DropdownMenuLabel,
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from "@client/components/ui/dropdown-menu";
 import {
 	SidebarMenu,
 	SidebarMenuButton,
 	SidebarMenuItem,
 	useSidebar,
-} from "@/components/ui/sidebar";
-import { Skeleton } from "@/components/ui/skeleton";
-import { authClient } from "@/lib/auth-client";
+} from "@client/components/ui/sidebar";
+import { Skeleton } from "@client/components/ui/skeleton";
+import { authClient } from "@client/lib/auth-client";
 import { useRouter } from "@tanstack/react-router";
 
 export function AppNavUser() {

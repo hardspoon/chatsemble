@@ -1,6 +1,6 @@
-import { ChatRoomTypeBadge } from "@/components/chat/chat-room-type-badge";
-import { useChatWsContext } from "@/components/chat/providers/chat-ws-provider";
-import { Separator } from "@/components/ui/separator";
+import { ChatRoomTypeBadge } from "@client/components/chat/chat-room-type-badge";
+import { useChatWsContext } from "@client/components/chat/providers/chat-ws-provider";
+import { Separator } from "@client/components/ui/separator";
 import { CalendarIcon } from "lucide-react";
 import { UsersIcon } from "lucide-react";
 

@@ -1,4 +1,4 @@
-import { AppHeader, AppHeaderIcon } from "@/components/layout/app-header";
+import { AppHeader, AppHeaderIcon } from "@client/components/layout/app-header";
 import { MessagesSquare } from "lucide-react";
 
 export function ChatRoomNotSelected() {

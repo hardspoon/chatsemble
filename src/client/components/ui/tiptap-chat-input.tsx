@@ -1,9 +1,9 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
-import { Tiptap } from "@/components/ui/tiptap/tiptap";
-import { cn } from "@/lib/utils";
-import type { ChatInputValue, ChatRoomMember } from "@/shared/types";
+import { Button } from "@client/components/ui/button";
+import { Tiptap } from "@client/components/ui/tiptap/tiptap";
+import { cn } from "@client/lib/utils";
+import type { ChatInputValue, ChatRoomMember } from "@shared/types";
 import { ArrowUpIcon } from "lucide-react";
 import React, {
 	createContext,

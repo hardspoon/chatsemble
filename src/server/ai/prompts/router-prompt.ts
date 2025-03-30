@@ -1,4 +1,4 @@
-import type { Agent, ChatRoom, ChatRoomMessage } from "@/shared/types";
+import type { Agent, ChatRoom, ChatRoomMessage } from "@shared/types";
 import { chatRoomMessagesToAgentMessages } from "../ai-utils";
 
 interface RouterPromptArgs {

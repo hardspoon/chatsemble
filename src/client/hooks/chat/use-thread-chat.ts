@@ -1,4 +1,4 @@
-import { updateMessageList } from "@/lib/chat";
+import { updateMessageList } from "@client/lib/chat";
 import type {
 	ChatInputValue,
 	ChatRoomMessage,
@@ -6,7 +6,7 @@ import type {
 	WsChatOutgoingMessage,
 	WsMessageSend,
 	WsMessageThreadInitRequest,
-} from "@/shared/types";
+} from "@shared/types";
 import type { User } from "better-auth";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {

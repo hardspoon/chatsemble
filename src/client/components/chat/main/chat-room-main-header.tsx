@@ -1,20 +1,20 @@
-import { useChatWsContext } from "@/components/chat/providers/chat-ws-provider";
+import { useChatWsContext } from "@client/components/chat/providers/chat-ws-provider";
 
-import { ChatDetailsDialog } from "@/components/chat/main/chat-room-details/chat-details-dialog";
-import type { ChatDetailsDialogOpen } from "@/components/chat/main/chat-room-details/chat-details-dialog";
+import { ChatDetailsDialog } from "@client/components/chat/main/chat-room-details/chat-details-dialog";
+import type { ChatDetailsDialogOpen } from "@client/components/chat/main/chat-room-details/chat-details-dialog";
 import {
 	AppHeader,
 	AppHeaderIcon,
 	AppHeaderSeparator,
-} from "@/components/layout/app-header";
-import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
+} from "@client/components/layout/app-header";
+import { Button } from "@client/components/ui/button";
+import { Skeleton } from "@client/components/ui/skeleton";
 import {
 	Tooltip,
 	TooltipContent,
 	TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { cn } from "@/lib/utils";
+} from "@client/components/ui/tooltip";
+import { cn } from "@client/lib/utils";
 import { MessagesSquare, Users } from "lucide-react";
 import { type Dispatch, type SetStateAction, useState } from "react";
 

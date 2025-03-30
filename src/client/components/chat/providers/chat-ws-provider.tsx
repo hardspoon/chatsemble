@@ -1,6 +1,6 @@
 "use client";
 
-import { type UseChatProps, useChat } from "@/hooks/chat/use-chat";
+import { type UseChatProps, useChat } from "@client/hooks/chat/use-chat";
 import { type ReactNode, createContext, useContext } from "react";
 
 const ChatWsContext = createContext<ReturnType<typeof useChat> | null>(null);

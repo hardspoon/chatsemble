@@ -3,7 +3,7 @@ import type {
 	AgentToolAnnotation,
 	ChatRoomMessage,
 	ChatRoomMessagePartial,
-} from "@/shared/types";
+} from "@shared/types";
 import { type DataStreamWriter, tool } from "ai";
 import FirecrawlApp from "firecrawl";
 import { customAlphabet, nanoid } from "nanoid";

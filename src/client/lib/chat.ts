@@ -1,4 +1,4 @@
-import type { ChatRoomMessage } from "@/shared/types";
+import type { ChatRoomMessage } from "@shared/types";
 
 export function updateMessageList({
 	messages,

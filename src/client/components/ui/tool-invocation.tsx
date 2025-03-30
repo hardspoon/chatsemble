@@ -1,11 +1,11 @@
-import { Card } from "@/components/ui/card";
+import { Card } from "@client/components/ui/card";
 import {
 	Collapsible,
 	CollapsibleContent,
 	CollapsibleTrigger,
-} from "@/components/ui/collapsible";
-import { idToReadableText } from "@/lib/id-parsing";
-import { cn } from "@/lib/utils";
+} from "@client/components/ui/collapsible";
+import { idToReadableText } from "@client/lib/id-parsing";
+import { cn } from "@client/lib/utils";
 import { ChevronDown } from "lucide-react";
 import React from "react";
 

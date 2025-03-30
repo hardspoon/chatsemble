@@ -1,5 +1,5 @@
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { idToReadableText } from "@/lib/id-parsing";
+import { ToggleGroup, ToggleGroupItem } from "@client/components/ui/toggle-group";
+import { idToReadableText } from "@client/lib/id-parsing";
 
 interface ToggleGroupProps<T extends string> {
 	value: T | undefined;

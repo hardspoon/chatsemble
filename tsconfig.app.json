@@ -23,8 +23,8 @@
 		"noUncheckedSideEffectImports": true,
 		"baseUrl": ".",
 		"paths": {
-			"@/*": ["./src/client/*"],
-			"@/shared/*": ["./src/shared/*"]
+			"@client/*": ["src/client/*"],
+			"@shared/*": ["src/shared/*"]
 		}
 	},
 	"include": ["src/client"]

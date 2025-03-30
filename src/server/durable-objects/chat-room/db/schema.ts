@@ -6,7 +6,7 @@ import type {
 	ChatRoomMemberRole,
 	ChatRoomMemberType,
 	ChatRoomType,
-} from "@/shared/types";
+} from "@shared/types";
 import { sql } from "drizzle-orm";
 import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
 

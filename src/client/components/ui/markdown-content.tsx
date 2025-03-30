@@ -1,4 +1,4 @@
-import { cn } from "@/lib/utils";
+import { cn } from "@client/lib/utils";
 import { marked } from "marked";
 import type * as React from "react";
 import { Suspense, isValidElement, memo, useMemo } from "react";

@@ -1,6 +1,6 @@
 import { createAccessControl } from "better-auth/plugins/access";
 
-import type { ChatRoomType } from "@/shared/types";
+import type { ChatRoomType } from "@shared/types";
 import { auth } from ".";
 import { dbServices } from "../db/services";
 import {

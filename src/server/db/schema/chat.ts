@@ -2,7 +2,7 @@ import type {
 	ChatRoomMemberRole,
 	ChatRoomMemberType,
 	ChatRoomType,
-} from "@/shared/types";
+} from "@shared/types";
 import { sql } from "drizzle-orm";
 import { relations } from "drizzle-orm";
 import {

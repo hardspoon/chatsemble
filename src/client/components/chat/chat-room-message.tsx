@@ -1,4 +1,4 @@
-import { Skeleton } from "@/components/ui/skeleton";
+import { Skeleton } from "@client/components/ui/skeleton";
 import {
 	ChatMessage,
 	ChatMessageAvatar,
@@ -14,8 +14,8 @@ import {
 	ToolInvocationDataTrigger,
 	ToolInvocationHeader,
 	ToolNameComponent,
-} from "@/components/ui/tool-invocation";
-import type { ChatRoomMessage as ChatRoomMessageType } from "@/shared/types";
+} from "@client/components/ui/tool-invocation";
+import type { ChatRoomMessage as ChatRoomMessageType } from "@shared/types";
 
 export function ChatRoomMessage({
 	message,

@@ -2,7 +2,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 
-import { Button } from "@/components/ui/button";
+import { Button } from "@client/components/ui/button";
 import {
 	Dialog,
 	DialogContent,
@@ -10,9 +10,9 @@ import {
 	DialogFooter,
 	DialogHeader,
 	DialogTitle,
-} from "@/components/ui/dialog";
-import { Form } from "@/components/ui/form";
-import { honoClient } from "@/lib/api-client";
+} from "@client/components/ui/dialog";
+import { Form } from "@client/components/ui/form";
+import { honoClient } from "@client/lib/api-client";
 import { useRouter } from "@tanstack/react-router";
 import { type AgentFormValues, createAgentSchema } from "../../../shared/types";
 import { AgentForm } from "./agent-form";

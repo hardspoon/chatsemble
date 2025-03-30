@@ -1,10 +1,10 @@
-import { ChatMemberAddDialog } from "@/components/chat-member/chat-member-add/chat-member-add-dialog";
-import { ChatMemberBadge } from "@/components/chat-member/chat-member-badge";
-import { ChatMemberRemoveButton } from "@/components/chat-member/chat-member-remove-button";
-import { useChatWsContext } from "@/components/chat/providers/chat-ws-provider";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { authClient } from "@/lib/auth-client";
-import type { ChatRoomMember } from "@/shared/types";
+import { ChatMemberAddDialog } from "@client/components/chat-member/chat-member-add/chat-member-add-dialog";
+import { ChatMemberBadge } from "@client/components/chat-member/chat-member-badge";
+import { ChatMemberRemoveButton } from "@client/components/chat-member/chat-member-remove-button";
+import { useChatWsContext } from "@client/components/chat/providers/chat-ws-provider";
+import { Avatar, AvatarFallback, AvatarImage } from "@client/components/ui/avatar";
+import { authClient } from "@client/lib/auth-client";
+import type { ChatRoomMember } from "@shared/types";
 
 interface ChatMemberListProps {
 	members: ChatRoomMember[];

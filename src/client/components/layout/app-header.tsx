@@ -1,6 +1,6 @@
-import { Separator } from "@/components/ui/separator";
-import { SidebarTrigger } from "@/components/ui/sidebar";
-import { cn } from "@/lib/utils";
+import { Separator } from "@client/components/ui/separator";
+import { SidebarTrigger } from "@client/components/ui/sidebar";
+import { cn } from "@client/lib/utils";
 
 export function AppHeader({ children }: React.ComponentProps<"div">) {
 	return (

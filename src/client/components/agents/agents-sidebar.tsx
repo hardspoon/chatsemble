@@ -10,10 +10,10 @@ import {
 	SidebarMenuItem,
 	SidebarMenuSkeleton,
 	useSidebar,
-} from "@/components/ui/sidebar";
-import { Skeleton } from "@/components/ui/skeleton";
-import { honoClient } from "@/lib/api-client";
-import type { Agent } from "@/shared/types";
+} from "@client/components/ui/sidebar";
+import { Skeleton } from "@client/components/ui/skeleton";
+import { honoClient } from "@client/lib/api-client";
+import type { Agent } from "@shared/types";
 import { useQuery } from "@tanstack/react-query";
 import { Link, getRouteApi } from "@tanstack/react-router";
 import {

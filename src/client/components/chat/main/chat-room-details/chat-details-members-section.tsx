@@ -1,5 +1,5 @@
-import { ChatMemberList } from "@/components/chat-member/chat-member-list";
-import { useChatWsContext } from "@/components/chat/providers/chat-ws-provider";
+import { ChatMemberList } from "@client/components/chat-member/chat-member-list";
+import { useChatWsContext } from "@client/components/chat/providers/chat-ws-provider";
 
 export function ChatDetailsMembersSection() {
 	const {

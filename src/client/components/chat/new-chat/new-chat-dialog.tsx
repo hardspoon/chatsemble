@@ -7,8 +7,8 @@ import {
 	DialogDescription,
 	DialogHeader,
 	DialogTitle,
-} from "@/components/ui/dialog";
-import { honoClient } from "@/lib/api-client";
+} from "@client/components/ui/dialog";
+import { honoClient } from "@client/lib/api-client";
 import { useRouter } from "@tanstack/react-router";
 import type { Dispatch, SetStateAction } from "react";
 import type {

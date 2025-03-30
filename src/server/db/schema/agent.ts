@@ -3,7 +3,7 @@ import type {
 	LanguageStyle,
 	Tone,
 	Verbosity,
-} from "@/shared/types";
+} from "@shared/types";
 import { sql } from "drizzle-orm";
 import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
 import { organization } from "./auth";

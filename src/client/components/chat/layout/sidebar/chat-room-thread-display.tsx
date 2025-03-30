@@ -1,14 +1,14 @@
 "use client";
 
-import { useAuthSession } from "@/components/providers/auth-provider";
-import { ChatMessageArea } from "@/components/ui/chat-message-area";
-import { Separator } from "@/components/ui/separator";
+import { useAuthSession } from "@client/components/providers/auth-provider";
+import { ChatMessageArea } from "@client/components/ui/chat-message-area";
+import { Separator } from "@client/components/ui/separator";
 import {
 	ChatInput,
 	ChatInputSubmit,
 	ChatInputTiptap,
-} from "@/components/ui/tiptap-chat-input";
-import type { ChatInputValue } from "@/shared/types";
+} from "@client/components/ui/tiptap-chat-input";
+import type { ChatInputValue } from "@shared/types";
 import { useMemo } from "react";
 import { ChatMessageSkeleton, ChatRoomMessage } from "../../chat-room-message";
 import { ChatMessagesSkeleton } from "../../chat-room-message";

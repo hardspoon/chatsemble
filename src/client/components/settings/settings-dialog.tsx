@@ -10,14 +10,14 @@ import {
 	BreadcrumbList,
 	BreadcrumbPage,
 	BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
+} from "@client/components/ui/breadcrumb";
 import {
 	Dialog,
 	DialogContent,
 	DialogDescription,
 	DialogTitle,
-} from "@/components/ui/dialog";
-import { ScrollArea } from "@/components/ui/scroll-area";
+} from "@client/components/ui/dialog";
+import { ScrollArea } from "@client/components/ui/scroll-area";
 import {
 	Sidebar,
 	SidebarContent,
@@ -27,7 +27,7 @@ import {
 	SidebarMenuButton,
 	SidebarMenuItem,
 	SidebarProvider,
-} from "@/components/ui/sidebar";
+} from "@client/components/ui/sidebar";
 import type { Dispatch, SetStateAction } from "react";
 import { OrganizationForm } from "./organization-form";
 import { ProfileForm } from "./profile-form";

@@ -1,23 +1,23 @@
 "use client";
 
-import { useChatWsContext } from "@/components/chat/providers/chat-ws-provider";
+import { useChatWsContext } from "@client/components/chat/providers/chat-ws-provider";
 import {
 	ChatMessageAction,
 	ChatMessageActionsArea,
 	ChatMessageThread,
-} from "@/components/ui/chat-message";
-import { ChatMessageArea } from "@/components/ui/chat-message-area";
+} from "@client/components/ui/chat-message";
+import { ChatMessageArea } from "@client/components/ui/chat-message-area";
 
 import {
 	ChatMessagesSkeleton,
 	ChatRoomMessage,
-} from "@/components/chat/chat-room-message";
-import { useAuthSession } from "@/components/providers/auth-provider";
+} from "@client/components/chat/chat-room-message";
+import { useAuthSession } from "@client/components/providers/auth-provider";
 import {
 	ChatInput,
 	ChatInputSubmit,
 	ChatInputTiptap,
-} from "@/components/ui/tiptap-chat-input";
+} from "@client/components/ui/tiptap-chat-input";
 import { useRouter } from "@tanstack/react-router";
 import { BookmarkIcon, MessageSquareIcon } from "lucide-react";
 import { useMemo } from "react";

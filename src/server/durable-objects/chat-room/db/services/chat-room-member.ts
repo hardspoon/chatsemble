@@ -1,4 +1,4 @@
-import type { ChatRoomMember, ChatRoomMemberType } from "@/shared/types";
+import type { ChatRoomMember, ChatRoomMemberType } from "@shared/types";
 import { eq, inArray } from "drizzle-orm";
 import type { DrizzleSqliteDODatabase } from "drizzle-orm/durable-sqlite";
 import { chatRoomMember } from "../schema";

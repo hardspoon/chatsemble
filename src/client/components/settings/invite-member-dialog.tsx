@@ -1,6 +1,6 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
+import { Button } from "@client/components/ui/button";
 import {
 	Dialog,
 	DialogClose,
@@ -10,7 +10,7 @@ import {
 	DialogHeader,
 	DialogTitle,
 	DialogTrigger,
-} from "@/components/ui/dialog";
+} from "@client/components/ui/dialog";
 import {
 	Form,
 	FormControl,
@@ -18,17 +18,17 @@ import {
 	FormItem,
 	FormLabel,
 	FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
+} from "@client/components/ui/form";
+import { Input } from "@client/components/ui/input";
 import {
 	Select,
 	SelectContent,
 	SelectItem,
 	SelectTrigger,
 	SelectValue,
-} from "@/components/ui/select";
-import { authClient } from "@/lib/auth-client";
-import type { ActiveOrganization } from "@/types/auth";
+} from "@client/components/ui/select";
+import { authClient } from "@client/lib/auth-client";
+import type { ActiveOrganization } from "@client/types/auth";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import { MailPlus } from "lucide-react";

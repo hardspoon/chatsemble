@@ -1,14 +1,14 @@
-import { Button } from "@/components/ui/button";
-import { MarkdownContent } from "@/components/ui/markdown-content";
+import { Button } from "@client/components/ui/button";
+import { MarkdownContent } from "@client/components/ui/markdown-content";
 import {
 	Tooltip,
 	TooltipContent,
 	TooltipProvider,
 	TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { dateToPrettyTimeAgo } from "@/lib/date";
-import { cn } from "@/lib/utils";
-import type { ChatMessageThreadMetadata } from "@/shared/types";
+} from "@client/components/ui/tooltip";
+import { dateToPrettyTimeAgo } from "@client/lib/date";
+import { cn } from "@client/lib/utils";
+import type { ChatMessageThreadMetadata } from "@shared/types";
 import { type VariantProps, cva } from "class-variance-authority";
 import { ChevronRight, SparklesIcon, UserIcon } from "lucide-react";
 import React, { type ReactNode, useState, useEffect } from "react";

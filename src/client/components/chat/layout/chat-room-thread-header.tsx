@@ -1,7 +1,7 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
+import { Button } from "@client/components/ui/button";
+import { Separator } from "@client/components/ui/separator";
 import { useRouter } from "@tanstack/react-router";
 import { X } from "lucide-react";
 

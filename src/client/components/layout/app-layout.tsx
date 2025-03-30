@@ -1,5 +1,5 @@
-import { AppSidebar } from "@/components/layout/app-sidebar";
-import { SidebarInset } from "@/components/ui/sidebar";
+import { AppSidebar } from "@client/components/layout/app-sidebar";
+import { SidebarInset } from "@client/components/ui/sidebar";
 
 export function AppLayout({
 	children,

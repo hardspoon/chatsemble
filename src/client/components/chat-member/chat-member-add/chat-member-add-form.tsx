@@ -1,12 +1,12 @@
-import { ChatMemberCombobox } from "@/components/chat-member/chat-member-combobox";
-import { useChatWsContext } from "@/components/chat/providers/chat-ws-provider";
-import { Button } from "@/components/ui/button";
+import { ChatMemberCombobox } from "@client/components/chat-member/chat-member-combobox";
+import { useChatWsContext } from "@client/components/chat/providers/chat-ws-provider";
+import { Button } from "@client/components/ui/button";
 import {
 	DialogDescription,
 	DialogFooter,
 	DialogHeader,
 	DialogTitle,
-} from "@/components/ui/dialog";
+} from "@client/components/ui/dialog";
 import {
 	Form,
 	FormControl,
@@ -14,15 +14,15 @@ import {
 	FormItem,
 	FormLabel,
 	FormMessage,
-} from "@/components/ui/form";
+} from "@client/components/ui/form";
 import {
 	Select,
 	SelectContent,
 	SelectItem,
 	SelectTrigger,
 	SelectValue,
-} from "@/components/ui/select";
-import { honoClient } from "@/lib/api-client";
+} from "@client/components/ui/select";
+import { honoClient } from "@client/lib/api-client";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
