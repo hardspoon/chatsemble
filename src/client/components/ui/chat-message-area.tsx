@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useScrollToBottom } from "@/hooks/use-scroll-to-bottom";
 import { cn } from "@/lib/utils";
+import { useScrollToBottom } from "@/hooks/use-scroll-to-bottom";
 import { ChevronDown } from "lucide-react";
 import type { ReactNode } from "react";
 
@@ -55,10 +55,10 @@ export function ChatMessageArea({
 		useScrollToBottom<HTMLDivElement>();
 
 	return (
-		<ScrollArea className="flex-1 relative">
-			<div ref={containerRef}>
-				<div className={cn(className, "min-h-0")}>{children}</div>
-			</div>
+		<div className={cn("relative", className)}>
+			<ScrollArea className="h-full">
+				<div ref={containerRef}>{children}</div>
+			</ScrollArea>
 			{showScrollButton && (
 				<ScrollButton
 					onClick={scrollToBottom}
@@ -66,7 +66,7 @@ export function ChatMessageArea({
 					className="absolute bottom-4 rounded-full shadow-lg hover:bg-secondary"
 				/>
 			)}
-		</ScrollArea>
+		</div>
 	);
 }
 

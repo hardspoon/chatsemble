@@ -11,8 +11,8 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 
 import { Form } from "@/components/ui/form";
-import { type AgentFormValues, createAgentSchema } from "../../../shared/types";
 import { Bot } from "lucide-react";
+import { type AgentFormValues, createAgentSchema } from "../../../shared/types";
 import {
 	AppHeader,
 	AppHeaderIcon,
@@ -20,9 +20,9 @@ import {
 	AppHeaderTitle,
 } from "../layout/app-header";
 
+import { toast } from "sonner";
 import { Button } from "../ui/button";
 import { AgentForm } from "./agent-form";
-import { toast } from "sonner";
 
 export function AgentEdit({ agentId }: { agentId: string }) {
 	const { data: agent, isLoading } = useQuery({

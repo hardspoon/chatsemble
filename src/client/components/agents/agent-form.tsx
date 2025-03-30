@@ -10,16 +10,6 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import {
-	emojiUsageDescriptions,
-	emojiUsageOptions,
-	languageStyleDescriptions,
-	languageStyleOptions,
-	toneDescriptions,
-	toneOptions,
-	verbosityDescriptions,
-	verbosityOptions,
-} from "../../../shared/types";
 import { cn } from "@/lib/utils";
 import {
 	AlignJustify,
@@ -36,6 +26,16 @@ import {
 	Sparkles,
 	Users,
 } from "lucide-react";
+import {
+	emojiUsageDescriptions,
+	emojiUsageOptions,
+	languageStyleDescriptions,
+	languageStyleOptions,
+	toneDescriptions,
+	toneOptions,
+	verbosityDescriptions,
+	verbosityOptions,
+} from "../../../shared/types";
 import { AvatarPicker } from "../avatar-picker";
 import { CardToggleGroup } from "../card-toggle-groups";
 

@@ -12,8 +12,9 @@ import {
 	DialogTitle,
 } from "@/components/ui/dialog";
 import { Form } from "@/components/ui/form";
-import { type AgentFormValues, createAgentSchema } from "../../../shared/types";
 import { honoClient } from "@/lib/api-client";
+import { useRouter } from "@tanstack/react-router";
+import { type AgentFormValues, createAgentSchema } from "../../../shared/types";
 import { AgentForm } from "./agent-form";
 
 export function NewAgentDialog({
@@ -37,6 +38,7 @@ function NewAgentDialogContent({
 }: {
 	setOpen: (open: boolean) => void;
 }) {
+	const router = useRouter();
 	const queryClient = useQueryClient();
 	const form = useForm<AgentFormValues>({
 		resolver: zodResolver(createAgentSchema),
@@ -61,7 +63,13 @@ function NewAgentDialogContent({
 		},
 		onSuccess: (data) => {
 			queryClient.invalidateQueries({ queryKey: ["agents"] });
-			//router.push(`/agents?agentId=${data.agentId}`); // TODO: Add this
+			router.navigate({
+				to: "/agents",
+				search: (prev) => ({
+					...prev,
+					agentId: data.agentId,
+				}),
+			});
 			setOpen(false);
 		},
 	});

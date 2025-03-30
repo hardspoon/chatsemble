@@ -19,7 +19,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { authClient } from "@/lib/auth-client";
 import { cn } from "@/lib/utils";
-import { Link, createFileRoute } from "@tanstack/react-router";
+import { Link, createFileRoute, useRouter } from "@tanstack/react-router";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/auth/signin")({
 	component: LoginForm,
@@ -31,6 +32,7 @@ const formSchema = z.object({
 });
 
 function LoginForm() {
+	const router = useRouter();
 	const form = useForm<z.infer<typeof formSchema>>({
 		resolver: zodResolver(formSchema),
 		defaultValues: {
@@ -50,6 +52,12 @@ function LoginForm() {
 				throw error;
 			}
 			return data;
+		},
+		onSuccess: ({ redirect, url }) => {
+			toast.success("Signed in successfully");
+			if (redirect) {
+				router.navigate({ to: url });
+			}
 		},
 	});
 

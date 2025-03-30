@@ -2,8 +2,8 @@
 
 import { Button } from "@/components/ui/button";
 import { Tiptap } from "@/components/ui/tiptap/tiptap";
-import type { ChatInputValue, ChatRoomMember } from "@/shared/types";
 import { cn } from "@/lib/utils";
+import type { ChatInputValue, ChatRoomMember } from "@/shared/types";
 import { ArrowUpIcon } from "lucide-react";
 import React, {
 	createContext,
@@ -91,6 +91,7 @@ function ChatInput({
 						if (child.type === ChatInputTiptap) {
 							return React.cloneElement(child, {
 								ref: editorRef,
+								//@ts-ignore // TODO: fix this
 								...child.props,
 							});
 						}

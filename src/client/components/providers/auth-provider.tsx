@@ -1,5 +1,5 @@
-import { createContext, useContext } from "react";
 import { authClient } from "@/lib/auth-client";
+import { createContext, useContext } from "react";
 
 type SessionContextType = ReturnType<typeof authClient.useSession>["data"];
 
