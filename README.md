@@ -6,7 +6,7 @@ Chatsemble is a real-time, multi-user chat application with integrated AI agents
 
 ## Features
 
-* **Multi-user Chat:**
+* **Multi-user Chats:**
   * Supports multiple users in a single chat room.
 
 * **AI Agents:**
