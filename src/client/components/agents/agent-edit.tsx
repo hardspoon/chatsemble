@@ -11,7 +11,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 
 import { Form } from "@/components/ui/form";
-import { type AgentFormValues, createAgentSchema } from "@/shared/types";
+import { type AgentFormValues, createAgentSchema } from "../../../shared/types";
 import { Bot } from "lucide-react";
 import {
 	AppHeader,

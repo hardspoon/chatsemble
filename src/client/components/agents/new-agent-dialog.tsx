@@ -12,7 +12,7 @@ import {
 	DialogTitle,
 } from "@/components/ui/dialog";
 import { Form } from "@/components/ui/form";
-import { type AgentFormValues, createAgentSchema } from "@/shared/types";
+import { type AgentFormValues, createAgentSchema } from "../../../shared/types";
 import { honoClient } from "@/lib/api-client";
 import { AgentForm } from "./agent-form";
 

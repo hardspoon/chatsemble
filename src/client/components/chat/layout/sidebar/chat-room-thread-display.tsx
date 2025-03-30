@@ -13,6 +13,7 @@ import { ChatMessageSkeleton, ChatRoomMessage } from "../../chat-room-message";
 import { ChatMessagesSkeleton } from "../../chat-room-message";
 import { useChatParams } from "../../providers/chat-params-provider";
 import { useChatWsContext } from "../../providers/chat-ws-provider";
+import { useUser } from "@/components/providers/auth-provider";
 
 export function ChatRoomThreadDisplay() {
 	const {
@@ -21,7 +22,9 @@ export function ChatRoomThreadDisplay() {
 		connectionStatus,
 	} = useChatWsContext();
 
-	const { threadId, user } = useChatParams();
+	const { threadId } = useChatParams();
+
+	const user = useUser();
 
 	const isLoading = connectionStatus !== "connected" || status !== "success";
 

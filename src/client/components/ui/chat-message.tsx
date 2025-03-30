@@ -318,7 +318,7 @@ const ChatMessageAction = React.forwardRef<
 				<span className="sr-only">{label}</span>
 			</Button>
 		</TooltipTrigger>
-		<TooltipContent>
+		<TooltipContent side="left">
 			<p>{label}</p>
 		</TooltipContent>
 	</Tooltip>

@@ -60,7 +60,7 @@ function ChatRoomContent() {
 						<ChatRoomMainDisplay />
 					</div>
 				</ResizablePanel>
-				{/* {threadId && <ResizableHandle className="bg-transparent" />}
+				{threadId && <ResizableHandle className="bg-transparent" />}
 				{threadId && (
 					<ResizablePanel
 						id="thread-panel"
@@ -73,7 +73,7 @@ function ChatRoomContent() {
 							<ChatRoomThreadDisplay />
 						</div>
 					</ResizablePanel>
-				)} */}
+				)}
 			</ResizablePanelGroup>
 		</>
 	);

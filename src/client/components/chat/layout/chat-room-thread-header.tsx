@@ -1,12 +1,12 @@
 "use client";
 
-import { useChatParams } from "@/components/chat/providers/chat-params-provider";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { X } from "lucide-react";
+import { useRouter } from "@tanstack/react-router";
 
 export function ChatRoomThreadHeader() {
-	const { clearThreadId } = useChatParams();
+	const router = useRouter();
 
 	return (
 		<header className="group-has-data-[collapsible=icon]/sidebar-wrapper:h-12 flex h-12 shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear">
@@ -15,7 +15,13 @@ export function ChatRoomThreadHeader() {
 					variant="ghost"
 					size="icon"
 					onClick={() => {
-						clearThreadId();
+						router.navigate({
+							to: "/chat",
+							search: (prev) => ({
+								...prev,
+								threadId: undefined,
+							}),
+						});
 					}}
 					title="Close thread"
 					className="-ml-1"
