@@ -1,6 +1,6 @@
 "use client";
 
-import { useUser } from "@/components/providers/auth-provider";
+import { useAuthSession } from "@/components/providers/auth-provider";
 import { ChatMessageArea } from "@/components/ui/chat-message-area";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -24,7 +24,7 @@ export function ChatRoomThreadDisplay() {
 
 	const { threadId } = useChatParams();
 
-	const user = useUser();
+	const { user } = useAuthSession();
 
 	const isLoading = connectionStatus !== "connected" || status !== "success";
 

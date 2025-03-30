@@ -26,7 +26,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { honoClient } from "@/lib/api-client";
 import type { ChatRoom, ChatRoomType } from "@/shared/types";
 import { useQuery } from "@tanstack/react-query";
-import { Link } from "@tanstack/react-router";
+import { getRouteApi, Link } from "@tanstack/react-router";
 import {
 	AlertCircle,
 	ArrowUpRight,
@@ -83,7 +83,9 @@ function ChatRoomsGroups({
 	chatRooms: ChatRoom[];
 	setDialogState: Dispatch<SetStateAction<DialogState>>;
 }) {
-	const selectedChatRoomId = null; // TODO: Add this
+	const route = getRouteApi("/(app)/chat");
+	const { roomId } = route.useSearch();
+	const selectedChatRoomId = roomId;
 	// Group chat rooms by type
 	const groupChats = useMemo(
 		() =>
@@ -105,14 +107,14 @@ function ChatRoomsGroups({
 				chatRooms={groupChats}
 				chatType="publicGroup"
 				setDialogState={setDialogState}
-				selectedChatRoomId={selectedChatRoomId}
+				selectedChatRoomId={selectedChatRoomId ?? null}
 			/>
 			<ChatRoomsGroup
 				title="Direct Messages"
 				chatRooms={oneToOneChats}
 				chatType="oneToOne"
 				setDialogState={setDialogState}
-				selectedChatRoomId={selectedChatRoomId}
+				selectedChatRoomId={selectedChatRoomId ?? null}
 			/>
 		</>
 	);

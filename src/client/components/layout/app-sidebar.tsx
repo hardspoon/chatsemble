@@ -18,7 +18,7 @@ import {
 	useSidebar,
 } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
-import { Link } from "@tanstack/react-router";
+import { Link, useRouterState } from "@tanstack/react-router";
 import { useState } from "react";
 import { LogoIcon } from "../icons/logo-icon";
 import { type SettingIds, SettingsDialog } from "../settings/settings-dialog";
@@ -41,8 +41,10 @@ const navMain = [
 ];
 
 export function AppSidebar({ children }: React.ComponentProps<typeof Sidebar>) {
-	/* const pathname = usePathname(); */
 	const { toggleSidebar } = useSidebar();
+	const {
+		location: { pathname },
+	} = useRouterState();
 
 	return (
 		<Sidebar variant="inset" collapsible="icon">
@@ -82,10 +84,10 @@ export function AppSidebar({ children }: React.ComponentProps<typeof Sidebar>) {
 			</SidebarHeader>
 			<SidebarContent className="overflow-x-hidden">
 				<SidebarSeparator />
-				<NavMain currentPath={""} /> {/* TODO: Add this */}
+				<NavMain currentPath={pathname} />
 				<SidebarSeparator className="group-data-[collapsible=icon]:hidden" />
 				{children}
-				<NavSecondary currentPath={""} className="mt-auto" />
+				<NavSecondary currentPath={pathname} className="mt-auto" />
 			</SidebarContent>
 			<SidebarFooter>
 				<AppNavUser />
