@@ -1,6 +1,6 @@
 /// <reference path="../../../worker-configuration.d.ts" />
 
-import type { auth } from "../auth";
+import type { auth } from "@server/auth";
 
 type Auth = typeof auth;
 

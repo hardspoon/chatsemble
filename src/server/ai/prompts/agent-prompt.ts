@@ -1,3 +1,4 @@
+import type { agentConfig as agentConfigT } from "@server/durable-objects/agent/db/schema";
 import {
 	type EmojiUsage,
 	type LanguageStyle,
@@ -8,7 +9,6 @@ import {
 	toneDescriptions,
 	verbosityDescriptions,
 } from "@shared/types";
-import type { agentConfig as agentConfigT } from "../../durable-objects/agent/db/schema";
 
 function getToneExplanation(tone: Tone): string {
 	return `For tone use ${tone}, ${toneDescriptions[tone]}`;

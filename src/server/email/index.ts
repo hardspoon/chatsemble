@@ -1,18 +1,18 @@
 import { env } from "cloudflare:workers";
-import { type ComponentType, createElement } from "react";
-import { Resend } from "resend";
 import {
 	EmailVerificationTemplate,
 	type EmailVerificationTemplateProps,
-} from "./templates/email-verification";
+} from "@server/email/templates/email-verification";
 import {
 	OrganizationInvitationTemplate,
 	type OrganizationInvitationTemplateProps,
-} from "./templates/organization-invitation";
+} from "@server/email/templates/organization-invitation";
 import {
 	PasswordResetTemplate,
 	type PasswordResetTemplateProps,
-} from "./templates/password-reset";
+} from "@server/email/templates/password-reset";
+import { type ComponentType, createElement } from "react";
+import { Resend } from "resend";
 
 const resend = new Resend(env.RESEND_API_KEY);
 
