@@ -22,7 +22,7 @@ import {
 	StarOff,
 	Trash2,
 } from "lucide-react";
-import { Link } from "@tanstack/react-router";
+import { getRouteApi, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import {
@@ -67,8 +67,8 @@ function AgentGroup({
 }: {
 	agents: Agent[];
 }) {
-	//const queryParams = useSearchParams();
-	//const selectedAgentId = queryParams.get("agentId");
+	const route = getRouteApi("/(app)/agents");
+	const { agentId } = route.useSearch();
 	const { isMobile } = useSidebar();
 	const [newAgentDialogOpen, setNewAgentDialogOpen] = useState(false);
 
@@ -90,11 +90,12 @@ function AgentGroup({
 					{agents.length > 0 ? (
 						agents.map((agent) => (
 							<SidebarMenuItem key={agent.id}>
-								<SidebarMenuButton
-									asChild
-									/* isActive={selectedAgentId === agent.id} */ // TODO: Add this
-								>
-									<Link to="/" title={agent.name}>
+								<SidebarMenuButton asChild isActive={agentId === agent.id}>
+									<Link
+										to="/agents"
+										search={{ agentId: agent.id }}
+										title={agent.name}
+									>
 										<Avatar className="size-5">
 											<AvatarImage src={agent.image} />
 											<AvatarFallback>{agent.name.slice(0, 2)}</AvatarFallback>

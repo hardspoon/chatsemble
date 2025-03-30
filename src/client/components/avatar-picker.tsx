@@ -7,6 +7,7 @@ import {
 	DialogHeader,
 	DialogTitle,
 } from "@/components/ui/dialog";
+import { UserRound } from "lucide-react";
 import { useState } from "react";
 
 interface AvatarPickerProps {
@@ -20,11 +21,17 @@ export function AvatarPicker({ value, onChange }: AvatarPickerProps) {
 	return (
 		<div className="flex items-center gap-4">
 			<div className="relative size-16 overflow-hidden rounded-lg border">
-				<img
-					src={value}
-					alt="Agent avatar"
-					className="size-full object-cover"
-				/>
+				{value ? (
+					<img
+						src={value}
+						alt="Agent avatar"
+						className="size-full object-cover"
+					/>
+				) : (
+					<div className="size-full flex items-center justify-center">
+						<UserRound />
+					</div>
+				)}
 			</div>
 			<Button
 				type="button"

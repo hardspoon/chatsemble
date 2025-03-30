@@ -20,12 +20,14 @@ import {
 import { BookmarkIcon, MessageSquareIcon } from "lucide-react";
 import { useMemo } from "react";
 import { useUser } from "@/components/providers/auth-provider";
-
+import { useRouter } from "@tanstack/react-router";
 export function ChatRoomMainDisplay() {
 	const {
 		mainChat: { messages, handleSubmit, members, status },
 		connectionStatus,
 	} = useChatWsContext();
+
+	const router = useRouter();
 
 	const user = useUser();
 
@@ -61,7 +63,13 @@ export function ChatRoomMainDisplay() {
 											<ChatMessageAction
 												label="Reply in thread"
 												onClick={() => {
-													/* setThreadId(message.id); */
+													router.navigate({
+														to: "/chat",
+														search: (prev) => ({
+															...prev,
+															threadId: message.id,
+														}),
+													});
 												}}
 											>
 												<MessageSquareIcon />
@@ -72,7 +80,13 @@ export function ChatRoomMainDisplay() {
 										<ChatMessageThread
 											threadMetadata={threadMetadata}
 											onClick={() => {
-												/* setThreadId(id); */
+												router.navigate({
+													to: "/chat",
+													search: (prev) => ({
+														...prev,
+														threadId: id,
+													}),
+												});
 											}}
 										/>
 									)}
