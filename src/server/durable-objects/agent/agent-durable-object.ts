@@ -125,7 +125,7 @@ export class AgentDurableObject extends DurableObject<Env> {
 
 		const agentToolSet = (dataStream: DataStreamWriter) => {
 			return {
-				searchInformation: searchInformationTool(),
+				searchInformation: searchInformationTool(dataStream),
 				deepResearch: deepResearchTool(dataStream),
 				createMessageThread: createMessageThreadTool({
 					onMessage,
