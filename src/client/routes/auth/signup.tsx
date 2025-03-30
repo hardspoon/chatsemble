@@ -6,9 +6,18 @@ import { useForm } from "react-hook-form";
 import * as z from "zod";
 
 import { LogoIcon } from "@client/components/icons/logo-icon";
-import { Alert, AlertDescription, AlertTitle } from "@client/components/ui/alert";
+import {
+	Alert,
+	AlertDescription,
+	AlertTitle,
+} from "@client/components/ui/alert";
 import { Button, buttonVariants } from "@client/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@client/components/ui/card";
+import {
+	Card,
+	CardContent,
+	CardHeader,
+	CardTitle,
+} from "@client/components/ui/card";
 import {
 	Form,
 	FormControl,

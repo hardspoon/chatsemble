@@ -14,13 +14,15 @@ import {
 } from "@client/components/ui/form";
 import { Input } from "@client/components/ui/input";
 import { Switch } from "@client/components/ui/switch";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@client/components/ui/tabs";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Settings, UserPlus } from "lucide-react";
 import {
-	type ChatRoomType,
-	createChatRoomSchema,
-} from "@shared/types";
+	Tabs,
+	TabsContent,
+	TabsList,
+	TabsTrigger,
+} from "@client/components/ui/tabs";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { type ChatRoomType, createChatRoomSchema } from "@shared/types";
+import { Settings, UserPlus } from "lucide-react";
 import { ChatMemberMultiSelect } from "../../chat-member/chat-member-multi-select";
 
 type CreateChatRoomFormValues = z.infer<typeof createChatRoomSchema>;

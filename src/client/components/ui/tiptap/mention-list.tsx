@@ -1,5 +1,9 @@
 import { ChatMemberBadge } from "@client/components/chat-member/chat-member-badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@client/components/ui/avatar";
+import {
+	Avatar,
+	AvatarFallback,
+	AvatarImage,
+} from "@client/components/ui/avatar";
 import { Button } from "@client/components/ui/button";
 import { cn } from "@client/lib/utils";
 import type { ChatRoomMember } from "@shared/types";

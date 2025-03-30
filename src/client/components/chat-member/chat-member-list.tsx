@@ -2,7 +2,11 @@ import { ChatMemberAddDialog } from "@client/components/chat-member/chat-member-
 import { ChatMemberBadge } from "@client/components/chat-member/chat-member-badge";
 import { ChatMemberRemoveButton } from "@client/components/chat-member/chat-member-remove-button";
 import { useChatWsContext } from "@client/components/chat/providers/chat-ws-provider";
-import { Avatar, AvatarFallback, AvatarImage } from "@client/components/ui/avatar";
+import {
+	Avatar,
+	AvatarFallback,
+	AvatarImage,
+} from "@client/components/ui/avatar";
 import { authClient } from "@client/lib/auth-client";
 import type { ChatRoomMember } from "@shared/types";
 

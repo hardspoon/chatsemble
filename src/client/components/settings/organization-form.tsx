@@ -1,7 +1,11 @@
 "use client";
 
 import { CopyButton } from "@client/components/copy-button";
-import { Avatar, AvatarFallback, AvatarImage } from "@client/components/ui/avatar";
+import {
+	Avatar,
+	AvatarFallback,
+	AvatarImage,
+} from "@client/components/ui/avatar";
 import { Button } from "@client/components/ui/button";
 import { Separator } from "@client/components/ui/separator";
 import { authClient } from "@client/lib/auth-client";

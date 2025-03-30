@@ -1,4 +1,8 @@
 import { updateMessageList } from "@client/lib/chat";
+import {
+	createChatRoomMessagePartial,
+	createChatRoomOptimisticMessage,
+} from "@shared/lib/chat";
 import type {
 	ChatInputValue,
 	ChatRoomMessage,
@@ -9,10 +13,6 @@ import type {
 } from "@shared/types";
 import type { User } from "better-auth";
 import { useCallback, useEffect, useRef, useState } from "react";
-import {
-	createChatRoomMessagePartial,
-	createChatRoomOptimisticMessage,
-} from "@shared/lib/chat";
 import type { UseWebSocketConnectionStatus } from "./use-web-socket";
 
 export function useThreadChat({
