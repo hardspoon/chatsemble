@@ -8,10 +8,14 @@
 		"build": "tsc -b && vite build",
 		"lint": "biome check --write src",
 		"preview": "vite preview",
+		"deploy": "wrangler deploy",
 		"cf-types": "wrangler types",
 		"db:generate": "drizzle-kit generate",
 		"db:migrate:dev": "wrangler d1 migrations apply chatsemble-db --local",
-		"db:seed": "tsx src/server/db/seed.ts",
+		"db:migrate:prod": "wrangler d1 migrations apply chatsemble-db --remote",
+		"db:seed:dev": "tsx src/server/db/seed.ts",
+		"db:seed:dev:sql": "wrangler d1 execute chatsemble-db --file=src/server/db/seed.sql --local",
+		"db:seed:prod:sql": "wrangler d1 execute chatsemble-db --file=src/server/db/seed.sql --remote",
 		"db:studio": "drizzle-kit studio"
 	},
 	"dependencies": {
