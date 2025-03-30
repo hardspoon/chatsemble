@@ -10,7 +10,7 @@ import {
 	useChatParams,
 } from "@/components/chat/providers/chat-params-provider";
 import { ChatWsProvider } from "@/components/chat/providers/chat-ws-provider";
-import { useUser } from "@/components/providers/auth-provider";
+import { useAuthSession } from "@/components/providers/auth-provider";
 import {
 	ResizableHandle,
 	ResizablePanel,
@@ -27,7 +27,7 @@ export function ChatRoom() {
 
 function ChatRoomWithParams() {
 	const { roomId, threadId } = useChatParams();
-	const user = useUser();
+	const { user } = useAuthSession();
 
 	return (
 		<ChatWsProvider roomId={roomId} threadId={threadId} user={user}>

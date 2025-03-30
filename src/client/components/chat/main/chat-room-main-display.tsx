@@ -12,7 +12,7 @@ import {
 	ChatMessagesSkeleton,
 	ChatRoomMessage,
 } from "@/components/chat/chat-room-message";
-import { useUser } from "@/components/providers/auth-provider";
+import { useAuthSession } from "@/components/providers/auth-provider";
 import {
 	ChatInput,
 	ChatInputSubmit,
@@ -29,7 +29,7 @@ export function ChatRoomMainDisplay() {
 
 	const router = useRouter();
 
-	const user = useUser();
+	const { user } = useAuthSession();
 
 	const isLoading = connectionStatus !== "connected" || status !== "success";
 

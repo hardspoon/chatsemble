@@ -5,8 +5,14 @@ type SessionContextType = ReturnType<typeof authClient.useSession>["data"];
 
 const SessionContext = createContext<SessionContextType>(null);
 
-export function useSession() {
-	return useContext(SessionContext);
+export function useAuthSession() {
+	const session = useContext(SessionContext);
+
+	if (!session) {
+		throw new Error("useSession must be used within an AuthProvider");
+	}
+
+	return session;
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -17,14 +23,4 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 			{children}
 		</SessionContext.Provider>
 	);
-}
-
-export function useUser() {
-	const session = useSession();
-
-	if (!session) {
-		throw new Error("User not found");
-	}
-
-	return session.user;
 }
