@@ -27,7 +27,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
-import { createChatRoomMemberSchema } from "../../../../shared/types";
+import { createChatRoomMemberSchema } from "@shared/types";
 
 export type FormValues = z.infer<typeof createChatRoomMemberSchema>;
 

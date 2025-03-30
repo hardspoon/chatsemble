@@ -20,7 +20,7 @@ import { Settings, UserPlus } from "lucide-react";
 import {
 	type ChatRoomType,
 	createChatRoomSchema,
-} from "../../../../shared/types";
+} from "@shared/types";
 import { ChatMemberMultiSelect } from "../../chat-member/chat-member-multi-select";
 
 type CreateChatRoomFormValues = z.infer<typeof createChatRoomSchema>;

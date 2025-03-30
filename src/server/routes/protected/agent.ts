@@ -2,7 +2,7 @@ import { Hono } from "hono";
 
 import { zValidator } from "@hono/zod-validator";
 import { and, eq } from "drizzle-orm";
-import { type Agent, createAgentSchema } from "../../../shared/types";
+import { type Agent, createAgentSchema } from "@shared/types";
 import { db } from "../../db";
 import { agent as agentSchema } from "../../db/schema";
 import type { HonoContextWithAuth } from "../../types/hono";

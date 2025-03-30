@@ -35,7 +35,7 @@ import {
 	toneOptions,
 	verbosityDescriptions,
 	verbosityOptions,
-} from "../../../shared/types";
+} from "@shared/types";
 import { AvatarPicker } from "../avatar-picker";
 import { CardToggleGroup } from "../card-toggle-groups";
 
