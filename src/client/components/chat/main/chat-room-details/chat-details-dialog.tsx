@@ -1,13 +1,13 @@
-import { useChatWsContext } from "@/components/chat/providers/chat-ws-provider";
+import { useChatWsContext } from "@client/components/chat/providers/chat-ws-provider";
 import {
 	Dialog,
 	DialogContent,
 	DialogDescription,
 	DialogHeader,
 	DialogTitle,
-} from "@/components/ui/dialog";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+} from "@client/components/ui/dialog";
+import { Skeleton } from "@client/components/ui/skeleton";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@client/components/ui/tabs";
 import { Info, UserPlus } from "lucide-react";
 import { ChatDetailsMembersSection } from "./chat-details-members-section";
 import { ChatDetailsSection } from "./chat-details-section";

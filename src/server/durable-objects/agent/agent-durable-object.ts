@@ -1,5 +1,5 @@
 import { DurableObject } from "cloudflare:workers";
-import type { ChatRoomMessage, ChatRoomMessagePartial } from "@/shared/types";
+import type { ChatRoomMessage, ChatRoomMessagePartial } from "@shared/types";
 import { createOpenAI } from "@ai-sdk/openai";
 import {
 	type DataStreamWriter,

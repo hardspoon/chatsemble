@@ -1,11 +1,11 @@
 "use client";
 
-import { CopyButton } from "@/components/copy-button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
-import { authClient } from "@/lib/auth-client";
-import type { ActiveOrganization } from "@/types/auth";
+import { CopyButton } from "@client/components/copy-button";
+import { Avatar, AvatarFallback, AvatarImage } from "@client/components/ui/avatar";
+import { Button } from "@client/components/ui/button";
+import { Separator } from "@client/components/ui/separator";
+import { authClient } from "@client/lib/auth-client";
+import type { ActiveOrganization } from "@client/types/auth";
 import { Loader2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";

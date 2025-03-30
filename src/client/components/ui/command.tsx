@@ -8,8 +8,8 @@ import {
 	DialogDescription,
 	DialogHeader,
 	DialogTitle,
-} from "@/components/ui/dialog";
-import { cn } from "@/lib/utils";
+} from "@client/components/ui/dialog";
+import { cn } from "@client/lib/utils";
 
 function Command({
 	className,

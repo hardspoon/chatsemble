@@ -1,8 +1,8 @@
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
 
-import { Button } from "@/components/ui/button";
-import { DialogFooter } from "@/components/ui/dialog";
+import { Button } from "@client/components/ui/button";
+import { DialogFooter } from "@client/components/ui/dialog";
 import {
 	Form,
 	FormControl,
@@ -11,10 +11,10 @@ import {
 	FormItem,
 	FormLabel,
 	FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Switch } from "@/components/ui/switch";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+} from "@client/components/ui/form";
+import { Input } from "@client/components/ui/input";
+import { Switch } from "@client/components/ui/switch";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@client/components/ui/tabs";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Settings, UserPlus } from "lucide-react";
 import {

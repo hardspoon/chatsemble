@@ -12,7 +12,7 @@ import {
 } from "react";
 import { Markdown } from "tiptap-markdown";
 import "./style.css";
-import type { ChatInputValue, ChatRoomMember } from "@/shared/types";
+import type { ChatInputValue, ChatRoomMember } from "@shared/types";
 import { Extension } from "@tiptap/core";
 import type { Transaction } from "@tiptap/pm/state";
 import type { Editor, JSONContent } from "@tiptap/react";

@@ -1,8 +1,8 @@
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Skeleton } from "@/components/ui/skeleton";
-import { honoClient } from "@/lib/api-client";
-import type { ChatRoomMember, CreateChatRoomMember } from "@/shared/types";
+import { Avatar, AvatarFallback, AvatarImage } from "@client/components/ui/avatar";
+import { Checkbox } from "@client/components/ui/checkbox";
+import { Skeleton } from "@client/components/ui/skeleton";
+import { honoClient } from "@client/lib/api-client";
+import type { ChatRoomMember, CreateChatRoomMember } from "@shared/types";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { ChatMemberBadge } from "./chat-member-badge";

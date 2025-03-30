@@ -5,20 +5,20 @@ import { useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 
-import { LogoIcon } from "@/components/icons/logo-icon";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Button, buttonVariants } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { LogoIcon } from "@client/components/icons/logo-icon";
+import { Alert, AlertDescription } from "@client/components/ui/alert";
+import { Button, buttonVariants } from "@client/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@client/components/ui/card";
 import {
 	Form,
 	FormControl,
 	FormField,
 	FormItem,
 	FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { authClient } from "@/lib/auth-client";
-import { cn } from "@/lib/utils";
+} from "@client/components/ui/form";
+import { Input } from "@client/components/ui/input";
+import { authClient } from "@client/lib/auth-client";
+import { cn } from "@client/lib/utils";
 import { Link, createFileRoute, useRouter } from "@tanstack/react-router";
 import { toast } from "sonner";
 

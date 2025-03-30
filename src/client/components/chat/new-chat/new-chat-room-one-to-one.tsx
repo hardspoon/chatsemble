@@ -1,8 +1,8 @@
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
 
-import { Button } from "@/components/ui/button";
-import { DialogFooter } from "@/components/ui/dialog";
+import { Button } from "@client/components/ui/button";
+import { DialogFooter } from "@client/components/ui/dialog";
 import {
 	Form,
 	FormControl,
@@ -10,7 +10,7 @@ import {
 	FormItem,
 	FormLabel,
 	FormMessage,
-} from "@/components/ui/form";
+} from "@client/components/ui/form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { createChatRoomSchema } from "../../../../shared/types";
 import { ChatMemberMultiSelect } from "../../chat-member/chat-member-multi-select";

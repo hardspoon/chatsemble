@@ -1,6 +1,6 @@
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@client/components/ui/avatar";
+import { Badge } from "@client/components/ui/badge";
+import { Button } from "@client/components/ui/button";
 import {
 	Command,
 	CommandEmpty,
@@ -9,16 +9,16 @@ import {
 	CommandItem,
 	CommandList,
 	CommandSeparator,
-} from "@/components/ui/command";
+} from "@client/components/ui/command";
 import {
 	Popover,
 	PopoverContent,
 	PopoverTrigger,
-} from "@/components/ui/popover";
-import { Skeleton } from "@/components/ui/skeleton";
-import { honoClient } from "@/lib/api-client";
-import { cn } from "@/lib/utils";
-import type { ChatRoomMember } from "@/shared/types";
+} from "@client/components/ui/popover";
+import { Skeleton } from "@client/components/ui/skeleton";
+import { honoClient } from "@client/lib/api-client";
+import { cn } from "@client/lib/utils";
+import type { ChatRoomMember } from "@shared/types";
 import { useQuery } from "@tanstack/react-query";
 import { Check, ChevronsUpDown } from "lucide-react";
 import { useState } from "react";

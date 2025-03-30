@@ -1,8 +1,8 @@
-import { AgentEdit } from "@/components/agents/agent-edit";
-import { AgentNotSelected } from "@/components/agents/agent-placeholder";
-import { AgentsSidebar } from "@/components/agents/agents-sidebar";
-import { AppHeader, AppHeaderIcon } from "@/components/layout/app-header";
-import { AppLayout } from "@/components/layout/app-layout";
+import { AgentEdit } from "@client/components/agents/agent-edit";
+import { AgentNotSelected } from "@client/components/agents/agent-placeholder";
+import { AgentsSidebar } from "@client/components/agents/agents-sidebar";
+import { AppHeader, AppHeaderIcon } from "@client/components/layout/app-header";
+import { AppLayout } from "@client/components/layout/app-layout";
 import { createFileRoute } from "@tanstack/react-router";
 import { Bot } from "lucide-react";
 import { z } from "zod";

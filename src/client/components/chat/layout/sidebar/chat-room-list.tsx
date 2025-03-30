@@ -3,14 +3,14 @@
 import {
 	type DialogState,
 	NewChatRoomDialog,
-} from "@/components/chat/new-chat/new-chat-dialog";
+} from "@client/components/chat/new-chat/new-chat-dialog";
 import {
 	DropdownMenu,
 	DropdownMenuContent,
 	DropdownMenuItem,
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from "@client/components/ui/dropdown-menu";
 import {
 	SidebarGroup,
 	SidebarGroupAction,
@@ -21,10 +21,10 @@ import {
 	SidebarMenuItem,
 	SidebarMenuSkeleton,
 	useSidebar,
-} from "@/components/ui/sidebar";
-import { Skeleton } from "@/components/ui/skeleton";
-import { honoClient } from "@/lib/api-client";
-import type { ChatRoom, ChatRoomType } from "@/shared/types";
+} from "@client/components/ui/sidebar";
+import { Skeleton } from "@client/components/ui/skeleton";
+import { honoClient } from "@client/lib/api-client";
+import type { ChatRoom, ChatRoomType } from "@shared/types";
 import { useQuery } from "@tanstack/react-query";
 import { getRouteApi, Link } from "@tanstack/react-router";
 import {

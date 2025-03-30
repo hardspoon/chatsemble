@@ -1,6 +1,6 @@
-import { AuthProvider } from "@/components/providers/auth-provider";
-import { SidebarProvider } from "@/components/ui/sidebar";
-import { authClient } from "@/lib/auth-client";
+import { AuthProvider } from "@client/components/providers/auth-provider";
+import { SidebarProvider } from "@client/components/ui/sidebar";
+import { authClient } from "@client/lib/auth-client";
 import { Navigate, Outlet, createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/(app)")({

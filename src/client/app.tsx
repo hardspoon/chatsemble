@@ -1,5 +1,5 @@
-import { Button } from "@/components/ui/button";
-import { honoClient } from "@/lib/api-client";
+import { Button } from "@client/components/ui/button";
+import { honoClient } from "@client/lib/api-client";
 
 function App() {
 	const fetchUsers = async () => {

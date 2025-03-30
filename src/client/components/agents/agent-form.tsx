@@ -7,10 +7,10 @@ import {
 	FormItem,
 	FormLabel,
 	FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { cn } from "@/lib/utils";
+} from "@client/components/ui/form";
+import { Input } from "@client/components/ui/input";
+import { Textarea } from "@client/components/ui/textarea";
+import { cn } from "@client/lib/utils";
 import {
 	AlignJustify,
 	Ban,

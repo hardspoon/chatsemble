@@ -1,6 +1,6 @@
-import { ChatRoom } from "@/components/chat/layout/chat-room";
-import { ChatRoomList } from "@/components/chat/layout/sidebar/chat-room-list";
-import { AppLayout } from "@/components/layout/app-layout";
+import { ChatRoom } from "@client/components/chat/layout/chat-room";
+import { ChatRoomList } from "@client/components/chat/layout/sidebar/chat-room-list";
+import { AppLayout } from "@client/components/layout/app-layout";
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 

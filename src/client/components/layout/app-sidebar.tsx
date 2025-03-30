@@ -3,7 +3,7 @@
 import { Bot, MessagesSquare, PanelLeft, Search, Settings } from "lucide-react";
 import type * as React from "react";
 
-import { AppNavUser } from "@/components/layout/app-nav-user";
+import { AppNavUser } from "@client/components/layout/app-nav-user";
 import {
 	Sidebar,
 	SidebarContent,
@@ -16,8 +16,8 @@ import {
 	SidebarMenuItem,
 	SidebarSeparator,
 	useSidebar,
-} from "@/components/ui/sidebar";
-import { cn } from "@/lib/utils";
+} from "@client/components/ui/sidebar";
+import { cn } from "@client/lib/utils";
 import { Link, useRouterState } from "@tanstack/react-router";
 import { useState } from "react";
 import { LogoIcon } from "../icons/logo-icon";

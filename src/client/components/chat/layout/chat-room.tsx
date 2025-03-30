@@ -1,21 +1,21 @@
 "use client";
 
-import { ChatRoomNotSelected } from "@/components/chat/layout/chat-room-not-selected";
-import { ChatRoomThreadHeader } from "@/components/chat/layout/chat-room-thread-header";
-import { ChatRoomThreadDisplay } from "@/components/chat/layout/sidebar/chat-room-thread-display";
-import { ChatRoomMainDisplay } from "@/components/chat/main/chat-room-main-display";
-import { ChatRoomMainHeader } from "@/components/chat/main/chat-room-main-header";
+import { ChatRoomNotSelected } from "@client/components/chat/layout/chat-room-not-selected";
+import { ChatRoomThreadHeader } from "@client/components/chat/layout/chat-room-thread-header";
+import { ChatRoomThreadDisplay } from "@client/components/chat/layout/sidebar/chat-room-thread-display";
+import { ChatRoomMainDisplay } from "@client/components/chat/main/chat-room-main-display";
+import { ChatRoomMainHeader } from "@client/components/chat/main/chat-room-main-header";
 import {
 	ChatParamsProvider,
 	useChatParams,
-} from "@/components/chat/providers/chat-params-provider";
-import { ChatWsProvider } from "@/components/chat/providers/chat-ws-provider";
-import { useAuthSession } from "@/components/providers/auth-provider";
+} from "@client/components/chat/providers/chat-params-provider";
+import { ChatWsProvider } from "@client/components/chat/providers/chat-ws-provider";
+import { useAuthSession } from "@client/components/providers/auth-provider";
 import {
 	ResizableHandle,
 	ResizablePanel,
 	ResizablePanelGroup,
-} from "@/components/ui/resizable";
+} from "@client/components/ui/resizable";
 
 export function ChatRoom() {
 	return (

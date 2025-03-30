@@ -2,7 +2,7 @@ import type {
 	WsChatIncomingMessage,
 	WsChatOutgoingMessage,
 	WsMessageChatInitRequest,
-} from "@/shared/types";
+} from "@shared/types";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 export type UseWebSocketConnectionStatus =

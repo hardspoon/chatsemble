@@ -1,6 +1,6 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
+import { Button } from "@client/components/ui/button";
 import {
 	Dialog,
 	DialogContent,
@@ -9,9 +9,9 @@ import {
 	DialogHeader,
 	DialogTitle,
 	DialogTrigger,
-} from "@/components/ui/dialog";
-import { honoClient } from "@/lib/api-client";
-import type { ChatRoomMember } from "@/shared/types";
+} from "@client/components/ui/dialog";
+import { honoClient } from "@client/lib/api-client";
+import type { ChatRoomMember } from "@shared/types";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Trash2 } from "lucide-react";
 import { useState } from "react";

@@ -1,4 +1,4 @@
-import type { ChatRoomMember } from "@/shared/types";
+import type { ChatRoomMember } from "@shared/types";
 import { ReactRenderer } from "@tiptap/react";
 import type { SuggestionProps } from "@tiptap/suggestion";
 import tippy from "tippy.js";
