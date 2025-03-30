@@ -1,5 +1,15 @@
 import { DurableObject } from "cloudflare:workers";
 import { createOpenAI } from "@ai-sdk/openai";
+import {
+	agentMessagesToContextCoreMessages,
+	processDataStream,
+} from "@server/ai/ai-utils";
+import { agentSystemPrompt } from "@server/ai/prompts/agent-prompt";
+import {
+	createMessageThreadTool,
+	deepResearchTool,
+	searchInformationTool,
+} from "@server/ai/tools";
 import type { ChatRoomMessage, ChatRoomMessagePartial } from "@shared/types";
 import {
 	type DataStreamWriter,
@@ -12,16 +22,6 @@ import {
 	drizzle,
 } from "drizzle-orm/durable-sqlite";
 import { migrate } from "drizzle-orm/durable-sqlite/migrator";
-import {
-	agentMessagesToContextCoreMessages,
-	processDataStream,
-} from "../../ai/ai-utils";
-import { agentSystemPrompt } from "../../ai/prompts/agent-prompt";
-import {
-	createMessageThreadTool,
-	deepResearchTool,
-	searchInformationTool,
-} from "../../ai/tools";
 import migrations from "./db/migrations/migrations.js";
 import { createAgentDbServices } from "./db/services";
 

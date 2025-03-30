@@ -1,6 +1,6 @@
-import { app } from "./routes";
+import { app } from "@server/routes";
 
-export { ChatDurableObject } from "./durable-objects/chat-room/chat-durable-object";
-export { AgentDurableObject } from "./durable-objects/agent/agent-durable-object";
+export { ChatDurableObject } from "@server/durable-objects/chat-room/chat-durable-object";
+export { AgentDurableObject } from "@server/durable-objects/agent/agent-durable-object";
 
 export default app;

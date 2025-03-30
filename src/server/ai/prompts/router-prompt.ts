@@ -1,5 +1,5 @@
+import { chatRoomMessagesToAgentMessages } from "@server/ai/ai-utils";
 import type { Agent, ChatRoom, ChatRoomMessage } from "@shared/types";
-import { chatRoomMessagesToAgentMessages } from "../ai-utils";
 
 interface RouterPromptArgs {
 	agents: Agent[];

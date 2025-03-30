@@ -10,15 +10,15 @@ import type {
 } from "@shared/types";
 import { generateObject } from "ai";
 
+import {
+	routeMessageToAgentSystemPrompt,
+	routeMessageToAgentUserPrompt,
+} from "@server/ai/prompts/router-prompt";
+import type { Session } from "@server/types/session";
 import { drizzle } from "drizzle-orm/durable-sqlite";
 import type { DrizzleSqliteDODatabase } from "drizzle-orm/durable-sqlite";
 import { migrate } from "drizzle-orm/durable-sqlite/migrator";
 import { z } from "zod";
-import {
-	routeMessageToAgentSystemPrompt,
-	routeMessageToAgentUserPrompt,
-} from "../../ai/prompts/router-prompt";
-import type { Session } from "../../types/session";
 import migrations from "./db/migrations/migrations.js";
 import { createChatRoomDbServices } from "./db/services";
 

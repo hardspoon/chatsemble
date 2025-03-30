@@ -1,17 +1,17 @@
 import { Hono } from "hono";
 
 import { zValidator } from "@hono/zod-validator";
+import { chatRoomMemberHasChatRoomPermission } from "@server/auth/chat-room-permissions";
+import { db } from "@server/db";
+import * as globalSchema from "@server/db/schema";
+import { dbServices } from "@server/db/services";
+import type { HonoContextWithAuth } from "@server/types/hono";
 import {
 	type ChatRoom,
 	type ChatRoomMember,
 	createChatRoomSchema,
 } from "@shared/types";
 import { eq, inArray } from "drizzle-orm";
-import { chatRoomMemberHasChatRoomPermission } from "../../../auth/chat-room-permissions";
-import { db } from "../../../db";
-import * as globalSchema from "../../../db/schema";
-import { dbServices } from "../../../db/services";
-import type { HonoContextWithAuth } from "../../../types/hono";
 
 const chatRoom = new Hono<HonoContextWithAuth>()
 	.post("/", zValidator("json", createChatRoomSchema), async (c) => {

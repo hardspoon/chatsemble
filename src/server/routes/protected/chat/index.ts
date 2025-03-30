@@ -1,7 +1,7 @@
+import chatRoomRoutes from "@server/routes/protected/chat/chat-room";
+import chatRoomMemberRoutes from "@server/routes/protected/chat/chat-room-member";
+import type { HonoContext } from "@server/types/hono";
 import { Hono } from "hono";
-import type { HonoContext } from "../../../types/hono";
-import chatRoomRoutes from "./chat-room";
-import chatRoomMemberRoutes from "./chat-room-member";
 
 const app = new Hono<HonoContext>()
 	.route("/chat-rooms", chatRoomRoutes)

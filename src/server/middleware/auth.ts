@@ -1,6 +1,6 @@
+import { auth } from "@server/auth";
+import type { HonoContext } from "@server/types/hono";
 import type { Context, Next } from "hono";
-import { auth } from "../auth";
-import type { HonoContext } from "../types/hono";
 
 export const honoAuthMiddleware = async (
 	c: Context<HonoContext>,
