@@ -4,13 +4,26 @@ import { MoonIcon, SunIcon } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useCallback } from "react";
 import { SidebarMenuButton } from "./ui/sidebar";
+import { Button } from "./ui/button";
 
-export const ThemeToggle = () => {
+export const ThemeToggle = ({
+	variant = "default",
+}: { variant?: "default" | "icon" }) => {
 	const { theme, setTheme } = useTheme();
 
 	const toggleTheme = useCallback(() => {
 		setTheme(theme === "light" ? "dark" : "light");
 	}, [theme, setTheme]);
+
+	if (variant === "icon") {
+		return (
+			<Button variant="ghost" size="icon" onClick={toggleTheme}>
+				<SunIcon className="hidden [html.dark_&]:block" />
+				<MoonIcon className="hidden [html.light_&]:block" />
+				<span className="sr-only">Toggle theme</span>
+			</Button>
+		);
+	}
 
 	return (
 		<SidebarMenuButton tooltip="Toggle theme" size="sm" onClick={toggleTheme}>
