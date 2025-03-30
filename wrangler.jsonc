@@ -42,7 +42,7 @@
 		{
 			"binding": "DB",
 			"database_name": "chatsemble-db",
-			"database_id": "my-database-id",
+			"database_id": "5d2bfeef-510c-466e-a1f7-31e2e12ce371",
 			"migrations_dir": "src/server/db/migrations"
 		}
 	]
