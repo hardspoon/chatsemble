@@ -1,12 +1,7 @@
 import { Card } from "@client/components/ui/card";
-import {
-	Collapsible,
-	CollapsibleContent,
-	CollapsibleTrigger,
-} from "@client/components/ui/collapsible";
 import { idToReadableText } from "@client/lib/id-parsing";
 import { cn } from "@client/lib/utils";
-import { CheckCircleIcon, ChevronDown } from "lucide-react";
+import { CheckCircleIcon } from "lucide-react";
 import { AnimatedPyramidIcon } from "../icons/loading-pyramid";
 
 export function ToolInvocation({
@@ -65,101 +60,6 @@ export function ToolInvocationName({
 				{idToReadableText(name, { capitalize })}
 			</span>
 		</span>
-	);
-}
-
-export interface SourceType {
-	url: string;
-	title: string;
-	description?: string;
-	icon?: string;
-}
-
-export interface ToolInvocationSourceProps {
-	source: SourceType;
-}
-
-export function ToolInvocationSource({ source }: ToolInvocationSourceProps) {
-	return (
-		<a
-			href={source.url}
-			target="_blank"
-			rel="noopener noreferrer"
-			className="flex items-start gap-2 py-1 hover:bg-muted/50 px-2 rounded-md transition-colors"
-		>
-			{source.icon && (
-				<img src={source.icon} alt="" className="h-4 w-4 mt-1 shrink-0" />
-			)}
-			<div className="flex-1 overflow-hidden">
-				<div className="text-sm font-medium truncate">{source.title}</div>
-				{source.description && (
-					<div className="text-xs text-muted-foreground truncate">
-						{source.description}
-					</div>
-				)}
-			</div>
-		</a>
-	);
-}
-
-export interface ToolInvocationSourcesListProps {
-	sources: SourceType[];
-	maxVisible?: number;
-	maxHeight?: string;
-}
-
-export function ToolInvocationSourcesList({
-	sources,
-	maxVisible = 5,
-	maxHeight = "10rem",
-}: ToolInvocationSourcesListProps) {
-	const hasMoreSources = sources.length > maxVisible;
-
-	return (
-		<div className="mt-2 border-t pt-2">
-			<div className="text-sm font-medium mb-1">Sources ({sources.length})</div>
-			<Collapsible className="w-full" defaultOpen={true}>
-				<div
-					className={cn(
-						"pl-2 flex flex-col gap-1 overflow-y-auto",
-						maxHeight && `max-h-[${maxHeight}]`,
-					)}
-				>
-					{sources.slice(0, maxVisible).map((source, index) => (
-						<ToolInvocationSource
-							key={`source-${source.url}-${index}`}
-							source={source}
-						/>
-					))}
-				</div>
-
-				{hasMoreSources && (
-					<>
-						<CollapsibleTrigger className="flex items-center text-xs text-muted-foreground hover:text-foreground transition-colors ml-2 mt-1">
-							<ChevronDown className="h-3 w-3 shrink-0 transition-transform duration-200 data-[state=open]:rotate-180" />
-							<span className="ml-1">
-								Show {sources.length - maxVisible} more sources
-							</span>
-						</CollapsibleTrigger>
-						<CollapsibleContent>
-							<div
-								className={cn(
-									"pl-2 flex flex-col gap-1 overflow-y-auto",
-									maxHeight && `max-h-[${maxHeight}]`,
-								)}
-							>
-								{sources.slice(maxVisible).map((source, index) => (
-									<ToolInvocationSource
-										key={`source-${source.url}-${maxVisible + index}`}
-										source={source}
-									/>
-								))}
-							</div>
-						</CollapsibleContent>
-					</>
-				)}
-			</Collapsible>
-		</div>
 	);
 }
 

@@ -17,6 +17,8 @@ import {
 	ToolInvocationResult,
 } from "@client/components/ui/tool-invocation";
 import type { ChatRoomMessage as ChatRoomMessageType } from "@shared/types";
+import { ToolInvocationSourcesList } from "../tools/sources-tool";
+import { Separator } from "../ui/separator";
 
 export function ChatRoomMessage({
 	message,
@@ -48,12 +50,53 @@ export function ChatRoomMessage({
 						// For deepResearch tool, use the specialized component
 						if (toolUse.toolName === "deepResearch") {
 							return (
-								<AnnotatedTool
-									key={toolUse.toolCallId}
-									toolUse={toolUse}
-									titleCall="Deep Research"
-									titleResult="Deep Research Completed"
-								/>
+								<div className="flex flex-col gap-3">
+									<AnnotatedTool
+										key={toolUse.toolCallId}
+										toolUse={toolUse}
+										titleCall="Deep Research"
+										titleResult="Deep Research Completed"
+									/>
+
+									{toolUse.type === "tool-result" &&
+										toolUse.result &&
+										"sources" in toolUse.result && (
+											<>
+												<Separator />
+												<ToolInvocationSourcesList
+													sources={toolUse.result.sources}
+													maxVisible={5}
+													maxHeight="10rem"
+												/>
+											</>
+										)}
+								</div>
+							);
+						}
+
+						if (toolUse.toolName === "searchInformation") {
+							return (
+								<div className="flex flex-col gap-3">
+									<AnnotatedTool
+										key={toolUse.toolCallId}
+										toolUse={toolUse}
+										titleCall="Searching the web"
+										titleResult="Search completed"
+									/>
+
+									{toolUse.type === "tool-result" &&
+										toolUse.result &&
+										"sources" in toolUse.result && (
+											<>
+												<Separator />
+												<ToolInvocationSourcesList
+													sources={toolUse.result.sources}
+													maxVisible={5}
+													maxHeight="10rem"
+												/>
+											</>
+										)}
+								</div>
 							);
 						}
 

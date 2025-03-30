@@ -91,6 +91,7 @@ export interface AgentToolPartial {
 export interface AgentToolAnnotation {
 	id: string;
 	type: string;
+	status: "processing" | "complete" | "failed";
 	message: string;
 	timestamp: number;
 	toolCallId: string;
@@ -119,3 +120,11 @@ export type AgentMessage = {
 		type: ChatRoomMessage["member"]["type"];
 	};
 };
+
+export interface ToolSource {
+	type: "url";
+	url: string;
+	title: string;
+	content: string;
+	icon?: string;
+}

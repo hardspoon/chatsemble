@@ -126,6 +126,7 @@ function AnnotatedToolCall({ toolUse, titleCall }: AnnotatedToolCallProps) {
 const statusColorMap: Record<string, string> = {
 	processing: "bg-blue-500",
 	complete: "bg-green-500",
+	failed: "bg-red-500",
 	default: "bg-gray-500",
 };
 
@@ -140,7 +141,7 @@ function ToolInvocationAnnotation({
 	className,
 	messageClassName,
 }: ToolInvocationAnnotationProps) {
-	const status = annotation?.data?.status || "default";
+	const status = annotation.status;
 	const statusColor = statusColorMap[status] || statusColorMap.default;
 
 	return (
