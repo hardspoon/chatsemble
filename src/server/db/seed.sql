@@ -1,5 +1,3 @@
-BEGIN TRANSACTION;
-
 -- Insert into user table
 INSERT OR IGNORE INTO user (id, name, email, email_verified, image, created_at, updated_at)
 VALUES 
@@ -18,11 +16,9 @@ VALUES
 INSERT OR IGNORE INTO organization (id, name, slug, logo, metadata, created_at)
 VALUES ('bu1cEXJI1PLWqnU7nQyvmDTEaEiqE9oR', 'Alwurts', 'alwurts', NULL, NULL, unixepoch('now') * 1000);
 
--- Insert into organization_member table
+-- Insert into org_member table
 INSERT OR IGNORE INTO organization_member (id, user_id, organization_id, role, created_at)
 VALUES 
 ('member_Fe7gvakGA5tVO5Ulho1BIqVGpMBan8r5', 'Fe7gvakGA5tVO5Ulho1BIqVGpMBan8r5', 'bu1cEXJI1PLWqnU7nQyvmDTEaEiqE9oR', 'owner', unixepoch('now') * 1000),
 ('member_Ks9mPqR4Nt2Wx5Yz8Abc3Def7Ghi1JkL', 'Ks9mPqR4Nt2Wx5Yz8Abc3Def7Ghi1JkL', 'bu1cEXJI1PLWqnU7nQyvmDTEaEiqE9oR', 'member', unixepoch('now') * 1000),
 ('member_Lm4nQpR8St2Uv5Wx7Yza3Bcd6Efg9HiJ', 'Lm4nQpR8St2Uv5Wx7Yza3Bcd6Efg9HiJ', 'bu1cEXJI1PLWqnU7nQyvmDTEaEiqE9oR', 'member', unixepoch('now') * 1000);
-
-COMMIT;
