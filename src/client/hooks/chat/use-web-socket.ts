@@ -53,7 +53,6 @@ export function useWebSocket({ roomId, onMessage }: UseWebSocketProps) {
 		};
 
 		ws.onmessage = (event) => {
-			console.log("[useWebSocket] onmessage", JSON.parse(event.data));
 			try {
 				const message: WsChatOutgoingMessage = JSON.parse(event.data);
 				onMessageRef.current(message);
@@ -76,11 +75,6 @@ export function useWebSocket({ roomId, onMessage }: UseWebSocketProps) {
 	}, []);
 
 	useEffect(() => {
-		console.log("[useWebSocket] useEffect", {
-			roomId,
-			wsRef: wsRef.current,
-		});
-
 		if (wsRef.current) {
 			wsRef.current.close();
 			wsRef.current = null;

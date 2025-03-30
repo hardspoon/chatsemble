@@ -1,11 +1,13 @@
 import { createChatRoomMessagePartial } from "@shared/lib/chat";
 import type {
+	AgentToolAnnotation,
 	AgentToolUse,
 	ChatRoomMessage,
 	ChatRoomMessagePartial,
 } from "@shared/types";
 import type { AgentMessage } from "@shared/types";
 import type { CoreMessage } from "ai";
+import { nanoid } from "nanoid";
 
 export function chatRoomMessagesToAgentMessages(
 	messages: ChatRoomMessage[],
@@ -185,7 +187,15 @@ export async function processDataStream({
 							toolCallId: dataObject.toolCallId,
 							toolName: dataObject.toolName,
 							args: dataObject.args,
-							annotations: [],
+							annotations: [
+								{
+									id: nanoid(),
+									type: "start",
+									message: "Starting",
+									timestamp: Date.now(),
+									toolCallId: dataObject.toolCallId,
+								},
+							],
 						};
 						newToolUses.push(parsedToolUse);
 					}
@@ -239,17 +249,10 @@ export async function processDataStream({
 				break;
 			}
 			case "message-annotation-part": {
-				/* const {
-					toolCallId,
-					type: annotationType,
-					message: annotationMessage,
-					data: annotationData,
-				} = parsedData; */
-				console.log(
-					"[processDataStream] Message annotation",
-					JSON.parse(JSON.stringify(parsedData, null, 2)),
-				);
-				/* const currentMessage = streamedMessages[streamedMessages.length - 1];
+				const annotation = parsedData[0] as AgentToolAnnotation;
+				console.log("[processDataStream] Message annotation", annotation);
+
+				const currentMessage = streamedMessages[streamedMessages.length - 1];
 				if (!currentMessage) {
 					console.error(
 						"[processDataStream] No current message found for annotation",
@@ -258,23 +261,14 @@ export async function processDataStream({
 				}
 
 				const toolUseIndex = currentMessage.toolUses.findIndex(
-					(t) => t.toolCallId === toolCallId,
+					(t) => t.toolCallId === annotation.toolCallId,
 				);
 				if (toolUseIndex === -1) {
 					console.warn(
-						`[processDataStream] Tool use with ID ${toolCallId} not found for annotation.`,
+						`[processDataStream] Tool use with ID ${annotation.toolCallId} not found for annotation.`,
 					);
 					break;
 				}
-
-				const annotation: Annotation = {
-					id: nanoid(),
-					type: annotationType,
-					message: annotationMessage,
-					timestamp: Date.now(),
-					toolCallId,
-					data: annotationData,
-				};
 
 				const updatedToolUses = [...currentMessage.toolUses];
 				updatedToolUses[toolUseIndex] = {
@@ -302,7 +296,7 @@ export async function processDataStream({
 						: currentMessage.id,
 				});
 
-				streamedMessages[streamedMessages.length - 1] = newMessage; */
+				streamedMessages[streamedMessages.length - 1] = newMessage;
 				break;
 			}
 			case "finish": {

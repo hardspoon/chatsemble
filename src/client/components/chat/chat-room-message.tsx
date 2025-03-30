@@ -5,16 +5,17 @@ import {
 	ChatMessageContent,
 	ChatMessageContentArea,
 	ChatMessageMetadata,
-} from "../ui/chat-message";
+} from "@client/components/ui/chat-message";
 
 import {
-	ToolInvocationBody,
-	ToolInvocationComponent,
-	ToolInvocationData,
-	ToolInvocationDataTrigger,
+	ToolInvocation,
 	ToolInvocationHeader,
-	ToolNameComponent,
+	ToolInvocationContent,
+	ToolInvocationName,
+	ToolInvocationArgs,
+	ToolInvocationResult,
 } from "@client/components/ui/tool-invocation";
+import { AnnotatedTool } from "@client/components/tools/annotated-tool";
 import type { ChatRoomMessage as ChatRoomMessageType } from "@shared/types";
 
 export function ChatRoomMessage({
@@ -43,27 +44,37 @@ export function ChatRoomMessage({
 					createdAt={message.createdAt}
 				/>
 				<ChatMessageContent content={message.content}>
-					{message.toolUses.map((toolUse) => (
-						<ToolInvocationComponent
-							key={toolUse.toolCallId}
-							collapsible={true}
-							defaultOpen={false}
-						>
-							<ToolInvocationHeader>
-								<ToolNameComponent
-									name={`Used ${toolUse.toolName}`}
-									type={toolUse.type}
+					{message.toolUses.map((toolUse) => {
+						// For deepResearch tool, use the specialized component
+						if (toolUse.toolName === "deepResearch") {
+							return (
+								<AnnotatedTool
+									key={toolUse.toolCallId}
+									toolUse={toolUse}
+									titleCall="Deep Research"
+									titleResult="Deep Research Completed"
 								/>
-								<ToolInvocationDataTrigger />
-							</ToolInvocationHeader>
-							<ToolInvocationBody>
-								<ToolInvocationData data={toolUse.args} />
-								{toolUse.type === "tool-result" && (
-									<ToolInvocationData data={toolUse.result} />
-								)}
-							</ToolInvocationBody>
-						</ToolInvocationComponent>
-					))}
+							);
+						}
+
+						// For other tools, use the default ToolInvocationComponent
+						return (
+							<ToolInvocation key={toolUse.toolCallId}>
+								<ToolInvocationHeader>
+									<ToolInvocationName
+										name={`Used ${toolUse.toolName}`}
+										type={toolUse.type}
+									/>
+								</ToolInvocationHeader>
+								<ToolInvocationContent>
+									{toolUse.args && <ToolInvocationArgs args={toolUse.args} />}
+									{toolUse.type === "tool-result" && toolUse.result && (
+										<ToolInvocationResult result={toolUse.result} />
+									)}
+								</ToolInvocationContent>
+							</ToolInvocation>
+						);
+					})}
 					{threadAreaComponent}
 				</ChatMessageContent>
 			</ChatMessageContentArea>

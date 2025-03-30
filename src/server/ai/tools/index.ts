@@ -64,19 +64,19 @@ export const deepResearchTool = (dataStream: DataStreamWriter) =>
 			const results = await firecrawl.deepResearch(
 				query,
 				{
-					maxDepth: 2, // Number of research iterations
-					timeLimit: 30, // Time limit in seconds
-					maxUrls: 5, // Maximum URLs to analyze
+					maxDepth: 1, // Number of research iterations
+					timeLimit: 40, // Time limit in seconds
+					maxUrls: 2, // Maximum URLs to analyze
 				},
 				({ type, message, depth, status, timestamp }) => {
-					console.log("[deepResearchTool] Activity:", {
+					/* console.log("[deepResearchTool] Activity:", {
 						type,
 						message,
 						depth,
 						status,
 						timestamp,
-					});
-					const annotation: AgentToolAnnotation = {
+					}); */
+					const annotation = {
 						toolCallId,
 						id: nanoid(),
 						type: type,
@@ -87,8 +87,8 @@ export const deepResearchTool = (dataStream: DataStreamWriter) =>
 							timestamp,
 						},
 						timestamp: Date.now(),
-					};
-					dataStream.writeMessageAnnotation(JSON.stringify(annotation));
+					} satisfies AgentToolAnnotation;
+					dataStream.writeMessageAnnotation(annotation);
 				},
 			);
 

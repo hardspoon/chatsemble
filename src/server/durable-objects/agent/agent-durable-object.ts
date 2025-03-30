@@ -74,6 +74,15 @@ export class AgentDurableObject extends DurableObject<Env> {
 			newMessages,
 			contextMessages,
 			onMessage: async ({ newMessagePartial, existingMessageId }) => {
+				console.log(
+					"[processAndRespond] onMessage",
+					JSON.parse(
+						JSON.stringify({
+							newMessagePartial,
+							existingMessageId,
+						}),
+					),
+				);
 				const newMessage = await this.sendResponse({
 					chatRoomId: chatRoomId,
 					message: newMessagePartial,
