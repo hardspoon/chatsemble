@@ -1,5 +1,6 @@
 "use client";
 
+import { useUser } from "@/components/providers/auth-provider";
 import { ChatMessageArea } from "@/components/ui/chat-message-area";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -13,7 +14,6 @@ import { ChatMessageSkeleton, ChatRoomMessage } from "../../chat-room-message";
 import { ChatMessagesSkeleton } from "../../chat-room-message";
 import { useChatParams } from "../../providers/chat-params-provider";
 import { useChatWsContext } from "../../providers/chat-ws-provider";
-import { useUser } from "@/components/providers/auth-provider";
 
 export function ChatRoomThreadDisplay() {
 	const {
@@ -42,9 +42,12 @@ export function ChatRoomThreadDisplay() {
 	};
 
 	return (
-		<div className="flex-1 flex flex-col h-full overflow-y-auto">
-			<ChatMessageArea scrollButtonAlignment="center" className="px-6">
-				<div className="max-w-2xl mx-auto w-full px-4 py-8">
+		<div className="flex-1 flex flex-col overflow-y-auto">
+			<ChatMessageArea
+				scrollButtonAlignment="center"
+				className="overflow-y-auto flex-1"
+			>
+				<div className="max-w-2xl mx-auto w-full px-8 py-8">
 					<div>
 						{threadMessage ? (
 							<ChatRoomMessage message={threadMessage} />

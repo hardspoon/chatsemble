@@ -12,9 +12,10 @@ import {
 	useSidebar,
 } from "@/components/ui/sidebar";
 import { Skeleton } from "@/components/ui/skeleton";
-import type { Agent } from "@/shared/types";
 import { honoClient } from "@/lib/api-client";
+import type { Agent } from "@/shared/types";
 import { useQuery } from "@tanstack/react-query";
+import { Link, getRouteApi } from "@tanstack/react-router";
 import {
 	AlertCircle,
 	MoreHorizontal,
@@ -22,7 +23,6 @@ import {
 	StarOff,
 	Trash2,
 } from "lucide-react";
-import { getRouteApi, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import {

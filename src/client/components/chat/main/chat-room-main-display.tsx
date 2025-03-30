@@ -12,15 +12,15 @@ import {
 	ChatMessagesSkeleton,
 	ChatRoomMessage,
 } from "@/components/chat/chat-room-message";
+import { useUser } from "@/components/providers/auth-provider";
 import {
 	ChatInput,
 	ChatInputSubmit,
 	ChatInputTiptap,
 } from "@/components/ui/tiptap-chat-input";
+import { useRouter } from "@tanstack/react-router";
 import { BookmarkIcon, MessageSquareIcon } from "lucide-react";
 import { useMemo } from "react";
-import { useUser } from "@/components/providers/auth-provider";
-import { useRouter } from "@tanstack/react-router";
 export function ChatRoomMainDisplay() {
 	const {
 		mainChat: { messages, handleSubmit, members, status },
@@ -39,9 +39,12 @@ export function ChatRoomMainDisplay() {
 	);
 
 	return (
-		<div className="flex-1 flex flex-col h-full overflow-y-auto">
-			<ChatMessageArea scrollButtonAlignment="center">
-				<div className="max-w-2xl mx-auto w-full px-4 py-8 space-y-4">
+		<div className="flex-1 flex flex-col overflow-y-auto">
+			<ChatMessageArea
+				scrollButtonAlignment="center"
+				className="overflow-y-auto flex-1"
+			>
+				<div className="max-w-2xl mx-auto w-full px-8 py-8 space-y-4">
 					{isLoading ? (
 						<ChatMessagesSkeleton />
 					) : messages.length > 0 ? (

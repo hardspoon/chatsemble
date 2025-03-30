@@ -9,6 +9,7 @@ import {
 	DialogTitle,
 } from "@/components/ui/dialog";
 import { honoClient } from "@/lib/api-client";
+import { useRouter } from "@tanstack/react-router";
 import type { Dispatch, SetStateAction } from "react";
 import type {
 	ChatRoomType,
@@ -60,6 +61,7 @@ function NewChatRoomDialogContent({
 	dialogState: NonNullable<DialogState>;
 }) {
 	const queryClient = useQueryClient();
+	const router = useRouter();
 
 	const createChatMutation = useMutation({
 		mutationFn: async (values: CreateChatRoomFormValues) => {
@@ -71,7 +73,13 @@ function NewChatRoomDialogContent({
 		},
 		onSuccess: (data) => {
 			queryClient.invalidateQueries({ queryKey: ["chatRooms"] });
-			//router.push(`/chat?roomId=${data.roomId}`); // TODO: Add this
+			router.navigate({
+				to: "/chat",
+				search: (prev) => ({
+					...prev,
+					roomId: data.roomId,
+				}),
+			});
 			setDialogState(null);
 		},
 	});

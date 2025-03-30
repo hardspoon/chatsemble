@@ -2,8 +2,8 @@
 
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { X } from "lucide-react";
 import { useRouter } from "@tanstack/react-router";
+import { X } from "lucide-react";
 
 export function ChatRoomThreadHeader() {
 	const router = useRouter();

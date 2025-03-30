@@ -1,3 +1,4 @@
+import { updateMessageList } from "@/lib/chat";
 import type {
 	ChatInputValue,
 	ChatRoom,
@@ -7,14 +8,13 @@ import type {
 	WsChatOutgoingMessage,
 	WsMessageSend,
 } from "@/shared/types";
-import { updateMessageList } from "@/lib/chat";
 import type { User } from "better-auth";
 import { useCallback, useEffect, useState } from "react";
-import type { UseWebSocketConnectionStatus } from "./use-web-socket";
 import {
 	createChatRoomMessagePartial,
 	createChatRoomOptimisticMessage,
 } from "../../../shared/lib/chat";
+import type { UseWebSocketConnectionStatus } from "./use-web-socket";
 
 export function useMainChat({
 	roomId,

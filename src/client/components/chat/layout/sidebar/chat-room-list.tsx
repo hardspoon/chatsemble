@@ -26,6 +26,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { honoClient } from "@/lib/api-client";
 import type { ChatRoom, ChatRoomType } from "@/shared/types";
 import { useQuery } from "@tanstack/react-query";
+import { Link } from "@tanstack/react-router";
 import {
 	AlertCircle,
 	ArrowUpRight,
@@ -35,7 +36,6 @@ import {
 	StarOff,
 	Trash2,
 } from "lucide-react";
-import { Link } from "@tanstack/react-router";
 import { type Dispatch, type SetStateAction, useMemo, useState } from "react";
 
 export function ChatRoomList() {
