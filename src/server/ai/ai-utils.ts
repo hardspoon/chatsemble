@@ -1,4 +1,3 @@
-import type { CoreMessage } from "ai";
 import { createChatRoomMessagePartial } from "@shared/lib/chat";
 import type {
 	AgentToolUse,
@@ -6,6 +5,7 @@ import type {
 	ChatRoomMessagePartial,
 } from "@shared/types";
 import type { AgentMessage } from "@shared/types";
+import type { CoreMessage } from "ai";
 
 export function chatRoomMessagesToAgentMessages(
 	messages: ChatRoomMessage[],

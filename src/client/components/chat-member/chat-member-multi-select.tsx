@@ -1,4 +1,8 @@
-import { Avatar, AvatarFallback, AvatarImage } from "@client/components/ui/avatar";
+import {
+	Avatar,
+	AvatarFallback,
+	AvatarImage,
+} from "@client/components/ui/avatar";
 import { Checkbox } from "@client/components/ui/checkbox";
 import { Skeleton } from "@client/components/ui/skeleton";
 import { honoClient } from "@client/lib/api-client";

@@ -26,7 +26,7 @@ import { Skeleton } from "@client/components/ui/skeleton";
 import { honoClient } from "@client/lib/api-client";
 import type { ChatRoom, ChatRoomType } from "@shared/types";
 import { useQuery } from "@tanstack/react-query";
-import { getRouteApi, Link } from "@tanstack/react-router";
+import { Link, getRouteApi } from "@tanstack/react-router";
 import {
 	AlertCircle,
 	ArrowUpRight,

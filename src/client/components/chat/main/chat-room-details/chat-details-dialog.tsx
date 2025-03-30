@@ -7,7 +7,12 @@ import {
 	DialogTitle,
 } from "@client/components/ui/dialog";
 import { Skeleton } from "@client/components/ui/skeleton";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@client/components/ui/tabs";
+import {
+	Tabs,
+	TabsContent,
+	TabsList,
+	TabsTrigger,
+} from "@client/components/ui/tabs";
 import { Info, UserPlus } from "lucide-react";
 import { ChatDetailsMembersSection } from "./chat-details-members-section";
 import { ChatDetailsSection } from "./chat-details-section";

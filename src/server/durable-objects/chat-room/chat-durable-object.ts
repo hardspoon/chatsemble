@@ -1,4 +1,5 @@
 import { DurableObject } from "cloudflare:workers";
+import { createOpenAI } from "@ai-sdk/openai";
 import type {
 	ChatRoom,
 	ChatRoomMember,
@@ -7,7 +8,6 @@ import type {
 	WsChatIncomingMessage,
 	WsChatOutgoingMessage,
 } from "@shared/types";
-import { createOpenAI } from "@ai-sdk/openai";
 import { generateObject } from "ai";
 
 import { drizzle } from "drizzle-orm/durable-sqlite";

@@ -12,6 +12,16 @@ import { Input } from "@client/components/ui/input";
 import { Textarea } from "@client/components/ui/textarea";
 import { cn } from "@client/lib/utils";
 import {
+	emojiUsageDescriptions,
+	emojiUsageOptions,
+	languageStyleDescriptions,
+	languageStyleOptions,
+	toneDescriptions,
+	toneOptions,
+	verbosityDescriptions,
+	verbosityOptions,
+} from "@shared/types";
+import {
 	AlignJustify,
 	Ban,
 	Binary,
@@ -26,16 +36,6 @@ import {
 	Sparkles,
 	Users,
 } from "lucide-react";
-import {
-	emojiUsageDescriptions,
-	emojiUsageOptions,
-	languageStyleDescriptions,
-	languageStyleOptions,
-	toneDescriptions,
-	toneOptions,
-	verbosityDescriptions,
-	verbosityOptions,
-} from "@shared/types";
 import { AvatarPicker } from "../avatar-picker";
 import { CardToggleGroup } from "../card-toggle-groups";
 

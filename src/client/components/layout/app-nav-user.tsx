@@ -2,7 +2,11 @@
 
 import { ChevronsUpDown, LogOut } from "lucide-react";
 
-import { Avatar, AvatarFallback, AvatarImage } from "@client/components/ui/avatar";
+import {
+	Avatar,
+	AvatarFallback,
+	AvatarImage,
+} from "@client/components/ui/avatar";
 import {
 	DropdownMenu,
 	DropdownMenuContent,

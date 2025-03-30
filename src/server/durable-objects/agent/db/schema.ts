@@ -1,9 +1,4 @@
-import type {
-	EmojiUsage,
-	LanguageStyle,
-	Tone,
-	Verbosity,
-} from "@shared/types";
+import type { EmojiUsage, LanguageStyle, Tone, Verbosity } from "@shared/types";
 import { sql } from "drizzle-orm";
 import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
 
