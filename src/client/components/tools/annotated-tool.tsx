@@ -1,22 +1,22 @@
 import {
+	Collapsible,
+	CollapsibleContent,
+} from "@client/components/ui/collapsible";
+import { ScrollArea } from "@client/components/ui/scroll-area";
+import { Separator } from "@client/components/ui/separator";
+import {
 	ToolInvocation,
 	ToolInvocationContent,
 	ToolInvocationHeader,
 	ToolInvocationName,
 } from "@client/components/ui/tool-invocation";
-import { Separator } from "@client/components/ui/separator";
+import { cn } from "@client/lib/utils";
 import type {
 	AgentToolAnnotation,
 	AgentToolCall,
 	AgentToolResult,
 	AgentToolUse,
 } from "@shared/types";
-import {
-	Collapsible,
-	CollapsibleContent,
-} from "@client/components/ui/collapsible";
-import { ScrollArea } from "@client/components/ui/scroll-area";
-import { cn } from "@client/lib/utils";
 import { useState } from "react";
 
 interface AnnotatedToolProps {
