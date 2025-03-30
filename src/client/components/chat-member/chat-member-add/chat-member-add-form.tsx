@@ -23,7 +23,7 @@ import {
 	SelectValue,
 } from "@/components/ui/select";
 import { honoClient } from "@/lib/api-client";
-import { createChatRoomMemberSchema } from "@/shared/types";
+import { createChatRoomMemberSchema } from "../../../../shared/types";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";

@@ -1,5 +1,4 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useRouter } from "next/navigation";
 import type { z } from "zod";
 
 import {
@@ -60,7 +59,6 @@ function NewChatRoomDialogContent({
 }: NewGroupChatDialogProps & {
 	dialogState: NonNullable<DialogState>;
 }) {
-	const router = useRouter();
 	const queryClient = useQueryClient();
 
 	const createChatMutation = useMutation({
@@ -73,7 +71,7 @@ function NewChatRoomDialogContent({
 		},
 		onSuccess: (data) => {
 			queryClient.invalidateQueries({ queryKey: ["chatRooms"] });
-			router.push(`/chat?roomId=${data.roomId}`);
+			//router.push(`/chat?roomId=${data.roomId}`); // TODO: Add this
 			setDialogState(null);
 		},
 	});

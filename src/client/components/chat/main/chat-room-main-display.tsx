@@ -12,7 +12,6 @@ import {
 	ChatMessagesSkeleton,
 	ChatRoomMessage,
 } from "@/components/chat/chat-room-message";
-import { useChatParams } from "@/components/chat/providers/chat-params-provider";
 import {
 	ChatInput,
 	ChatInputSubmit,
@@ -20,6 +19,7 @@ import {
 } from "@/components/ui/tiptap-chat-input";
 import { BookmarkIcon, MessageSquareIcon } from "lucide-react";
 import { useMemo } from "react";
+import { useUser } from "@/components/providers/auth-provider";
 
 export function ChatRoomMainDisplay() {
 	const {
@@ -27,7 +27,7 @@ export function ChatRoomMainDisplay() {
 		connectionStatus,
 	} = useChatWsContext();
 
-	const { setThreadId, user } = useChatParams();
+	const user = useUser();
 
 	const isLoading = connectionStatus !== "connected" || status !== "success";
 
@@ -61,7 +61,7 @@ export function ChatRoomMainDisplay() {
 											<ChatMessageAction
 												label="Reply in thread"
 												onClick={() => {
-													setThreadId(message.id);
+													/* setThreadId(message.id); */
 												}}
 											>
 												<MessageSquareIcon />
@@ -72,7 +72,7 @@ export function ChatRoomMainDisplay() {
 										<ChatMessageThread
 											threadMetadata={threadMetadata}
 											onClick={() => {
-												setThreadId(id);
+												/* setThreadId(id); */
 											}}
 										/>
 									)}

@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Tiptap } from "@/components/ui/tiptap/tiptap";
-import type { ChatInputValue, ChatRoomMember } from "@/cs-shared";
+import type { ChatInputValue, ChatRoomMember } from "@/shared/types";
 import { cn } from "@/lib/utils";
 import { ArrowUpIcon } from "lucide-react";
 import React, {
@@ -139,8 +139,9 @@ function ChatInputSubmit({
 
 	return (
 		<Button
+			size="icon"
 			className={cn(
-				"shrink-0 rounded-full p-1.5 h-fit border dark:border-zinc-600",
+				"shrink-0 rounded-full border dark:border-zinc-600",
 				className,
 			)}
 			disabled={isDisabled}

@@ -1,17 +1,19 @@
-import {
-	type ChatInputValue,
-	type ChatRoomMessage,
-	type WsChatIncomingMessage,
-	type WsChatOutgoingMessage,
-	type WsMessageSend,
-	type WsMessageThreadInitRequest,
-	createChatRoomMessagePartial,
-	createChatRoomOptimisticMessage,
-} from "@/cs-shared";
+import type {
+	ChatInputValue,
+	ChatRoomMessage,
+	WsChatIncomingMessage,
+	WsChatOutgoingMessage,
+	WsMessageSend,
+	WsMessageThreadInitRequest,
+} from "@/shared/types";
 import { updateMessageList } from "@/lib/chat";
 import type { User } from "better-auth";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { UseWebSocketConnectionStatus } from "./use-web-socket";
+import {
+	createChatRoomMessagePartial,
+	createChatRoomOptimisticMessage,
+} from "../../../shared/lib/chat";
 
 export function useThreadChat({
 	roomId,

@@ -7,14 +7,13 @@ import {
 	BreadcrumbPage,
 	BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
-import { usePathname } from "next/navigation";
 import React from "react";
 
 export function DynamicBreadcrumb() {
-	const pathname = usePathname();
+	/* const pathname = usePathname(); */
 
 	const getBreadcrumbItems = () => {
-		const sections = pathname.split("/").slice(1);
+		const sections = "".split("/").slice(1); // TODO: Add this
 		const items = [];
 		for (let i = 0; i < sections.length; i++) {
 			const section = sections[i];

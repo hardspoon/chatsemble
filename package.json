@@ -10,7 +10,7 @@
 		"preview": "vite preview",
 		"cf-types": "wrangler types",
 		"db:generate": "drizzle-kit generate",
-		"db:migrate:dev": "wrangler d1 migrations apply cf-vite-starter-db --local",
+		"db:migrate:dev": "wrangler d1 migrations apply chatsemble-db --local",
 		"db:seed": "tsx src/server/db/seed.ts",
 		"db:studio": "drizzle-kit studio"
 	},
@@ -43,6 +43,7 @@
 		"@tiptap/pm": "^2.11.6",
 		"@tiptap/react": "^2.11.6",
 		"@tiptap/starter-kit": "^2.11.6",
+		"@tiptap/suggestion": "^2.11.7",
 		"ai": "^4.2.8",
 		"better-auth": "^1.2.5",
 		"better-sqlite3": "^11.9.1",

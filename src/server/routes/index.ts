@@ -9,7 +9,7 @@ import websocketRoutes from "./websocket/chat-room";
 export const app = new Hono<HonoContext>().use(
 	"/api/*",
 	cors({
-		origin: env.BETTER_AUTH_URL,
+		origin: env.APP_URL,
 		allowMethods: ["GET", "POST", "OPTIONS", "PUT", "DELETE"],
 		allowHeaders: ["Content-Type", "Authorization"],
 		exposeHeaders: ["Content-Length"],

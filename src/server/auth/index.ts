@@ -10,9 +10,9 @@ import { organizationPermissions } from "./organization-permissions";
 
 export const auth = betterAuth({
 	appName: "Chatsemble",
-	baseURL: env.BETTER_AUTH_URL,
+	baseURL: env.APP_URL,
 	secret: env.BETTER_AUTH_SECRET,
-	trustedOrigins: [env.BETTER_AUTH_URL],
+	trustedOrigins: [env.APP_URL],
 	database: drizzleAdapter(db, {
 		provider: "sqlite",
 	}),
@@ -53,7 +53,7 @@ export const auth = betterAuth({
 				},
 			},
 			sendInvitationEmail: async (data) => {
-				const url = `${env.BETTER_AUTH_URL}/auth/accept-invitation/${data.id}`;
+				const url = `${env.APP_URL}/auth/accept-invitation/${data.id}`;
 				await sendMail(data.email, "organization-invitation", {
 					inviteLink: url,
 					username: data.email,
