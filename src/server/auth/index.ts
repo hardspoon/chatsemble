@@ -1,12 +1,12 @@
+import { env } from "cloudflare:workers";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { organization } from "better-auth/plugins";
-import { organizationPermissions } from "./organization-permissions";
-import { db } from "../db";
-import { env } from "cloudflare:workers";
 import { eq } from "drizzle-orm";
+import { db } from "../db";
 import * as globalSchema from "../db/schema";
 import { sendMail } from "../email";
+import { organizationPermissions } from "./organization-permissions";
 
 export const auth = betterAuth({
 	appName: "Chatsemble",

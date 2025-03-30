@@ -1,3 +1,6 @@
+import { env } from "cloudflare:workers";
+import { type ComponentType, createElement } from "react";
+import { Resend } from "resend";
 import {
 	EmailVerificationTemplate,
 	type EmailVerificationTemplateProps,
@@ -10,9 +13,6 @@ import {
 	PasswordResetTemplate,
 	type PasswordResetTemplateProps,
 } from "./templates/password-reset";
-import { type ComponentType, createElement } from "react";
-import { Resend } from "resend";
-import { env } from "cloudflare:workers";
 
 const resend = new Resend(env.RESEND_API_KEY);
 

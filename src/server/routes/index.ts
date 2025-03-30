@@ -1,10 +1,10 @@
+import { env } from "cloudflare:workers";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { auth } from "../auth";
 import type { HonoContext } from "../types/hono";
 import protectedRoutes from "./protected";
 import websocketRoutes from "./websocket/chat-room";
-import { env } from "cloudflare:workers";
 
 export const app = new Hono<HonoContext>().use(
 	"/api/*",

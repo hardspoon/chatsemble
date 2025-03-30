@@ -1,17 +1,17 @@
+import type {
+	ChatRoomMemberRole,
+	ChatRoomMemberType,
+	ChatRoomType,
+} from "@/shared/types";
+import { sql } from "drizzle-orm";
+import { relations } from "drizzle-orm";
 import {
 	integer,
 	primaryKey,
 	sqliteTable,
 	text,
 } from "drizzle-orm/sqlite-core";
-import { sql } from "drizzle-orm";
-import { relations } from "drizzle-orm";
 import { organization } from "./auth";
-import type {
-	ChatRoomMemberRole,
-	ChatRoomMemberType,
-	ChatRoomType,
-} from "@/shared/types";
 
 export const chatRoom = sqliteTable("chat_room", {
 	id: text("id").primaryKey(), // Same as the DO ID

@@ -59,9 +59,35 @@ async function createUserWithAccount({
 	return newUser;
 }
 
+async function createOrganizationWithMembers(
+	orgData: typeof globalSchema.organization.$inferSelect,
+	users: (typeof globalSchema.user.$inferSelect)[],
+	ownerUserId: string,
+) {
+	await db
+		.insert(globalSchema.organization)
+		.values(orgData)
+		.onConflictDoNothing();
+
+	const members: (typeof globalSchema.organizationMember.$inferSelect)[] =
+		users.map((user) => ({
+			id: `member_${user.id}`,
+			userId: user.id,
+			organizationId: orgData.id,
+			role: user.id === ownerUserId ? "owner" : "member",
+			createdAt: new Date(),
+		}));
+
+	await db
+		.insert(globalSchema.organizationMember)
+		.values(members)
+		.onConflictDoNothing();
+}
+
 async function seed() {
 	try {
-		await Promise.all([
+		// Create users
+		const users = await Promise.all([
 			createUserWithAccount({
 				id: "Fe7gvakGA5tVO5Ulho1BIqVGpMBan8r5",
 				name: "Alejandro Wurts",
@@ -81,6 +107,18 @@ async function seed() {
 				avatar: "/notion-avatars/avatar-03.svg",
 			}),
 		]);
+
+		// Create organization with all users
+		const orgData: typeof globalSchema.organization.$inferSelect = {
+			id: "bu1cEXJI1PLWqnU7nQyvmDTEaEiqE9oR",
+			name: "Alwurts",
+			slug: "alwurts",
+			logo: null,
+			metadata: null,
+			createdAt: new Date(),
+		};
+
+		await createOrganizationWithMembers(orgData, users, users[0].id);
 
 		console.log("Seed completed successfully");
 	} catch (error) {
