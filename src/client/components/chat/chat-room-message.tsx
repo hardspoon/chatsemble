@@ -1,4 +1,3 @@
-import { Skeleton } from "@client/components/ui/skeleton";
 import {
 	ChatMessage,
 	ChatMessageAvatar,
@@ -6,16 +5,17 @@ import {
 	ChatMessageContentArea,
 	ChatMessageMetadata,
 } from "@client/components/ui/chat-message";
+import { Skeleton } from "@client/components/ui/skeleton";
 
+import { AnnotatedTool } from "@client/components/tools/annotated-tool";
 import {
 	ToolInvocation,
-	ToolInvocationHeader,
-	ToolInvocationContent,
-	ToolInvocationName,
 	ToolInvocationArgs,
+	ToolInvocationContent,
+	ToolInvocationHeader,
+	ToolInvocationName,
 	ToolInvocationResult,
 } from "@client/components/ui/tool-invocation";
-import { AnnotatedTool } from "@client/components/tools/annotated-tool";
 import type { ChatRoomMessage as ChatRoomMessageType } from "@shared/types";
 
 export function ChatRoomMessage({
