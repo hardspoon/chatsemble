@@ -12,7 +12,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import {
 	createChatRoomMessagePartial,
 	createChatRoomOptimisticMessage,
-} from "../../../shared/lib/chat";
+} from "@shared/lib/chat";
 import type { UseWebSocketConnectionStatus } from "./use-web-socket";
 
 export function useThreadChat({

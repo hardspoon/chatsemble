@@ -14,7 +14,7 @@ import {
 import { Form } from "@client/components/ui/form";
 import { honoClient } from "@client/lib/api-client";
 import { useRouter } from "@tanstack/react-router";
-import { type AgentFormValues, createAgentSchema } from "../../../shared/types";
+import { type AgentFormValues, createAgentSchema } from "@shared/types";
 import { AgentForm } from "./agent-form";
 
 export function NewAgentDialog({

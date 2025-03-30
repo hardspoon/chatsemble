@@ -7,7 +7,7 @@ import {
 	languageStyleDescriptions,
 	toneDescriptions,
 	verbosityDescriptions,
-} from "../../../shared/types";
+} from "@shared/types";
 import type { agentConfig as agentConfigT } from "../../durable-objects/agent/db/schema";
 
 function getToneExplanation(tone: Tone): string {

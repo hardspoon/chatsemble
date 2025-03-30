@@ -12,7 +12,7 @@ import {
 	FormMessage,
 } from "@client/components/ui/form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { createChatRoomSchema } from "../../../../shared/types";
+import { createChatRoomSchema } from "@shared/types";
 import { ChatMemberMultiSelect } from "../../chat-member/chat-member-multi-select";
 
 type CreateChatRoomFormValues = z.infer<typeof createChatRoomSchema>;

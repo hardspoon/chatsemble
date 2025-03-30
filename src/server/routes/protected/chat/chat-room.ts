@@ -6,7 +6,7 @@ import {
 	type ChatRoom,
 	type ChatRoomMember,
 	createChatRoomSchema,
-} from "../../../../shared/types";
+} from "@shared/types";
 import { chatRoomMemberHasChatRoomPermission } from "../../../auth/chat-room-permissions";
 import { db } from "../../../db";
 import * as globalSchema from "../../../db/schema";
