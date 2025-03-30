@@ -118,7 +118,6 @@ export function NewChatRoomGroupForm({
 										<ChatMemberMultiSelect
 											selectedMembers={field.value}
 											setSelectedMembers={(members) => {
-												console.log("members", members);
 												field.onChange(members);
 											}}
 										/>

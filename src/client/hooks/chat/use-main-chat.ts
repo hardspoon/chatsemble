@@ -41,10 +41,6 @@ export function useMainChat({
 	}, [connectionStatus, sendMessage]);
 
 	const handleMessage = useCallback((wsMessage: WsChatOutgoingMessage) => {
-		console.log(
-			"[useMainChat] handleMessage",
-			JSON.parse(JSON.stringify(wsMessage)),
-		);
 		switch (wsMessage.type) {
 			case "message-broadcast":
 				if (wsMessage.message.threadId === null) {
