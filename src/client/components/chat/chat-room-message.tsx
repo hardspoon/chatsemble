@@ -47,20 +47,40 @@ export function ChatRoomMessage({
 				/>
 				<ChatMessageContent content={message.content}>
 					{message.toolUses.map((toolUse) => {
-						// For deepResearch tool, use the specialized component
-						if (toolUse.toolName === "deepResearch") {
+						if (
+							toolUse.toolName === "deepResearch" ||
+							toolUse.toolName === "webCrawl" ||
+							toolUse.toolName === "webSearch"
+						) {
+							let titleCall = "Running tool";
+							let titleResult = "Tool completed";
+							switch (toolUse.toolName) {
+								case "deepResearch":
+									titleCall = "Deep Research";
+									titleResult = "Deep Research Completed";
+									break;
+								case "webCrawl":
+									titleCall = "Web Crawl";
+									titleResult = "Web Crawl Completed";
+									break;
+								case "webSearch":
+									titleCall = "Web Search";
+									titleResult = "Web Search Completed";
+									break;
+							}
 							return (
 								<div className="flex flex-col gap-3">
 									<AnnotatedTool
 										key={toolUse.toolCallId}
 										toolUse={toolUse}
-										titleCall="Deep Research"
-										titleResult="Deep Research Completed"
+										titleCall={titleCall}
+										titleResult={titleResult}
 									/>
 
 									{toolUse.type === "tool-result" &&
 										toolUse.result &&
-										"sources" in toolUse.result && (
+										"sources" in toolUse.result &&
+										toolUse.result.sources.length > 0 && (
 											<>
 												<Separator />
 												<ToolInvocationSourcesList
@@ -74,33 +94,6 @@ export function ChatRoomMessage({
 							);
 						}
 
-						if (toolUse.toolName === "searchInformation") {
-							return (
-								<div className="flex flex-col gap-3">
-									<AnnotatedTool
-										key={toolUse.toolCallId}
-										toolUse={toolUse}
-										titleCall="Searching the web"
-										titleResult="Search completed"
-									/>
-
-									{toolUse.type === "tool-result" &&
-										toolUse.result &&
-										"sources" in toolUse.result && (
-											<>
-												<Separator />
-												<ToolInvocationSourcesList
-													sources={toolUse.result.sources}
-													maxVisible={5}
-													maxHeight="10rem"
-												/>
-											</>
-										)}
-								</div>
-							);
-						}
-
-						// For other tools, use the default ToolInvocationComponent
 						return (
 							<ToolInvocation key={toolUse.toolCallId}>
 								<ToolInvocationHeader>

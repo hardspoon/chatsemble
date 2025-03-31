@@ -85,7 +85,7 @@ export function agentSystemPrompt({
                 - "(agent: <your name>) Hello John, how can I help you today?" # Wrong since it includes the agent name
                 - "(agent: <your name>) John, I understand you are looking for..." # Wrong since it includes the agent name
                 - "(agent: <your name>) Yeah, I agree with you, I think..." # Wrong since it includes the agent name
-                - "<tool_call>{\"name\":\"searchInformation\",\"arguments\":{\"query\":\"information about ...\"}}</tool_call>" # Wrong since it includes the tool call object
+                - "<tool_call>{\"name\":\"webSearch\",\"arguments\":{\"query\":\"information about ...\"}}</tool_call>" # Wrong since it includes the tool call object
                 - "<tool_result>{\"result\":\"information about ...\"}</tool_result>" # Wrong since it includes the tool result object
     </forming_correct_responses>
 
