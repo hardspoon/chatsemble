@@ -73,15 +73,6 @@ export class AgentDurableObject extends DurableObject<Env> {
 			newMessages,
 			contextMessages,
 			onMessage: async ({ newMessagePartial, existingMessageId }) => {
-				console.log(
-					"[processAndRespond] onMessage",
-					JSON.parse(
-						JSON.stringify({
-							newMessagePartial,
-							existingMessageId,
-						}),
-					),
-				);
 				const newMessage = await this.sendResponse({
 					chatRoomId: chatRoomId,
 					message: newMessagePartial,
@@ -147,28 +138,34 @@ export class AgentDurableObject extends DurableObject<Env> {
 			contextMessages,
 			newMessages,
 		);
+		try {
+			const dataStreamResponse = createDataStreamResponse({
+				execute: async (dataStream) => {
+					streamText({
+						model: openAIClient("gpt-4o"),
+						system: systemPrompt,
+						tools: agentToolSet(dataStream),
+						messages,
+						maxSteps: 10,
+						experimental_transform: smoothStream({
+							chunking: "line",
+						}),
+						onError: (error) => {
+							console.error("[formulateResponse] onError", error);
+						},
+					}).mergeIntoDataStream(dataStream);
+				},
+			});
 
-		const dataStreamResponse = createDataStreamResponse({
-			execute: async (dataStream) => {
-				streamText({
-					model: openAIClient("gpt-4o"),
-					system: systemPrompt,
-					tools: agentToolSet(dataStream),
-					messages,
-					maxSteps: 10,
-					experimental_transform: smoothStream({
-						chunking: "line",
-					}),
-				}).mergeIntoDataStream(dataStream);
-			},
-		});
-
-		await processDataStream({
-			response: dataStreamResponse,
-			getThreadId: () => sendMessageThreadId,
-			omitSendingTool: ["createMessageThread"],
-			onMessageSend: onMessage,
-		});
+			await processDataStream({
+				response: dataStreamResponse,
+				getThreadId: () => sendMessageThreadId,
+				omitSendingTool: ["createMessageThread"],
+				onMessageSend: onMessage,
+			});
+		} catch (error) {
+			console.error("[formulateResponse] error", error);
+		}
 	}
 
 	private async sendResponse({

@@ -194,6 +194,7 @@ export async function processDataStream({
 									message: "Starting",
 									timestamp: Date.now(),
 									toolCallId: dataObject.toolCallId,
+									status: "processing",
 								},
 							],
 						};
@@ -250,7 +251,6 @@ export async function processDataStream({
 			}
 			case "message-annotation-part": {
 				const annotation = parsedData[0] as AgentToolAnnotation;
-				console.log("[processDataStream] Message annotation", annotation);
 
 				const currentMessage = streamedMessages[streamedMessages.length - 1];
 				if (!currentMessage) {
