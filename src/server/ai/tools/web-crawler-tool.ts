@@ -1,10 +1,13 @@
 import { env } from "cloudflare:workers";
 import type { AgentToolAnnotation, ToolSource } from "@shared/types";
 import { type DataStreamWriter, generateObject, tool } from "ai";
-import FirecrawlApp from "@mendable/firecrawl-js";
+import FirecrawlApp, {
+	type FirecrawlDocumentMetadata,
+} from "@mendable/firecrawl-js"; // Import necessary types
 import { nanoid } from "nanoid";
 import { z } from "zod";
 import { createOpenAI } from "@ai-sdk/openai";
+import { createGoogleGenerativeAI } from '@ai-sdk/google';
 
 const baseTaskSchema = z.object({
 	taskId: z.string().describe("Unique identifier for this specific task."),
@@ -45,7 +48,9 @@ const crawlTaskSchema = baseTaskSchema.extend({
 				.number()
 				.int()
 				.positive()
+				.max(30)
 				.optional()
+				.default(10)
 				.describe(
 					"Optional: Maximum number of pages to retrieve during the crawl.",
 				),
@@ -74,27 +79,52 @@ const webScrapePlanSchema = z.object({
 
 type WebScrapePlan = z.infer<typeof webScrapePlanSchema>;
 
+interface PageData {
+	markdown: string;
+	metadata: FirecrawlDocumentMetadata;
+}
+
 interface CrawlResult {
 	type: "crawl";
 	taskId: string;
+	startUrl: string;
 	status: "completed" | "failed";
-	data?: string[];
+	data?: PageData[];
 	error?: string;
 }
 interface ScrapeResult {
 	type: "scrape";
 	taskId: string;
+	url: string;
 	status: "completed" | "failed";
-	data?: string;
+	data?: PageData;
 	error?: string;
 }
 
 type TaskResult = CrawlResult | ScrapeResult;
 
+// Helper function to trim markdown content
+function trimMarkdown(markdown: string | undefined, maxLength = 300): string {
+	if (!markdown) {
+		return "No content retrieved.";
+	}
+	if (markdown.length <= maxLength) {
+		return markdown;
+	}
+	// Find the last space within the limit to avoid cutting words
+	let trimmed = markdown.substring(0, maxLength);
+	const lastSpace = trimmed.lastIndexOf(" ");
+	if (lastSpace > 0) {
+		trimmed = trimmed.substring(0, lastSpace);
+	}
+	return `${trimmed}...`;
+}
+
 export const webCrawlerTool = (dataStream: DataStreamWriter) =>
 	tool({
-		description:
-			"Performs web scraping or crawling based on a query and potential sources. Use when detailed, up-to-date information from specific websites is needed. Generates a plan (scrape single pages or crawl starting URLs) and executes it.",
+		description: `Performs web scraping or crawling based on a query and potential sources. Use when detailed, up-to-date information from specific websites is needed. Generates a plan (scrape single pages or crawl starting URLs) and executes it.
+			- NEVER call this tool multiple times in a row, this is highly important.
+			`,
 		parameters: z.object({
 			query: z
 				.string()
@@ -106,14 +136,21 @@ export const webCrawlerTool = (dataStream: DataStreamWriter) =>
 						title: z.string().describe("The title of the source."),
 						description: z
 							.string()
+							.optional() // Make description optional as it might not always be there
 							.describe(
 								"Description of the source on how it is relevant to the query.",
+							),
+						approach: z
+							.enum(["scrape", "crawl"])
+							.optional()
+							.describe(
+								"The approach to use for the source. It can be 'scrape' or 'crawl'.",
 							),
 					}),
 				)
 				.min(1) // Require at least one source to consider
 				.describe(
-					"A list of potential web sources (URLs with title/description) relevant to the query.",
+					"A list of potential web sources (URLs with title/description/icon) relevant to the query.",
 				),
 		}),
 		execute: async (
@@ -151,7 +188,9 @@ export const webCrawlerTool = (dataStream: DataStreamWriter) =>
 				const sourceList = relevantSources
 					.map(
 						(s) =>
-							`- ${s.title}: ${s.url} (${s.description || "No description"})`,
+							`- ${s.title || "Untitled"}: ${s.url} (${
+								s.description || "No description"
+							}) ${s.approach ? `(approach: ${s.approach})` : ""}`,
 					)
 					.join("\n");
 
@@ -187,7 +226,7 @@ Instructions:
 					usage,
 				);
 
-				if (finishReason !== "stop" && finishReason !== "tool-calls") {
+				if (finishReason !== "stop") {
 					throw new Error(
 						`Plan generation failed or was incomplete. Finish reason: ${finishReason}`,
 					);
@@ -211,19 +250,18 @@ Instructions:
 				dataStream.writeMessageAnnotation(planAnnotation);
 			} catch (error) {
 				console.error("[webCrawlerTool] Error generating plan:", error);
-				if (error instanceof Error) {
-					const errorAnnotation = {
-						toolCallId,
-						id: nanoid(),
-						type: "plan",
-						message: `Failed to generate web crawl/scrape plan: ${error.message}`,
-						status: "failed",
-						timestamp: Date.now(),
-					} satisfies AgentToolAnnotation;
-
-					dataStream.writeMessageAnnotation(errorAnnotation);
-				}
-				return { sources: [], results: {} };
+				const message =
+					error instanceof Error ? error.message : "Unknown error";
+				const errorAnnotation = {
+					toolCallId,
+					id: nanoid(),
+					type: "plan",
+					message: `Failed to generate web crawl/scrape plan: ${message}`,
+					status: "failed",
+					timestamp: Date.now(),
+				} satisfies AgentToolAnnotation;
+				dataStream.writeMessageAnnotation(errorAnnotation);
+				return { sources: [], results: {} }; // Stop execution if plan fails
 			}
 
 			if (!generatedPlan || generatedPlan.tasks.length === 0) {
@@ -250,7 +288,6 @@ Instructions:
 					type: task.taskType,
 					message: `Starting task ${task.taskId}: ${task.taskType} - ${task.description || (task.taskType === "scrape" ? task.url : task.startUrl)}`,
 					status: "processing",
-
 					timestamp: taskStartTime,
 				} satisfies AgentToolAnnotation;
 				dataStream.writeMessageAnnotation(taskStartAnnotation);
@@ -261,20 +298,33 @@ Instructions:
 							`[webCrawlerTool] Executing scrape task ${task.taskId} for URL: ${task.url}`,
 						);
 
+						// Request both markdown and metadata
 						const scrapeResponse = await app.scrapeUrl(task.url, {
-							formats: ["markdown"], // Always get markdown
-							onlyMainContent: false, // Defaulting to main content
+							formats: ["markdown"], // <-- Request metadata
+							onlyMainContent: true, // Keep as per original request
 							// timeout: 30000 // Consider adding timeouts
 						});
 
 						if (scrapeResponse.success) {
-							const scrapeResult: ScrapeResult = {
-								type: "scrape",
-								taskId: task.taskId,
-								status: "completed",
-								data: scrapeResponse.markdown,
-							};
-							results[task.taskId] = scrapeResult;
+							// Type assertion for clarity if needed, or check fields exist
+							if (scrapeResponse.markdown && scrapeResponse.metadata) {
+								const scrapeResult: ScrapeResult = {
+									type: "scrape",
+									taskId: task.taskId,
+									url: task.url, // Store the URL
+									status: "completed",
+									data: {
+										markdown: scrapeResponse.markdown,
+										metadata: scrapeResponse.metadata, // Store metadata
+									},
+								};
+								results[task.taskId] = scrapeResult;
+							} else {
+								console.error(
+									`[webCrawlerTool] Scrape response missing required fields for task ${task.taskId}:`,
+									scrapeResponse,
+								);
+							}
 						} else {
 							throw new Error(scrapeResponse.error || "Unknown scrape error");
 						}
@@ -283,33 +333,37 @@ Instructions:
 							`[webCrawlerTool] Executing crawl task ${task.taskId} starting at: ${task.startUrl} with depth ${task.parameters.depth}`,
 						);
 
-						// Using synchronous crawlUrl for simplicity (handles polling internally)
-						// WARNING: This can block the Node.js event loop for long crawls.
-						// For production, consider app.asyncCrawlUrl + external polling/queue.
+						// Request markdown and metadata for each crawled page
 						const crawlResponse = await app.crawlUrl(
 							task.startUrl,
 							{
 								maxDepth: task.parameters.depth,
-								limit: task.parameters.maxPages, // Pass limit if provided
-								// includePaths: task.parameters.focus_paths, // focus_paths removed from schema for simplicity, could be added back
+								limit: task.parameters.maxPages,
 								scrapeOptions: {
-									formats: ["markdown"], // Always get markdown and metadata per page
-									onlyMainContent: false, // Defaulting to main content for crawled pages
+									formats: ["markdown"], // <-- Request metadata
+									onlyMainContent: true, // Keep as per original request
 								},
-								// timeout: 180000 // Consider adding overall crawl timeout
 							},
-							//, poll_interval=5 // Optional: Adjust polling frequency if needed (default is usually fine)
+							// poll_interval=5 // Optional
 						);
 
 						if (crawlResponse.success) {
-							const resultsParsed = crawlResponse.data
-								.map((d) => d.markdown)
-								.filter((d): d is string => d !== undefined);
+							// Filter out pages that might have failed scraping during the crawl
+							const crawledPages = crawlResponse.data.map((d) => ({
+								markdown: d.markdown,
+								metadata: d.metadata,
+							}));
+
+							const filteredCrawledPages = crawledPages.filter(
+								(d): d is PageData => !!d.metadata?.sourceURL && !!d.markdown,
+							);
+
 							const crawlResult: CrawlResult = {
 								type: "crawl",
 								taskId: task.taskId,
+								startUrl: task.startUrl, // Store start URL
 								status: "completed",
-								data: resultsParsed,
+								data: filteredCrawledPages, // Store the structured data
 							};
 							results[task.taskId] = crawlResult;
 						} else {
@@ -337,65 +391,126 @@ Instructions:
 						`[webCrawlerTool] Error executing task ${task.taskId} (${task.taskType}):`,
 						error,
 					);
-					if (error instanceof Error) {
-						const taskResult: TaskResult = {
-							type: task.taskType,
-							taskId: task.taskId,
-							status: "failed",
-							error: error.message,
-						};
-						results[task.taskId] = taskResult;
-						const taskErrorAnnotation = {
-							toolCallId,
-							id: nanoid(),
-							type: task.taskType,
-							message: `Failed task ${task.taskId} (${task.taskType}): ${error.message}`,
-							status: "failed",
-							timestamp: Date.now(),
-						} satisfies AgentToolAnnotation;
-						dataStream.writeMessageAnnotation(taskErrorAnnotation);
-					}
-					// Decide whether to continue with other tasks or stop here
-					// For now, we'll continue
+					const message =
+						error instanceof Error ? error.message : "Unknown error";
+
+					// @ts-expect-error
+					const taskResult: TaskResult = {
+						type: task.taskType,
+						taskId: task.taskId,
+						status: "failed",
+						error: message,
+						// Add URL/startUrl for context in failed results
+						...(task.taskType === "scrape" && { url: task.url }),
+						...(task.taskType === "crawl" && { startUrl: task.startUrl }),
+					};
+					results[task.taskId] = taskResult;
+
+					const taskErrorAnnotation = {
+						toolCallId,
+						id: nanoid(),
+						type: task.taskType,
+						message: `Failed task ${task.taskId} (${task.taskType}): ${message}`,
+						status: "failed",
+						timestamp: Date.now(),
+					} satisfies AgentToolAnnotation;
+					dataStream.writeMessageAnnotation(taskErrorAnnotation);
+					// Continue with other tasks even if one fails
 				}
 			}
 
-			// --- 4. Final Result ---
+			// --- 4. Process Results and Construct Final Sources ---
+			const finalSources: ToolSource[] = [];
+			const processedUrls = new Set<string>(); // To avoid duplicates
+
+			for (const result of Object.values(results)) {
+				if (result.status !== "completed") {
+					continue;
+				} // Skip failed tasks
+
+				if (result.type === "scrape" && result.data) {
+					const url = result.url;
+					if (!processedUrls.has(url)) {
+						const metadata = result.data.metadata;
+						const description =
+							metadata?.ogDescription || metadata?.description || "";
+						const content = description
+							? description
+							: trimMarkdown(result.data.markdown);
+
+						finalSources.push({
+							type: "url",
+							url: url,
+							title: metadata?.ogTitle || metadata?.title || url,
+							icon: metadata?.ogImage, // Use og:image if available
+							content: content,
+						});
+						processedUrls.add(url);
+					}
+				} else if (result.type === "crawl" && result.data) {
+					for (const pageData of result.data) {
+						const url = pageData.metadata.sourceURL; // sourceURL must exist here
+						if (url && !processedUrls.has(url)) {
+							const metadata = pageData.metadata;
+							const description =
+								metadata?.ogDescription || metadata?.description || "";
+							const content = description
+								? description
+								: trimMarkdown(pageData.markdown);
+
+							finalSources.push({
+								type: "url",
+								url: url,
+								title: metadata?.ogTitle || metadata?.title || url,
+								icon: metadata?.ogImage, // Use og:image if available
+								content: content,
+							});
+							processedUrls.add(url);
+						}
+					}
+				}
+			}
+
+			const geminiClient = createGoogleGenerativeAI({
+				baseURL: env.AI_GATEWAY_GEMINI_URL,
+				apiKey: env.GEMINI_API_KEY,
+			});
+
+			const systemPrompt = "";
+
+			const {
+				object: synthetyzedResponse,
+			} = await generateObject({
+				model: geminiClient("gemini-1.5-flash"),
+				schema: webScrapePlanSchema,
+				prompt: "",
+				system: systemPrompt,
+			});
+
+			// --- 5. Final Annotation ---
 			const overallDuration = Date.now() - overallStartTime;
 			console.log(
-				`[webCrawlerTool] Completed all tasks in ${(overallDuration / 1000).toFixed(2)}s.`,
+				`[webCrawlerTool] Completed all tasks in ${(overallDuration / 1000).toFixed(2)}s. Found ${finalSources.length} unique sources.`,
 			);
 
 			const finalAnnotation = {
 				toolCallId,
 				id: nanoid(),
 				type: "finish",
-				message: `Web crawl/scrape finished in ${(overallDuration / 1000).toFixed(2)}s.`,
+				message: `Web crawl/scrape finished in ${(overallDuration / 1000).toFixed(2)}s. Processed ${finalSources.length} sources.`,
 				status: "complete",
 				data: {
 					durationMs: overallDuration,
-					resultsSummary: Object.values(results).map((r) => ({
-						id: r.taskId,
-						status: r.status,
-					})),
+					sourceCount: finalSources.length,
 				},
 				timestamp: Date.now(),
 			} satisfies AgentToolAnnotation;
 			dataStream.writeMessageAnnotation(finalAnnotation);
 
-			const finalSources: ToolSource[] = relevantSources.map((s) => ({
-				type: "url",
-				url: s.url,
-				title: s.title,
-				content: "",
-				icon: s.icon, // Can we get icon
-			}));
-
-			// Return the collected raw data, keyed by task_id
-			// The calling agent is responsible for synthesizing this
+			// Return the final sources and the detailed results
 			return {
 				sources: finalSources,
-				results: results,
+				results: results, // Return the raw, detailed results keyed by task_id
 			};
 		},
 	});
