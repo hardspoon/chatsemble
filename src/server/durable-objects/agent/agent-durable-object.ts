@@ -5,11 +5,6 @@ import {
 	processDataStream,
 } from "@server/ai/ai-utils";
 import { agentSystemPrompt } from "@server/ai/prompts/agent-prompt";
-import {
-	createMessageThreadTool,
-	deepResearchTool,
-	searchInformationTool,
-} from "@server/ai/tools";
 import type { ChatRoomMessage, ChatRoomMessagePartial } from "@shared/types";
 import {
 	type DataStreamWriter,
@@ -24,6 +19,10 @@ import {
 import { migrate } from "drizzle-orm/durable-sqlite/migrator";
 import migrations from "./db/migrations/migrations.js";
 import { createAgentDbServices } from "./db/services";
+import { webSearchTool } from "@server/ai/tools/web-search-tool.js";
+import { deepResearchTool } from "@server/ai/tools/deep-search-tool.js";
+import { createMessageThreadTool } from "@server/ai/tools/create-thread-tool.js";
+import { webCrawlerTool } from "@server/ai/tools/web-crawler-tool.js";
 
 export class AgentDurableObject extends DurableObject<Env> {
 	storage: DurableObjectStorage;
@@ -125,8 +124,9 @@ export class AgentDurableObject extends DurableObject<Env> {
 
 		const agentToolSet = (dataStream: DataStreamWriter) => {
 			return {
-				searchInformation: searchInformationTool(dataStream),
+				webSearch: webSearchTool(dataStream),
 				deepResearch: deepResearchTool(dataStream),
+				webCrawl: webCrawlerTool(dataStream),
 				createMessageThread: createMessageThreadTool({
 					onMessage,
 					onNewThread: (newThreadId) => {
