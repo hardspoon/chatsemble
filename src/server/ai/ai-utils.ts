@@ -263,21 +263,36 @@ export async function processDataStream({
 				const toolUseIndex = currentMessage.toolUses.findIndex(
 					(t) => t.toolCallId === annotation.toolCallId,
 				);
-				if (toolUseIndex === -1) {
-					console.warn(
-						`[processDataStream] Tool use with ID ${annotation.toolCallId} not found for annotation.`,
-					);
-					break;
-				}
 
 				const updatedToolUses = [...currentMessage.toolUses];
-				updatedToolUses[toolUseIndex] = {
-					...updatedToolUses[toolUseIndex],
-					annotations: [
-						...updatedToolUses[toolUseIndex].annotations,
-						annotation,
-					],
-				};
+
+				// If tool use doesn't exist, create a temporary one
+				if (toolUseIndex === -1) {
+					console.warn(
+						`[processDataStream] Tool use with ID ${annotation.toolCallId} not found for annotation. Creating temporary tool.`,
+					);
+
+					// Create temporary tool call
+					const temporaryToolUse: AgentToolUse = {
+						type: "tool-call",
+						toolCallId: annotation.toolCallId,
+						toolName: "temporary-tool-call",
+						args: {},
+						annotations: [annotation],
+					};
+
+					// Add the temporary tool to the list
+					updatedToolUses.push(temporaryToolUse);
+				} else {
+					// Update existing tool with the new annotation
+					updatedToolUses[toolUseIndex] = {
+						...updatedToolUses[toolUseIndex],
+						annotations: [
+							...updatedToolUses[toolUseIndex].annotations,
+							annotation,
+						],
+					};
+				}
 
 				const haventSentCurrentMessage =
 					currentMessage.id === currentMessage.metadata.optimisticData?.id;
