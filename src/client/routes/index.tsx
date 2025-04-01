@@ -1,12 +1,12 @@
 // src/client/routes/index.tsx
 import { createFileRoute } from "@tanstack/react-router";
-import { GithubIcon, FileCode, Server, Settings, Mail } from "lucide-react";
+import { FileCode, GithubIcon, Mail, Server, Settings } from "lucide-react";
 
-import { Button } from "@client/components/ui/button";
-import { Input } from "@client/components/ui/input";
-import { Badge } from "@client/components/ui/badge";
 import { LogoIcon } from "@client/components/icons/logo-icon";
 import { ThemeToggle } from "@client/components/theme-toggle";
+import { Badge } from "@client/components/ui/badge";
+import { Button } from "@client/components/ui/button";
+import { Input } from "@client/components/ui/input";
 
 export const Route = createFileRoute("/")({
 	component: ChatsembleLandingPage,

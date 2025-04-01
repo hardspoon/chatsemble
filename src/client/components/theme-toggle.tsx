@@ -3,8 +3,8 @@
 import { MoonIcon, SunIcon } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useCallback } from "react";
-import { SidebarMenuButton } from "./ui/sidebar";
 import { Button } from "./ui/button";
+import { SidebarMenuButton } from "./ui/sidebar";
 
 export const ThemeToggle = ({
 	variant = "default",
