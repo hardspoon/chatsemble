@@ -3,11 +3,11 @@ import type { AgentToolAnnotation, ToolSource } from "@shared/types";
 import { type DataStreamWriter, generateObject, tool } from "ai";
 import FirecrawlApp, {
 	type FirecrawlDocumentMetadata,
-} from "@mendable/firecrawl-js"; // Import necessary types
+} from "@mendable/firecrawl-js";
 import { nanoid } from "nanoid";
 import { z } from "zod";
 import { createOpenAI } from "@ai-sdk/openai";
-import { createGoogleGenerativeAI } from '@ai-sdk/google';
+import { createGoogleGenerativeAI } from "@ai-sdk/google";
 
 const baseTaskSchema = z.object({
 	taskId: z.string().describe("Unique identifier for this specific task."),
@@ -24,15 +24,12 @@ const baseTaskSchema = z.object({
 
 const scrapeTaskSchema = baseTaskSchema.extend({
 	taskType: z.literal("scrape"),
-	url: z.string().url().describe("The exact URL to scrape."),
+	url: z.string().describe("The exact URL to scrape."),
 });
 
 const crawlTaskSchema = baseTaskSchema.extend({
 	taskType: z.literal("crawl"),
-	startUrl: z
-		.string()
-		.url()
-		.describe("The starting URL for the crawl operation."),
+	startUrl: z.string().describe("The starting URL for the crawl operation."),
 	parameters: z
 		.object({
 			depth: z
@@ -65,7 +62,7 @@ const taskSchema = z.discriminatedUnion("taskType", [
 
 const webScrapePlanSchema = z.object({
 	relevantTaskSources: z
-		.array(z.string().url())
+		.array(z.string())
 		.describe(
 			"List of URLs from the initial sources that the AI decided are relevant and included in the tasks.",
 		),
@@ -103,7 +100,34 @@ interface ScrapeResult {
 
 type TaskResult = CrawlResult | ScrapeResult;
 
-// Helper function to trim markdown content
+const synthesizedResultSchema = z.object({
+	title: z.string().describe("A concise title for the synthesized answer."),
+	explanation: z
+		.string()
+		.describe(
+			"A detailed explanation answering the original query, based *only* on the provided context (the JSON results object).",
+		),
+	keyFindings: z
+		.array(z.string())
+		.describe(
+			"Bulleted list of the most important points or findings relevant to the query, extracted from the successful tasks in the results object.",
+		),
+	interestingPoints: z
+		.array(z.string())
+		.optional()
+		.describe(
+			"Optional: Additional interesting details or related information found in the successful tasks within the results object.",
+		),
+	limitations: z
+		.string()
+		.describe(
+			"A brief statement acknowledging that the answer is based solely on the provided JSON results object and might not be exhaustive (mention if some tasks failed or yielded no data).",
+		),
+});
+
+type SynthesizedResult = z.infer<typeof synthesizedResultSchema>;
+
+// Helper function to trim markdown content (used for ToolSource preview)
 function trimMarkdown(markdown: string | undefined, maxLength = 300): string {
 	if (!markdown) {
 		return "No content retrieved.";
@@ -111,7 +135,6 @@ function trimMarkdown(markdown: string | undefined, maxLength = 300): string {
 	if (markdown.length <= maxLength) {
 		return markdown;
 	}
-	// Find the last space within the limit to avoid cutting words
 	let trimmed = markdown.substring(0, maxLength);
 	const lastSpace = trimmed.lastIndexOf(" ");
 	if (lastSpace > 0) {
@@ -122,7 +145,7 @@ function trimMarkdown(markdown: string | undefined, maxLength = 300): string {
 
 export const webCrawlerTool = (dataStream: DataStreamWriter) =>
 	tool({
-		description: `Performs web scraping or crawling based on a query and potential sources. Use when detailed, up-to-date information from specific websites is needed. Generates a plan (scrape single pages or crawl starting URLs) and executes it.
+		description: `Performs web scraping or crawling based on a query and potential sources. Use when detailed, up-to-date information from specific websites is needed. Generates a plan, executes it, synthesizes the results (passed as a raw JSON object) into a structured answer using an AI, and returns the structured answer with citation sources.
 			- NEVER call this tool multiple times in a row, this is highly important.
 			`,
 		parameters: z.object({
@@ -132,39 +155,40 @@ export const webCrawlerTool = (dataStream: DataStreamWriter) =>
 			relevantSources: z
 				.array(
 					z.object({
-						url: z.string().url().describe("The URL of a potential source."),
+						url: z.string().describe("The URL of a potential source."),
 						title: z.string().describe("The title of the source."),
 						description: z
 							.string()
-							.optional() // Make description optional as it might not always be there
+							.optional()
 							.describe(
 								"Description of the source on how it is relevant to the query.",
 							),
 						approach: z
 							.enum(["scrape", "crawl"])
 							.optional()
+							.default("scrape")
 							.describe(
-								"The approach to use for the source. It can be 'scrape' or 'crawl'.",
+								"The approach to use for the source: 'scrape' (default) or 'crawl'.",
 							),
 					}),
 				)
-				.min(1) // Require at least one source to consider
-				.describe(
-					"A list of potential web sources (URLs with title/description/icon) relevant to the query.",
-				),
+				.min(1)
+				.describe("A list of potential web sources relevant to the query."),
 		}),
 		execute: async (
 			{ query, relevantSources },
 			{ toolCallId },
 		): Promise<{
+			synthesizedAnswer?: SynthesizedResult;
 			sources: ToolSource[];
-			results: Record<string, TaskResult>;
+			error?: string;
 		}> => {
 			console.log(
 				`[webCrawlerTool] Starting web crawl/scrape for query: "${query}"`,
 			);
 			const overallStartTime = Date.now();
-			const results: Record<string, TaskResult> = {}; // Store results by task_id
+			const results: Record<string, TaskResult> = {};
+			let errorMessage: string | undefined = undefined;
 
 			// --- 1. Send Annotation: Starting ---
 			const startAnnotation = {
@@ -190,20 +214,19 @@ export const webCrawlerTool = (dataStream: DataStreamWriter) =>
 						(s) =>
 							`- ${s.title || "Untitled"}: ${s.url} (${
 								s.description || "No description"
-							}) ${s.approach ? `(approach: ${s.approach})` : ""}`,
+							}) (approach: ${s.approach})`,
 					)
 					.join("\n");
 
 				const systemPrompt = `You are an expert planning agent for web scraping and crawling. Your goal is to create a concise plan to gather information relevant to the user's query using the provided sources.
 Available task types:
 - scrape: Fetches content from a single, specific URL. Use this for targeted information retrieval from one page.
-- crawl: Starts at a URL and follows links to a specified depth. Use this to explore a section of a website or gather broader context. Max depth should generally be 1 or 2 unless necessary.
-
+- crawl: Starts at a URL and follows links to a specified depth. Use this to explore a section of a website or gather broader context. Max depth should generally be 1 or 2 unless necessary. Max pages default to 10.
 Instructions:
 1. Analyze the query: "${query}".
 2. Review the potential sources:\n${sourceList}\n
 3. Decide which sources are most relevant and likely to contain the answer. Include these URLs in the 'relevant_task_sources' list.
-4. For each chosen source, decide if a 'scrape' or 'crawl' task is more appropriate.
+4. For each chosen source, decide if a 'scrape' or 'crawl' task is more appropriate based on the source description and the 'approach' hint (defaulting to 'scrape' if unspecified).
 5. If crawling, specify a reasonable 'depth' (usually 0, 1, or 2) and optionally 'max_pages'.
 6. Generate a plan conforming to the provided schema with at least one task. Assign a unique 'task_id' to each task (e.g., "task-001", "task-002").
 7. Add a brief 'description' to each task explaining its purpose in relation to the query.`;
@@ -226,9 +249,9 @@ Instructions:
 					usage,
 				);
 
-				if (finishReason !== "stop") {
+				if (finishReason !== "stop" || !planObject) {
 					throw new Error(
-						`Plan generation failed or was incomplete. Finish reason: ${finishReason}`,
+						`Plan generation failed or incomplete. Finish reason: ${finishReason}`,
 					);
 				}
 
@@ -250,36 +273,39 @@ Instructions:
 				dataStream.writeMessageAnnotation(planAnnotation);
 			} catch (error) {
 				console.error("[webCrawlerTool] Error generating plan:", error);
-				const message =
-					error instanceof Error ? error.message : "Unknown error";
+				errorMessage = `Failed to generate web crawl/scrape plan: ${
+					error instanceof Error ? error.message : "Unknown error"
+				}`;
 				const errorAnnotation = {
 					toolCallId,
 					id: nanoid(),
 					type: "plan",
-					message: `Failed to generate web crawl/scrape plan: ${message}`,
+					message: errorMessage,
 					status: "failed",
 					timestamp: Date.now(),
 				} satisfies AgentToolAnnotation;
 				dataStream.writeMessageAnnotation(errorAnnotation);
-				return { sources: [], results: {} }; // Stop execution if plan fails
+
+				return { sources: [], error: errorMessage };
 			}
 
 			if (!generatedPlan || generatedPlan.tasks.length === 0) {
+				errorMessage =
+					"No relevant tasks identified in the plan. Cannot proceed.";
 				const noPlanAnnotation = {
 					toolCallId,
 					id: nanoid(),
 					type: "plan",
-					message: "No relevant tasks identified in the plan. Cannot proceed.",
-					status: "failed", // Or complete if this is valid behavior
+					message: errorMessage,
+					status: "failed",
 					timestamp: Date.now(),
 				} satisfies AgentToolAnnotation;
 				dataStream.writeMessageAnnotation(noPlanAnnotation);
-				return { sources: [], results: {} };
+				return { sources: [], error: errorMessage };
 			}
 
 			// --- 3. Execute the Plan ---
 			const app = new FirecrawlApp({ apiKey: env.FIRECRAWL_API_KEY });
-
 			for (const task of generatedPlan.tasks) {
 				const taskStartTime = Date.now();
 				const taskStartAnnotation = {
@@ -293,83 +319,73 @@ Instructions:
 				dataStream.writeMessageAnnotation(taskStartAnnotation);
 
 				try {
+					let taskResult: TaskResult;
 					if (task.taskType === "scrape") {
 						console.log(
 							`[webCrawlerTool] Executing scrape task ${task.taskId} for URL: ${task.url}`,
 						);
-
-						// Request both markdown and metadata
 						const scrapeResponse = await app.scrapeUrl(task.url, {
-							formats: ["markdown"], // <-- Request metadata
-							onlyMainContent: true, // Keep as per original request
-							// timeout: 30000 // Consider adding timeouts
+							formats: ["markdown"],
+							onlyMainContent: true,
 						});
 
-						if (scrapeResponse.success) {
-							// Type assertion for clarity if needed, or check fields exist
-							if (scrapeResponse.markdown && scrapeResponse.metadata) {
-								const scrapeResult: ScrapeResult = {
-									type: "scrape",
-									taskId: task.taskId,
-									url: task.url, // Store the URL
-									status: "completed",
-									data: {
-										markdown: scrapeResponse.markdown,
-										metadata: scrapeResponse.metadata, // Store metadata
-									},
-								};
-								results[task.taskId] = scrapeResult;
-							} else {
-								console.error(
-									`[webCrawlerTool] Scrape response missing required fields for task ${task.taskId}:`,
-									scrapeResponse,
-								);
-							}
+						if (
+							scrapeResponse.success &&
+							scrapeResponse.markdown &&
+							scrapeResponse.metadata
+						) {
+							taskResult = {
+								type: "scrape",
+								taskId: task.taskId,
+								url: task.url,
+								status: "completed",
+								data: {
+									// Scrape has single PageData
+									markdown: scrapeResponse.markdown,
+									metadata: scrapeResponse.metadata,
+								},
+							};
 						} else {
-							throw new Error(scrapeResponse.error || "Unknown scrape error");
+							throw new Error(
+								scrapeResponse.error ||
+									"Scrape failed or missing essential data",
+							);
 						}
-					} else if (task.taskType === "crawl") {
+					} else {
 						console.log(
 							`[webCrawlerTool] Executing crawl task ${task.taskId} starting at: ${task.startUrl} with depth ${task.parameters.depth}`,
 						);
+						const crawlResponse = await app.crawlUrl(task.startUrl, {
+							maxDepth: task.parameters.depth,
+							limit: task.parameters.maxPages,
+							scrapeOptions: { formats: ["markdown"], onlyMainContent: true },
+						});
 
-						// Request markdown and metadata for each crawled page
-						const crawlResponse = await app.crawlUrl(
-							task.startUrl,
-							{
-								maxDepth: task.parameters.depth,
-								limit: task.parameters.maxPages,
-								scrapeOptions: {
-									formats: ["markdown"], // <-- Request metadata
-									onlyMainContent: true, // Keep as per original request
-								},
-							},
-							// poll_interval=5 // Optional
-						);
+						if (crawlResponse.success && crawlResponse.data) {
+							const filteredPages = crawlResponse.data
+								.map((d) => ({ markdown: d.markdown, metadata: d.metadata }))
 
-						if (crawlResponse.success) {
-							// Filter out pages that might have failed scraping during the crawl
-							const crawledPages = crawlResponse.data.map((d) => ({
-								markdown: d.markdown,
-								metadata: d.metadata,
-							}));
+								.filter(
+									(d): d is PageData =>
+										!!d.metadata?.sourceURL &&
+										d.markdown !== undefined &&
+										d.markdown !== null,
+								);
 
-							const filteredCrawledPages = crawledPages.filter(
-								(d): d is PageData => !!d.metadata?.sourceURL && !!d.markdown,
-							);
-
-							const crawlResult: CrawlResult = {
+							taskResult = {
 								type: "crawl",
 								taskId: task.taskId,
-								startUrl: task.startUrl, // Store start URL
+								startUrl: task.startUrl,
 								status: "completed",
-								data: filteredCrawledPages, // Store the structured data
+								data: filteredPages,
 							};
-							results[task.taskId] = crawlResult;
 						} else {
-							throw new Error(crawlResponse.error || "Unknown crawl error");
+							throw new Error(
+								"error" in crawlResponse ? crawlResponse.error : "Crawl failed",
+							);
 						}
 					}
+					results[task.taskId] = taskResult;
 
 					const taskCompleteAnnotation = {
 						toolCallId,
@@ -378,9 +394,7 @@ Instructions:
 						message: `Completed task ${task.taskId} (${task.taskType}) in ${((Date.now() - taskStartTime) / 1000).toFixed(2)}s.`,
 						status: "complete",
 						data: {
-							stage: "executing",
 							taskId: task.taskId,
-							taskType: task.taskType,
 							durationMs: Date.now() - taskStartTime,
 						},
 						timestamp: Date.now(),
@@ -394,17 +408,14 @@ Instructions:
 					const message =
 						error instanceof Error ? error.message : "Unknown error";
 
-					// @ts-expect-error
-					const taskResult: TaskResult = {
+					results[task.taskId] = {
 						type: task.taskType,
 						taskId: task.taskId,
 						status: "failed",
 						error: message,
-						// Add URL/startUrl for context in failed results
 						...(task.taskType === "scrape" && { url: task.url }),
 						...(task.taskType === "crawl" && { startUrl: task.startUrl }),
-					};
-					results[task.taskId] = taskResult;
+					} as TaskResult;
 
 					const taskErrorAnnotation = {
 						toolCallId,
@@ -415,55 +426,57 @@ Instructions:
 						timestamp: Date.now(),
 					} satisfies AgentToolAnnotation;
 					dataStream.writeMessageAnnotation(taskErrorAnnotation);
-					// Continue with other tasks even if one fails
 				}
 			}
 
-			// --- 4. Process Results and Construct Final Sources ---
+			// --- 4. Construct Final Sources (for citation) ---
 			const finalSources: ToolSource[] = [];
-			const processedUrls = new Set<string>(); // To avoid duplicates
+			const processedUrls = new Set<string>();
 
 			for (const result of Object.values(results)) {
 				if (result.status !== "completed") {
 					continue;
-				} // Skip failed tasks
+				}
 
 				if (result.type === "scrape" && result.data) {
 					const url = result.url;
 					if (!processedUrls.has(url)) {
 						const metadata = result.data.metadata;
+						const title = metadata?.ogTitle || metadata?.title || url;
 						const description =
 							metadata?.ogDescription || metadata?.description || "";
-						const content = description
+
+						const previewContent = description
 							? description
-							: trimMarkdown(result.data.markdown);
+							: trimMarkdown(result.data.markdown, 250);
 
 						finalSources.push({
 							type: "url",
-							url: url,
-							title: metadata?.ogTitle || metadata?.title || url,
-							icon: metadata?.ogImage, // Use og:image if available
-							content: content,
+							url,
+							title,
+							icon: metadata?.ogImage,
+							content: previewContent,
 						});
 						processedUrls.add(url);
 					}
 				} else if (result.type === "crawl" && result.data) {
 					for (const pageData of result.data) {
-						const url = pageData.metadata.sourceURL; // sourceURL must exist here
+						const url = pageData.metadata?.sourceURL;
 						if (url && !processedUrls.has(url)) {
 							const metadata = pageData.metadata;
+							const title = metadata?.ogTitle || metadata?.title || url;
 							const description =
 								metadata?.ogDescription || metadata?.description || "";
-							const content = description
+							const previewContent = description
 								? description
-								: trimMarkdown(pageData.markdown);
+								: trimMarkdown(pageData.markdown, 250);
 
 							finalSources.push({
 								type: "url",
-								url: url,
-								title: metadata?.ogTitle || metadata?.title || url,
-								icon: metadata?.ogImage, // Use og:image if available
-								content: content,
+								url,
+								title,
+								icon: metadata?.ogImage,
+								content: previewContent,
 							});
 							processedUrls.add(url);
 						}
@@ -471,46 +484,165 @@ Instructions:
 				}
 			}
 
-			const geminiClient = createGoogleGenerativeAI({
-				baseURL: env.AI_GATEWAY_GEMINI_URL,
-				apiKey: env.GEMINI_API_KEY,
-			});
+			// --- 5. Synthesize Results with Gemini ---
+			let synthesizedAnswer: SynthesizedResult | undefined = undefined;
+			const synthesisStartTime = Date.now();
 
-			const systemPrompt = "";
+			const hasSuccessfulData = Object.values(results).some(
+				(r) => r.status === "completed" && r.data,
+			);
 
-			const {
-				object: synthetyzedResponse,
-			} = await generateObject({
-				model: geminiClient("gemini-1.5-flash"),
-				schema: webScrapePlanSchema,
-				prompt: "",
-				system: systemPrompt,
-			});
+			if (!hasSuccessfulData) {
+				errorMessage =
+					"No content was successfully retrieved from any task to synthesize an answer.";
+				console.log("[webCrawlerTool] Skipping synthesis:", errorMessage);
+				dataStream.writeMessageAnnotation({
+					toolCallId,
+					id: nanoid(),
+					type: "synthesis",
+					message:
+						"Skipping synthesis: No successful scrape/crawl results with data.",
+					status: "failed",
+					timestamp: Date.now(),
+				} satisfies AgentToolAnnotation);
+			} else {
+				const synthesisStartAnnotation = {
+					toolCallId,
+					id: nanoid(),
+					type: "synthesis",
+					message: "Synthesizing content from raw results object...",
+					status: "processing",
+					timestamp: synthesisStartTime,
+				} satisfies AgentToolAnnotation;
+				dataStream.writeMessageAnnotation(synthesisStartAnnotation);
 
-			// --- 5. Final Annotation ---
+				try {
+					const geminiClient = createGoogleGenerativeAI({
+						//baseURL: env.AI_GATEWAY_GEMINI_URL,
+						apiKey: env.GEMINI_API_KEY,
+					});
+
+					const resultsJsonString = JSON.stringify(results, null, 2);
+
+					const resultTokenCount = resultsJsonString.length / 4;
+
+					const MAX_CONTEXT_LENGTH = 400000;
+					if (resultTokenCount > MAX_CONTEXT_LENGTH) {
+						console.warn(
+							`[webCrawlerTool] Results JSON string token count (${resultTokenCount}) exceeds limit (${MAX_CONTEXT_LENGTH}). Potential truncation or errors.`,
+						);
+						// Consider truncation strategy or erroring out if too large
+						// For now, just warn and proceed
+					}
+
+					const synthesisSystemPrompt = `You are an AI assistant specialized in synthesizing information from a raw JSON object containing web scraping/crawling results.
+Your goal is to answer the user's original query accurately and descriptively, using *only* the information contained within the provided JSON object. Do not add external knowledge or assumptions.
+
+The user's query is: "${query}"
+
+The input you will receive is a JSON object where keys are task IDs and values are objects representing the result of each task ('scrape' or 'crawl'). Each result object has a 'status' field ('completed' or 'failed').
+For 'completed' tasks:
+- Look inside the 'data' field.
+- If the task 'type' is 'scrape', 'data' will be an object containing 'markdown' and 'metadata'.
+- If the task 'type' is 'crawl', 'data' will be an array of objects, each containing 'markdown' and 'metadata'.
+- Extract the relevant information *only* from the 'markdown' content of these successful tasks to answer the query.
+
+You MUST structure your response according to the following JSON schema:
+- title: A concise title for the synthesized answer.
+- explanation: A detailed explanation answering the original query, based *only* on the markdown content found in the successful tasks within the input JSON.
+- keyFindings: Bulleted list of the most important points relevant to the query found in the markdown content.
+- interestingPoints: (Optional) Additional interesting details found.
+- limitations: A brief statement acknowledging the answer is based *only* on the provided JSON. Mention if any tasks failed (check 'status: "failed"') or if relevant information might be missing.
+
+Analyze the provided JSON object carefully. Ignore tasks with 'status: "failed"'. Extract information *only* from the 'markdown' fields of successful tasks.`;
+
+					const synthesisPrompt = `Based on the user query "${query}", synthesize the information contained *only* within the following JSON results object. Structure your answer according to the required schema.\n\nJSON Results Object:\n\`\`\`json\n${resultsJsonString}\n\`\`\``;
+					console.log(
+						"[webCrawlerTool] Synthesizing results with Gemini...",
+						synthesisPrompt,
+					);
+					const {
+						object: synthesisObject,
+						finishReason,
+						usage,
+					} = await generateObject({
+						model: geminiClient("gemini-1.5-flash"),
+						schema: synthesizedResultSchema,
+						prompt: synthesisPrompt,
+						system: synthesisSystemPrompt,
+					});
+
+					console.log(
+						"[webCrawlerTool] Synthesis Finished. Reason:",
+						finishReason,
+						"Usage:",
+						usage,
+					);
+
+					if (finishReason !== "stop" || !synthesisObject) {
+						throw new Error(
+							`Synthesis generation failed or incomplete. Finish reason: ${finishReason}`,
+						);
+					}
+
+					synthesizedAnswer = synthesisObject;
+
+					const synthesisCompleteAnnotation = {
+						toolCallId,
+						id: nanoid(),
+						type: "synthesis",
+						message: `Content synthesis completed in ${((Date.now() - synthesisStartTime) / 1000).toFixed(2)}s.`,
+						status: "complete",
+						data: { durationMs: Date.now() - synthesisStartTime },
+						timestamp: Date.now(),
+					} satisfies AgentToolAnnotation;
+					dataStream.writeMessageAnnotation(synthesisCompleteAnnotation);
+				} catch (error) {
+					console.error("[webCrawlerTool] Error during synthesis:", error);
+					errorMessage = `Failed to synthesize results: ${
+						error instanceof Error ? error.message : "Unknown synthesis error"
+					}`;
+
+					const synthesisErrorAnnotation = {
+						toolCallId,
+						id: nanoid(),
+						type: "synthesis",
+						message: errorMessage,
+						status: "failed",
+						timestamp: Date.now(),
+					} satisfies AgentToolAnnotation;
+					dataStream.writeMessageAnnotation(synthesisErrorAnnotation);
+				}
+			}
+
+			// --- 6. Final Annotation and Return ---
 			const overallDuration = Date.now() - overallStartTime;
+			const status = errorMessage ? "failed" : "complete";
+			const finalMessage = `Web crawl/scrape finished in ${(overallDuration / 1000).toFixed(2)}s. ${
+				errorMessage
+					? `Error: ${errorMessage}`
+					: `Synthesized answer successfully. Processed ${finalSources.length} sources.`
+			}`;
+
 			console.log(
-				`[webCrawlerTool] Completed all tasks in ${(overallDuration / 1000).toFixed(2)}s. Found ${finalSources.length} unique sources.`,
+				`[webCrawlerTool] ${status === "complete" ? "Completed" : "Finished with error"} in ${(overallDuration / 1000).toFixed(2)}s. Returning ${finalSources.length} sources.`,
 			);
 
 			const finalAnnotation = {
 				toolCallId,
 				id: nanoid(),
 				type: "finish",
-				message: `Web crawl/scrape finished in ${(overallDuration / 1000).toFixed(2)}s. Processed ${finalSources.length} sources.`,
-				status: "complete",
-				data: {
-					durationMs: overallDuration,
-					sourceCount: finalSources.length,
-				},
+				message: finalMessage,
+				status: status,
+				data: { durationMs: overallDuration, sourceCount: finalSources.length },
 				timestamp: Date.now(),
 			} satisfies AgentToolAnnotation;
 			dataStream.writeMessageAnnotation(finalAnnotation);
 
-			// Return the final sources and the detailed results
 			return {
+				synthesizedAnswer: synthesizedAnswer,
 				sources: finalSources,
-				results: results, // Return the raw, detailed results keyed by task_id
+				error: errorMessage,
 			};
 		},
 	});
