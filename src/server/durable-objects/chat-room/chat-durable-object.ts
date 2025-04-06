@@ -284,7 +284,7 @@ export class ChatDurableObject extends DurableObject<Env> {
 					this.env.AGENT_DURABLE_OBJECT.idFromString(agentId),
 				);
 
-				await agentDO.processAndRespond({
+				await agentDO.processAndRespondIncomingMessages({
 					chatRoomId: this.ctx.id.toString(),
 					threadId: threadId,
 					newMessages: [newMessage],

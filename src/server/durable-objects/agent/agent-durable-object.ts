@@ -5,13 +5,23 @@ import {
 	processDataStream,
 } from "@server/ai/ai-utils";
 import { agentSystemPrompt } from "@server/ai/prompts/agent-prompt";
-import type { ChatRoomMessage, ChatRoomMessagePartial } from "@shared/types";
+import { createMessageThreadTool } from "@server/ai/tools/create-thread-tool.js";
+import { deepResearchTool } from "@server/ai/tools/deep-search-tool.js";
+import { scheduleWorkflowTool } from "@server/ai/tools/schedule-workflow-tool.js";
+import { webCrawlerTool } from "@server/ai/tools/web-crawler-tool.js";
+import { webSearchTool } from "@server/ai/tools/web-search-tool.js";
+import type {
+	ChatRoomMessage,
+	ChatRoomMessagePartial,
+	Workflow,
+} from "@shared/types";
 import {
 	type DataStreamWriter,
 	createDataStreamResponse,
 	smoothStream,
 	streamText,
 } from "ai";
+import { CronExpressionParser } from "cron-parser";
 import {
 	type DrizzleSqliteDODatabase,
 	drizzle,
@@ -19,10 +29,6 @@ import {
 import { migrate } from "drizzle-orm/durable-sqlite/migrator";
 import migrations from "./db/migrations/migrations.js";
 import { createAgentDbServices } from "./db/services";
-import { webSearchTool } from "@server/ai/tools/web-search-tool.js";
-import { deepResearchTool } from "@server/ai/tools/deep-search-tool.js";
-import { createMessageThreadTool } from "@server/ai/tools/create-thread-tool.js";
-import { webCrawlerTool } from "@server/ai/tools/web-crawler-tool.js";
 
 export class AgentDurableObject extends DurableObject<Env> {
 	storage: DurableObjectStorage;
@@ -43,7 +49,126 @@ export class AgentDurableObject extends DurableObject<Env> {
 		migrate(this.db, migrations);
 	}
 
-	async processAndRespond({
+	async alarm() {
+		await this.handleWorkflowAlarm();
+		await this.scheduleNextWorkflowAlarm();
+	}
+
+	async scheduleNextWorkflowAlarm() {
+		const now = Date.now();
+		const nextTime = await this.dbServices.findNextWorkflowTime(now);
+		const currentAlarm = await this.ctx.storage.getAlarm();
+
+		if (nextTime) {
+			if (currentAlarm !== nextTime) {
+				console.log(
+					`[AgentDO ${this.ctx.id}] Setting next alarm for ${new Date(nextTime).toISOString()}`,
+				);
+				this.ctx.storage.setAlarm(nextTime);
+			} else {
+				console.log(
+					`[AgentDO ${this.ctx.id}] Alarm already set correctly for ${new Date(nextTime).toISOString()}`,
+				);
+			}
+		} else {
+			if (currentAlarm) {
+				console.log(
+					`[AgentDO ${this.ctx.id}] No active tasks, deleting alarm.`,
+				);
+				this.ctx.storage.deleteAlarm();
+			} else {
+				console.log(
+					`[AgentDO ${this.ctx.id}] No active tasks, no alarm to delete.`,
+				);
+			}
+		}
+	}
+
+	async handleWorkflowAlarm() {
+		console.log(
+			`[AgentDO ${this.ctx.id}] Alarm triggered at ${new Date().toISOString()}`,
+		);
+		const now = Date.now();
+		const dueWorkflows = await this.dbServices.getDueWorkflows(now);
+
+		console.log(
+			`[AgentDO ${this.ctx.id}] Found ${dueWorkflows.length} due workflows.`,
+		);
+
+		for (const workflow of dueWorkflows) {
+			console.log(
+				`[AgentDO ${this.ctx.id}] Processing workflow ${workflow.id}`,
+			);
+			await this.executeWorkflow(workflow);
+		}
+	}
+
+	async executeWorkflow(workflow: Workflow) {
+		console.log(`[AgentDO ${this.ctx.id}] Executing workflow ${workflow.id}`);
+		try {
+			await this.processAndRespondWorkflow({ workflow });
+
+			if (workflow.isRecurring) {
+				try {
+					const interval = CronExpressionParser.parse(
+						workflow.scheduleExpression,
+						{
+							tz: "UTC",
+							currentDate: new Date(workflow.nextExecutionTime),
+						},
+					);
+					const nextExecutionTime = interval.next().getTime();
+					console.log(
+						`[AgentDO ${this.ctx.id}] Rescheduling task ${workflow.id} for ${new Date(nextExecutionTime).toISOString()}`,
+					);
+					await this.dbServices.updateWorkflow(workflow.id, {
+						nextExecutionTime,
+						lastExecutionTime: Date.now(),
+					});
+				} catch (error) {
+					console.error(
+						`[AgentDO ${this.ctx.id}] Failed to parse schedule for recurring workflow ${workflow.id}:`,
+						error,
+					);
+					await this.dbServices.updateWorkflow(workflow.id, {
+						lastExecutionTime: Date.now(),
+					});
+				}
+			} else {
+				await this.dbServices.updateWorkflow(workflow.id, {
+					lastExecutionTime: Date.now(),
+				});
+				console.log(
+					`[AgentDO ${this.ctx.id}] Workflow ${workflow.id} completed.`,
+				);
+			}
+		} catch (error) {
+			console.error(
+				`[AgentDO ${this.ctx.id}] Error executing workflow ${workflow.id}:`,
+				error,
+			);
+			await this.dbServices.updateWorkflow(workflow.id, {
+				lastExecutionTime: Date.now(),
+			});
+		}
+	}
+
+	async processAndRespondWorkflow({
+		workflow,
+	}: {
+		workflow: Workflow;
+	}) {
+		console.log(`[AgentDO ${this.ctx.id}] Processing workflow ${workflow.id}`);
+
+		await this.formulateResponse({
+			chatRoomId: workflow.chatRoomId,
+			threadId: null,
+			newMessages: [],
+			contextMessages: [],
+		});
+	}
+
+	async processAndRespondIncomingMessages({
 		chatRoomId,
 		threadId,
 		newMessages,
@@ -54,7 +179,7 @@ export class AgentDurableObject extends DurableObject<Env> {
 		newMessages: ChatRoomMessage[];
 		contextMessages: ChatRoomMessage[];
 	}) {
-		console.log("[processAndRespond] received messages", {
+		console.log("[processAndRespondIncomingMessages] received messages", {
 			chatRoomId,
 			threadId,
 			newMessages,
@@ -62,24 +187,17 @@ export class AgentDurableObject extends DurableObject<Env> {
 		});
 
 		if (newMessages.length === 0) {
-			console.log("[processAndRespond] No new messages to process.");
+			console.log(
+				"[processAndRespondIncomingMessages] No new messages to process.",
+			);
 			return;
 		}
 
-		// @ts-ignore
 		await this.formulateResponse({
 			chatRoomId,
 			threadId,
 			newMessages,
 			contextMessages,
-			onMessage: async ({ newMessagePartial, existingMessageId }) => {
-				const newMessage = await this.sendResponse({
-					chatRoomId: chatRoomId,
-					message: newMessagePartial,
-					existingMessageId: existingMessageId ?? null,
-				});
-				return newMessage;
-			},
 		});
 	}
 
@@ -88,20 +206,27 @@ export class AgentDurableObject extends DurableObject<Env> {
 		threadId: originalThreadId,
 		newMessages,
 		contextMessages,
-		onMessage,
 	}: {
 		chatRoomId: string;
 		threadId: number | null;
 		newMessages: ChatRoomMessage[];
 		contextMessages: ChatRoomMessage[];
-		onMessage: ({
+	}) {
+		const onMessage = async ({
 			newMessagePartial,
 			existingMessageId,
 		}: {
 			newMessagePartial: ChatRoomMessagePartial;
 			existingMessageId?: number | null;
-		}) => Promise<ChatRoomMessage>;
-	}) {
+		}) => {
+			const newMessage = await this.sendResponse({
+				chatRoomId: chatRoomId,
+				message: newMessagePartial,
+				existingMessageId: existingMessageId ?? null,
+			});
+			return newMessage;
+		};
+
 		console.log("[formulateResponse] chatRoomId", chatRoomId);
 		const agentConfig = await this.dbServices.getAgentConfig();
 
@@ -118,6 +243,11 @@ export class AgentDurableObject extends DurableObject<Env> {
 				webSearch: webSearchTool(dataStream),
 				deepResearch: deepResearchTool(dataStream),
 				webCrawl: webCrawlerTool(dataStream),
+				scheduleWorkflow: scheduleWorkflowTool({
+					agentInstance: this,
+					chatRoomId,
+				}),
+				// @ts-ignore Type instantiation is excessively deep and possibly infinite.ts(2589)
 				createMessageThread: createMessageThreadTool({
 					onMessage,
 					onNewThread: (newThreadId) => {
@@ -157,6 +287,7 @@ export class AgentDurableObject extends DurableObject<Env> {
 				},
 			});
 
+			// @ts-ignore Type instantiation is excessively deep and possibly infinite.ts(2589)
 			await processDataStream({
 				response: dataStreamResponse,
 				getThreadId: () => sendMessageThreadId,
