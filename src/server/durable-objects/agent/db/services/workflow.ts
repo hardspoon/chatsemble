@@ -1,7 +1,7 @@
-import type { Workflow, WorkflowSteps } from "@shared/types";
+import type { Workflow, WorkflowPartial, WorkflowSteps } from "@shared/types";
 import { and, asc, eq, gte, lte } from "drizzle-orm";
 import type { DrizzleSqliteDODatabase } from "drizzle-orm/durable-sqlite";
-import { workflows } from "../schema";
+import { agentConfig, workflows } from "../schema";
 
 export function createWorkflowService(db: DrizzleSqliteDODatabase) {
 	return {
@@ -20,6 +20,10 @@ export function createWorkflowService(db: DrizzleSqliteDODatabase) {
 			nextExecutionTime: number;
 			chatRoomId: string;
 		}): Promise<Workflow> {
+			const config = await db.select().from(agentConfig).get();
+			if (!config) {
+				throw new Error("Agent config not found");
+			}
 			const [newWorkflow] = await db
 				.insert(workflows)
 				.values({
@@ -30,6 +34,7 @@ export function createWorkflowService(db: DrizzleSqliteDODatabase) {
 					isRecurring,
 					scheduleExpression,
 					nextExecutionTime,
+					agentId: config.id,
 				})
 				.returning();
 
@@ -37,11 +42,61 @@ export function createWorkflowService(db: DrizzleSqliteDODatabase) {
 				throw new Error("Failed to create workflow");
 			}
 
-			return newWorkflow;
+			const workflow = await this.getWorkflow(newWorkflow.id);
+
+			return workflow;
 		},
 
-		async getDueWorkflows(now: number): Promise<Workflow[]> {
-			return db
+		async getWorkflow(id: string): Promise<Workflow> {
+			const workflow = await db
+				.select()
+				.from(workflows)
+				.where(eq(workflows.id, id))
+				.get();
+			if (!workflow) {
+				throw new Error("Workflow not found");
+			}
+			const config = await db.select().from(agentConfig).get();
+			if (!config) {
+				throw new Error("Agent config not found");
+			}
+			return {
+				...workflow,
+				agent: {
+					id: config.id,
+					name: config.name,
+					email: config.email,
+					image: config.image,
+					role: "member",
+					type: "agent",
+					roomId: workflow.chatRoomId,
+				},
+			};
+		},
+
+		async getWorkflows(): Promise<Workflow[]> {
+			const config = await db.select().from(agentConfig).get();
+			if (!config) {
+				throw new Error("Agent config not found");
+			}
+			const workflowsResult = await db.select().from(workflows);
+			return workflowsResult.map((workflow) => ({
+				...workflow,
+				agent: {
+					id: config.id,
+					name: config.name,
+					email: config.email,
+					image: config.image,
+					role: "member",
+					type: "agent",
+					organizationId: config.organizationId,
+					roomId: workflow.chatRoomId,
+				},
+			}));
+		},
+
+		async getDueWorkflows(now: number): Promise<WorkflowPartial[]> {
+			const workflowsResult = await db
 				.select()
 				.from(workflows)
 				.where(
@@ -51,6 +106,8 @@ export function createWorkflowService(db: DrizzleSqliteDODatabase) {
 						lte(workflows.nextExecutionTime, now),
 					),
 				);
+
+			return workflowsResult;
 		},
 
 		async findNextWorkflowTime(now: number): Promise<number | null> {
@@ -70,7 +127,10 @@ export function createWorkflowService(db: DrizzleSqliteDODatabase) {
 			return nextWorkflow?.nextExecutionTime ?? null;
 		},
 
-		async updateWorkflow(id: string, data: Partial<Workflow>): Promise<void> {
+		async updateWorkflow(
+			id: string,
+			data: Partial<WorkflowPartial>,
+		): Promise<void> {
 			await db.update(workflows).set(data).where(eq(workflows.id, id));
 		},
 	};

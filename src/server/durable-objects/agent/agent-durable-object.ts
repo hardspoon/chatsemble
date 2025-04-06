@@ -12,7 +12,7 @@ import { workflowToPrompt } from "@server/ai/utils/workflow";
 import type {
 	ChatRoomMessage,
 	ChatRoomMessagePartial,
-	Workflow,
+	WorkflowPartial,
 } from "@shared/types";
 import {
 	type DataStreamWriter,
@@ -103,7 +103,7 @@ export class AgentDurableObject extends DurableObject<Env> {
 		}
 	}
 
-	async executeWorkflow(workflow: Workflow) {
+	async executeWorkflow(workflow: WorkflowPartial) {
 		console.log(`[AgentDO ${this.ctx.id}] Executing workflow ${workflow.id}`);
 		try {
 			await this.processAndRespondWorkflow({ workflow });
@@ -156,7 +156,7 @@ export class AgentDurableObject extends DurableObject<Env> {
 	async processAndRespondWorkflow({
 		workflow,
 	}: {
-		workflow: Workflow;
+		workflow: WorkflowPartial;
 	}) {
 		console.log(`[AgentDO ${this.ctx.id}] Processing workflow ${workflow.id}`);
 
@@ -322,6 +322,16 @@ export class AgentDurableObject extends DurableObject<Env> {
 
 	async getAgentConfig() {
 		return this.dbServices.getAgentConfig();
+	}
+
+	async getWorkflows() {
+		return this.dbServices.getWorkflows();
+	}
+
+	async broadcastWorkflowUpdate(chatRoomId: string) {
+		const chatRoomDoId = this.env.CHAT_DURABLE_OBJECT.idFromString(chatRoomId);
+		const chatRoomDO = this.env.CHAT_DURABLE_OBJECT.get(chatRoomDoId);
+		await chatRoomDO.broadcastWorkflowUpdate();
 	}
 
 	async insertAgentConfig(

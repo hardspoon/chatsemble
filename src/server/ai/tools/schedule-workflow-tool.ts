@@ -66,6 +66,13 @@ export const scheduleWorkflowTool = ({
 				});
 				await agentInstance.scheduleNextWorkflowAlarm();
 
+				// Notify the chat room about the new workflow
+				try {
+					await agentInstance.broadcastWorkflowUpdate(chatRoomId);
+				} catch (error) {
+					console.error("Error broadcasting workflow update:", error);
+				}
+
 				return {
 					success: true,
 					workflowId: workflow.id,

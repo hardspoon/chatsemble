@@ -1,18 +1,10 @@
-import { eq } from "drizzle-orm";
 import type { DrizzleSqliteDODatabase } from "drizzle-orm/durable-sqlite";
 import { chatRoomConfig } from "../schema";
 
-export function createChatRoomConfigService(
-	db: DrizzleSqliteDODatabase,
-	chatRoomId: string,
-) {
+export function createChatRoomConfigService(db: DrizzleSqliteDODatabase) {
 	return {
 		async getConfig() {
-			const config = await db
-				.select()
-				.from(chatRoomConfig)
-				.where(eq(chatRoomConfig.id, chatRoomId))
-				.get();
+			const config = await db.select().from(chatRoomConfig).get();
 
 			if (!config) {
 				throw new Error("Chat room config not found");

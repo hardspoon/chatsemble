@@ -1,12 +1,6 @@
 import { z } from "zod";
 import type { Versioned } from "./helper";
-
-export interface WorkflowStep {
-	stepId: string; // Unique identifier within the workflow
-	description: string; // Natural language instruction for this step (guides AI or tool execution)
-	toolName: string | null; // Name of the specific tool to prioritize for this step (e.g., "webSearch", "deepResearch"). Null if AI should use internal capabilities or decide based on description.
-	inputFromSteps?: string[]; // Optional: Array of stepIds whose outputs should be considered as input for this step
-}
+import type { ChatRoomMember } from "./chat";
 
 export const workflowStepSchema = z.object({
 	stepId: z.string().describe("Unique identifier within the workflow"),
@@ -29,11 +23,14 @@ export const workflowStepSchema = z.object({
 		),
 });
 
+type WorkflowStep = z.infer<typeof workflowStepSchema>;
+
 export interface WorkflowSteps
 	extends Versioned<WorkflowStep[], "workflowSteps", 1> {}
 
-export interface Workflow {
+export interface WorkflowPartial {
 	id: string;
+	agentId: string;
 	chatRoomId: string;
 	goal: string;
 	steps: WorkflowSteps;
@@ -44,4 +41,8 @@ export interface Workflow {
 	isActive: boolean;
 	createdAt: number;
 	updatedAt: number;
+}
+
+export interface Workflow extends WorkflowPartial {
+	agent: ChatRoomMember;
 }
