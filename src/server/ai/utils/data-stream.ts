@@ -5,53 +5,7 @@ import type {
 	ChatRoomMessage,
 	ChatRoomMessagePartial,
 } from "@shared/types";
-import type { AgentMessage } from "@shared/types";
-import type { CoreMessage } from "ai";
 import { nanoid } from "nanoid";
-
-export function chatRoomMessagesToAgentMessages(
-	messages: ChatRoomMessage[],
-): AgentMessage[] {
-	const aiMessages: AgentMessage[] = messages.map((msg) => {
-		return {
-			content: msg.content,
-			toolUses: msg.toolUses,
-			member: {
-				id: msg.member.id,
-				name: msg.member.name,
-				type: msg.member.type,
-			},
-		};
-	});
-
-	return aiMessages;
-}
-
-export function agentMessagesToContextCoreMessages(
-	contextMessages: ChatRoomMessage[],
-	newMessages: ChatRoomMessage[],
-): CoreMessage[] {
-	const agentMessagesContext = chatRoomMessagesToAgentMessages(contextMessages);
-	const agentMessagesNew = chatRoomMessagesToAgentMessages(newMessages);
-	return [
-		{
-			role: "system",
-			content: `
-			<conversation_history_context>
-			${JSON.stringify(agentMessagesContext, null, 2)}
-			</conversation_history_context>
-			`,
-		},
-		{
-			role: "user",
-			content: `
-			<new_messages_to_process>
-			${JSON.stringify(agentMessagesNew, null, 2)}
-			</new_messages_to_process>
-			`,
-		},
-	];
-}
 
 const dataStreamTypes = {
 	f: "step-start",
@@ -82,7 +36,7 @@ export async function processDataStream({
 		existingMessageId,
 	}: {
 		newMessagePartial: ChatRoomMessagePartial;
-		existingMessageId?: number | null;
+		existingMessageId: number | null;
 	}) => Promise<ChatRoomMessage>;
 }) {
 	const streamedMessages: Omit<ChatRoomMessage, "member">[] = [];

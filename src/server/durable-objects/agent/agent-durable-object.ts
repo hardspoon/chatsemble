@@ -1,9 +1,6 @@
 import { DurableObject } from "cloudflare:workers";
 import { createOpenAI } from "@ai-sdk/openai";
-import {
-	agentMessagesToContextCoreMessages,
-	processDataStream,
-} from "@server/ai/ai-utils";
+import { processDataStream } from "@server/ai/utils/data-stream";
 import { agentSystemPrompt } from "@server/ai/prompts/agent-prompt";
 import { createMessageThreadTool } from "@server/ai/tools/create-thread-tool.js";
 import { deepResearchTool } from "@server/ai/tools/deep-search-tool.js";
@@ -17,6 +14,7 @@ import type {
 } from "@shared/types";
 import {
 	type DataStreamWriter,
+	type Message,
 	createDataStreamResponse,
 	smoothStream,
 	streamText,
@@ -29,6 +27,7 @@ import {
 import { migrate } from "drizzle-orm/durable-sqlite/migrator";
 import migrations from "./db/migrations/migrations.js";
 import { createAgentDbServices } from "./db/services";
+import { contextAndNewchatRoomMessagesToAIMessages } from "@server/ai/utils/message.js";
 
 export class AgentDurableObject extends DurableObject<Env> {
 	storage: DurableObjectStorage;
@@ -160,12 +159,12 @@ export class AgentDurableObject extends DurableObject<Env> {
 	}) {
 		console.log(`[AgentDO ${this.ctx.id}] Processing workflow ${workflow.id}`);
 
-		await this.formulateResponse({
+		/* await this.formulateResponse({
 			chatRoomId: workflow.chatRoomId,
 			threadId: null,
 			newMessages: [],
 			contextMessages: [],
-		});
+		}); */
 	}
 
 	async processAndRespondIncomingMessages({
@@ -193,40 +192,28 @@ export class AgentDurableObject extends DurableObject<Env> {
 			return;
 		}
 
+		const messages = contextAndNewchatRoomMessagesToAIMessages({
+			contextMessages,
+			newMessages,
+			agentIdForAssistant: this.ctx.id.toString(),
+		});
+
 		await this.formulateResponse({
 			chatRoomId,
 			threadId,
-			newMessages,
-			contextMessages,
+			messages,
 		});
 	}
 
 	private async formulateResponse({
 		chatRoomId,
 		threadId: originalThreadId,
-		newMessages,
-		contextMessages,
+		messages,
 	}: {
 		chatRoomId: string;
 		threadId: number | null;
-		newMessages: ChatRoomMessage[];
-		contextMessages: ChatRoomMessage[];
+		messages: Message[];
 	}) {
-		const onMessage = async ({
-			newMessagePartial,
-			existingMessageId,
-		}: {
-			newMessagePartial: ChatRoomMessagePartial;
-			existingMessageId?: number | null;
-		}) => {
-			const newMessage = await this.sendResponse({
-				chatRoomId: chatRoomId,
-				message: newMessagePartial,
-				existingMessageId: existingMessageId ?? null,
-			});
-			return newMessage;
-		};
-
 		console.log("[formulateResponse] chatRoomId", chatRoomId);
 		const agentConfig = await this.dbServices.getAgentConfig();
 
@@ -249,7 +236,12 @@ export class AgentDurableObject extends DurableObject<Env> {
 				}),
 				// @ts-ignore Type instantiation is excessively deep and possibly infinite.ts(2589)
 				createMessageThread: createMessageThreadTool({
-					onMessage,
+					onMessage: async ({ newMessagePartial }) =>
+						await this.sendResponse({
+							chatRoomId: chatRoomId,
+							message: newMessagePartial,
+							existingMessageId: null,
+						}),
 					onNewThread: (newThreadId) => {
 						console.log("[formulateResponse] onNewThread", newThreadId);
 						sendMessageThreadId = newThreadId;
@@ -264,10 +256,6 @@ export class AgentDurableObject extends DurableObject<Env> {
 			threadId: sendMessageThreadId,
 		});
 
-		const messages = agentMessagesToContextCoreMessages(
-			contextMessages,
-			newMessages,
-		);
 		try {
 			const dataStreamResponse = createDataStreamResponse({
 				execute: async (dataStream) => {
@@ -292,7 +280,12 @@ export class AgentDurableObject extends DurableObject<Env> {
 				response: dataStreamResponse,
 				getThreadId: () => sendMessageThreadId,
 				omitSendingTool: ["createMessageThread"],
-				onMessageSend: onMessage,
+				onMessageSend: async ({ newMessagePartial, existingMessageId }) =>
+					await this.sendResponse({
+						chatRoomId: chatRoomId,
+						message: newMessagePartial,
+						existingMessageId: existingMessageId,
+					}),
 			});
 		} catch (error) {
 			console.error("[formulateResponse] error", error);
