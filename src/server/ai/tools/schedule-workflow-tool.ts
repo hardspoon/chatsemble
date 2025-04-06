@@ -1,8 +1,8 @@
+import { workflowStepSchema } from "@shared/types";
 import { tool } from "ai";
 import { CronExpressionParser } from "cron-parser";
 import { z } from "zod";
 import type { AgentDurableObject } from "../../durable-objects/agent/agent-durable-object";
-import { workflowStepSchema } from "@shared/types";
 
 export const scheduleWorkflowTool = ({
 	agentInstance,
@@ -18,7 +18,7 @@ export const scheduleWorkflowTool = ({
 			scheduleExpression: z
 				.string()
 				.describe(
-					"The schedule (e.g., ISO 8601 for one-off, CRON string like '0 9 * * 1' for recurring).",
+					"The schedule (e.g., Date string like '2025-04-06T12:00:00Z' for one-off, CRON string like '0 9 * * 1' for recurring).",
 				),
 			goal: z.string().describe("The goal of the workflow."),
 			steps: z
@@ -57,14 +57,14 @@ export const scheduleWorkflowTool = ({
 					steps: {
 						version: 1,
 						type: "workflowSteps",
-						steps,
+						data: steps,
 					},
 					scheduleExpression,
 					isRecurring,
 					nextExecutionTime,
 					chatRoomId,
 				});
-				//await agentInstance.scheduleNextAlarm(); // Recalculate and set the DO alarm
+				await agentInstance.scheduleNextWorkflowAlarm();
 
 				return {
 					success: true,

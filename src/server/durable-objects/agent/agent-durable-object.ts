@@ -1,12 +1,14 @@
 import { DurableObject } from "cloudflare:workers";
 import { createOpenAI } from "@ai-sdk/openai";
-import { processDataStream } from "@server/ai/utils/data-stream";
 import { agentSystemPrompt } from "@server/ai/prompts/agent-prompt";
-import { createMessageThreadTool } from "@server/ai/tools/create-thread-tool.js";
-import { deepResearchTool } from "@server/ai/tools/deep-search-tool.js";
-import { scheduleWorkflowTool } from "@server/ai/tools/schedule-workflow-tool.js";
-import { webCrawlerTool } from "@server/ai/tools/web-crawler-tool.js";
-import { webSearchTool } from "@server/ai/tools/web-search-tool.js";
+import { createMessageThreadTool } from "@server/ai/tools/create-thread-tool";
+import { deepResearchTool } from "@server/ai/tools/deep-search-tool";
+import { scheduleWorkflowTool } from "@server/ai/tools/schedule-workflow-tool";
+import { webCrawlerTool } from "@server/ai/tools/web-crawler-tool";
+import { webSearchTool } from "@server/ai/tools/web-search-tool";
+import { processDataStream } from "@server/ai/utils/data-stream";
+import { contextAndNewchatRoomMessagesToAIMessages } from "@server/ai/utils/message";
+import { workflowToPrompt } from "@server/ai/utils/workflow";
 import type {
 	ChatRoomMessage,
 	ChatRoomMessagePartial,
@@ -25,9 +27,8 @@ import {
 	drizzle,
 } from "drizzle-orm/durable-sqlite";
 import { migrate } from "drizzle-orm/durable-sqlite/migrator";
-import migrations from "./db/migrations/migrations.js";
+import migrations from "./db/migrations/migrations";
 import { createAgentDbServices } from "./db/services";
-import { contextAndNewchatRoomMessagesToAIMessages } from "@server/ai/utils/message.js";
 
 export class AgentDurableObject extends DurableObject<Env> {
 	storage: DurableObjectStorage;
@@ -159,12 +160,17 @@ export class AgentDurableObject extends DurableObject<Env> {
 	}) {
 		console.log(`[AgentDO ${this.ctx.id}] Processing workflow ${workflow.id}`);
 
-		/* await this.formulateResponse({
+		await this.formulateResponse({
 			chatRoomId: workflow.chatRoomId,
 			threadId: null,
-			newMessages: [],
-			contextMessages: [],
-		}); */
+			messages: [
+				{
+					id: "1",
+					content: workflowToPrompt(workflow),
+					role: "user",
+				},
+			],
+		});
 	}
 
 	async processAndRespondIncomingMessages({
@@ -284,7 +290,7 @@ export class AgentDurableObject extends DurableObject<Env> {
 					await this.sendResponse({
 						chatRoomId: chatRoomId,
 						message: newMessagePartial,
-						existingMessageId: existingMessageId,
+						existingMessageId,
 					}),
 			});
 		} catch (error) {
@@ -329,4 +335,50 @@ export class AgentDurableObject extends DurableObject<Env> {
 	) {
 		await this.dbServices.updateAgentConfig(agentConfigData);
 	}
+
+	/* async createWorkflow({
+		scheduleExpression,
+		goal,
+		steps,
+		chatRoomId,
+	}: {
+		scheduleExpression: string;
+		goal: string;
+		steps: WorkflowSteps;
+		chatRoomId: string;
+	}) {
+		let nextExecutionTime: number;
+		let isRecurring: boolean;
+
+		try {
+			const interval = CronExpressionParser.parse(scheduleExpression, {
+				tz: "UTC",
+			});
+
+			nextExecutionTime = interval.next().getTime();
+			isRecurring = true;
+		} catch (_error) {
+			const date = new Date(scheduleExpression);
+			if (!Number.isNaN(date.getTime())) {
+				nextExecutionTime = date.getTime();
+				isRecurring = false;
+				if (nextExecutionTime <= Date.now()) {
+					throw new Error("Scheduled time must be in the future.");
+				}
+			} else {
+				throw new Error(`Invalid scheduleExpression: ${scheduleExpression}`);
+			}
+		}
+
+		const workflow = await this.dbServices.createWorkflow({
+			goal,
+			steps,
+			scheduleExpression,
+			isRecurring,
+			nextExecutionTime,
+			chatRoomId,
+		});
+
+		return workflow;
+	} */
 }

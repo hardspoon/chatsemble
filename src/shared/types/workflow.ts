@@ -1,4 +1,5 @@
 import { z } from "zod";
+import type { Versioned } from "./helper";
 
 export interface WorkflowStep {
 	stepId: string; // Unique identifier within the workflow
@@ -28,11 +29,8 @@ export const workflowStepSchema = z.object({
 		),
 });
 
-export interface WorkflowSteps {
-	version: 1;
-	type: "workflowSteps"; // Discriminator type
-	steps: WorkflowStep[];
-}
+export interface WorkflowSteps
+	extends Versioned<WorkflowStep[], "workflowSteps", 1> {}
 
 export interface Workflow {
 	id: string;

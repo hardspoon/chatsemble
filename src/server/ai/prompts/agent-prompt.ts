@@ -105,6 +105,7 @@ export function agentSystemPrompt({
 <chat_room_info_context>
     - chatRoomId: ${chatRoomId}
     - threadId: ${threadId ?? "null"}
+    - currentTime: ${new Date().toISOString()}
 </chat_room_info_context>
 `;
 }

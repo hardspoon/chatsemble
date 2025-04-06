@@ -72,10 +72,7 @@ function NewChatRoomDialogContent({
 			queryClient.invalidateQueries({ queryKey: ["chatRooms"] });
 			router.navigate({
 				to: "/chat",
-				search: (prev) => ({
-					...prev,
-					roomId: data.roomId,
-				}),
+				search: { roomId: data.roomId },
 			});
 			setDialogState(null);
 		},

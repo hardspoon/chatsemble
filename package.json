@@ -11,6 +11,8 @@
 		"deploy": "wrangler deploy",
 		"cf-types": "wrangler types",
 		"db:generate": "drizzle-kit generate",
+		"db:generate:chat": "DRIZZLE_SCHEMA=./src/server/durable-objects/chat-room/db/schema.ts DRIZZLE_OUT=./src/server/durable-objects/chat-room/db/migrations drizzle-kit generate --config=drizzle.do.config.ts",
+		"db:generate:agent": "DRIZZLE_SCHEMA=./src/server/durable-objects/agent/db/schema.ts DRIZZLE_OUT=./src/server/durable-objects/agent/db/migrations drizzle-kit generate --config=drizzle.do.config.ts",
 		"db:migrate:dev": "wrangler d1 migrations apply chatsemble-db --local",
 		"db:migrate:prod": "wrangler d1 migrations apply chatsemble-db --remote",
 		"db:seed:dev": "tsx src/server/db/seed.ts",
