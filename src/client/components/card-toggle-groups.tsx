@@ -35,11 +35,11 @@ export function CardToggleGroup<T extends string>({
 						key={option}
 						value={option}
 						variant="outline"
-						className="flex flex-col items-center gap-1 h-full py-3 px-4"
+						className="flex flex-col items-stretch gap-1 h-full py-3 px-4"
 					>
-						<Icon className="h-4 w-4" />
+						<Icon className="h-4 w-4 mx-auto" />
 						<span>{idToReadableText(option, { capitalize: true })}</span>
-						<span className="text-xs text-muted-foreground text-center break-words">
+						<span className="text-xs text-muted-foreground text-center line-clamp-2 break-words">
 							{descriptions[option]}
 						</span>
 					</ToggleGroupItem>

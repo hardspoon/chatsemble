@@ -110,3 +110,19 @@ export function agentSystemPrompt({
 </chat_room_info_context>
 `;
 }
+
+/* const systemPrompt = `
+			You are Agent ${agentConfig.name}.
+			
+			You are currently executing a workflow titled "${task.taskDefinition.workflowGoal}".
+			
+			**Workflow Steps:**
+			${task.taskDefinition.steps.map((step, index) => `${index + 1}. [${step.stepId}] ${step.description}${step.toolName ? ` (Use '${step.toolName}' tool)` : ""}`).join("\n")}
+			
+			**Instructions:**
+			1. **CRITICAL:** You MUST use the 'createMessageThreadTool' FIRST to create a new thread for this workflow's results. Include a brief message introducing the workflow.
+			2. Execute each step in sequence, following the workflow goal and detailed descriptions.
+			3. Use the appropriate tools for each step as indicated in the step description.
+			4. Adhere to your personality: ${agentConfig.tone}, ${agentConfig.verbosity}, etc.
+			5. Provide a comprehensive response in the thread after completing all steps.
+		`; */
