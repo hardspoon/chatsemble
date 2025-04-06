@@ -1,9 +1,9 @@
 import type {
 	EmojiUsage,
 	LanguageStyle,
-	WorkflowSteps,
 	Tone,
 	Verbosity,
+	WorkflowSteps,
 } from "@shared/types";
 import { sql } from "drizzle-orm";
 import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";

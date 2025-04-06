@@ -1,5 +1,5 @@
 import type { Workflow, WorkflowSteps } from "@shared/types";
-import { eq, and, lte, asc, gte } from "drizzle-orm";
+import { and, asc, eq, gte, lte } from "drizzle-orm";
 import type { DrizzleSqliteDODatabase } from "drizzle-orm/durable-sqlite";
 import { workflows } from "../schema";
 
@@ -72,18 +72,6 @@ export function createWorkflowService(db: DrizzleSqliteDODatabase) {
 
 		async updateWorkflow(id: string, data: Partial<Workflow>): Promise<void> {
 			await db.update(workflows).set(data).where(eq(workflows.id, id));
-		},
-
-		async getWorkflowById(id: string): Promise<Workflow | undefined> {
-			return db.select().from(workflows).where(eq(workflows.id, id)).get();
-		},
-
-		async deleteWorkflow(id: string): Promise<void> {
-			await db.delete(workflows).where(eq(workflows.id, id));
-		},
-
-		async getAllWorkflows(): Promise<Workflow[]> {
-			return db.select().from(workflows);
 		},
 	};
 }

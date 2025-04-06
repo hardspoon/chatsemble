@@ -11,14 +11,14 @@ import type {
 import { generateObject } from "ai";
 
 import { routeMessageToAgentSystemPrompt } from "@server/ai/prompts/router-prompt";
+import { contextAndNewchatRoomMessagesToAIMessages } from "@server/ai/utils/message";
 import type { Session } from "@server/types/session";
 import { drizzle } from "drizzle-orm/durable-sqlite";
 import type { DrizzleSqliteDODatabase } from "drizzle-orm/durable-sqlite";
 import { migrate } from "drizzle-orm/durable-sqlite/migrator";
 import { z } from "zod";
-import migrations from "./db/migrations/migrations.js";
+import migrations from "./db/migrations/migrations";
 import { createChatRoomDbServices } from "./db/services";
-import { contextAndNewchatRoomMessagesToAIMessages } from "@server/ai/utils/message.js";
 
 export class ChatDurableObject extends DurableObject<Env> {
 	storage: DurableObjectStorage;
