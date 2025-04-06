@@ -13,13 +13,13 @@ import { generateObject } from "ai";
 import { routeMessageToAgentSystemPrompt } from "@server/ai/prompts/router-prompt";
 import { contextAndNewchatRoomMessagesToAIMessages } from "@server/ai/utils/message";
 import type { Session } from "@server/types/session";
+import type { Workflow } from "@shared/types";
 import { drizzle } from "drizzle-orm/durable-sqlite";
 import type { DrizzleSqliteDODatabase } from "drizzle-orm/durable-sqlite";
 import { migrate } from "drizzle-orm/durable-sqlite/migrator";
 import { z } from "zod";
 import migrations from "./db/migrations/migrations";
 import { createChatRoomDbServices } from "./db/services";
-import type { Workflow } from "@shared/types";
 
 export class ChatDurableObject extends DurableObject<Env> {
 	storage: DurableObjectStorage;

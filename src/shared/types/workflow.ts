@@ -1,6 +1,6 @@
 import { z } from "zod";
-import type { Versioned } from "./helper";
 import type { ChatRoomMember } from "./chat";
+import type { Versioned } from "./helper";
 
 export const workflowStepSchema = z.object({
 	stepId: z.string().describe("Unique identifier within the workflow"),
