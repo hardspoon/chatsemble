@@ -19,6 +19,7 @@ import { migrate } from "drizzle-orm/durable-sqlite/migrator";
 import { z } from "zod";
 import migrations from "./db/migrations/migrations";
 import { createChatRoomDbServices } from "./db/services";
+import type { Workflow } from "@shared/types";
 
 export class ChatDurableObject extends DurableObject<Env> {
 	storage: DurableObjectStorage;
@@ -36,7 +37,7 @@ export class ChatDurableObject extends DurableObject<Env> {
 			await this.migrate();
 		});
 
-		this.dbServices = createChatRoomDbServices(this.db, this.ctx.id.toString());
+		this.dbServices = createChatRoomDbServices(this.db);
 
 		// Restore any existing WebSocket sessions
 		for (const webSocket of ctx.getWebSockets()) {
@@ -102,6 +103,7 @@ export class ChatDurableObject extends DurableObject<Env> {
 							}),
 							members: await this.getMembers(),
 							room: await this.getConfig(),
+							workflows: await this.getAgentWorkflows(),
 						},
 						session.userId,
 					);
@@ -416,5 +418,33 @@ export class ChatDurableObject extends DurableObject<Env> {
 
 	async getConfig() {
 		return this.dbServices.getConfig();
+	}
+
+	async getAgentWorkflows() {
+		const agentMembers = await this.getMembers({ type: "agent" });
+		const allWorkflows: Workflow[] = [];
+
+		for (const agent of agentMembers) {
+			try {
+				const agentDO = this.env.AGENT_DURABLE_OBJECT.get(
+					this.env.AGENT_DURABLE_OBJECT.idFromString(agent.id),
+				);
+
+				const workflows = await agentDO.getWorkflows();
+				allWorkflows.push(...workflows);
+			} catch (error) {
+				console.error(`Error fetching workflows for agent ${agent.id}:`, error);
+			}
+		}
+
+		return allWorkflows;
+	}
+
+	async broadcastWorkflowUpdate() {
+		const workflows = await this.getAgentWorkflows();
+		this.broadcastWebSocketMessage({
+			type: "workflow-update",
+			workflows,
+		});
 	}
 }

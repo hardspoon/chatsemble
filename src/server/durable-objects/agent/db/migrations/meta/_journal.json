@@ -1,20 +1,27 @@
 {
-	"version": "7",
-	"dialect": "sqlite",
-	"entries": [
-		{
-			"idx": 0,
-			"version": "6",
-			"when": 1743246700426,
-			"tag": "0000_round_rawhide_kid",
-			"breakpoints": true
-		},
-		{
-			"idx": 1,
-			"version": "6",
-			"when": 1743929162888,
-			"tag": "0001_many_magneto",
-			"breakpoints": true
-		}
-	]
+  "version": "7",
+  "dialect": "sqlite",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1743246700426,
+      "tag": "0000_round_rawhide_kid",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1743929162888,
+      "tag": "0001_many_magneto",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1743937344725,
+      "tag": "0002_opposite_masked_marvel",
+      "breakpoints": true
+    }
+  ]
 }

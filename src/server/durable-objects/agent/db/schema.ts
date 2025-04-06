@@ -30,6 +30,7 @@ export const workflows = sqliteTable("workflows", {
 	id: text("id")
 		.primaryKey()
 		.$defaultFn(() => nanoid(36)), // Workflow unique ID
+	agentId: text("agent_id").notNull(),
 	chatRoomId: text("chat_room_id").notNull(),
 	goal: text("goal").notNull(),
 	steps: text("steps", { mode: "json" }).$type<WorkflowSteps>().notNull(),
