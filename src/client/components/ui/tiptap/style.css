@@ -161,8 +161,8 @@
 
 /* Mention styling */
 .tiptap .mention {
-	background: var(--accent-foreground) !important; /* Replaces @apply bg-accent */
-	color: var(--accent) !important; /* Replaces @apply text-accent-foreground */
+	background: var(--primary) !important; /* Replaces @apply bg-accent */
+	color: var(--primary-foreground) !important; /* Replaces @apply text-accent-foreground */
 	border-radius: 6px; /* Replaces @apply rounded-sm */
 	padding: 0.125rem 0.5rem; /* py-0.5 px-2 */
 	font-weight: 500; /* Add medium weight */

@@ -182,7 +182,7 @@ const components: Partial<Components> = {
 			return (
 				<span
 					className={cn(
-						"bg-accent text-accent-foreground rounded-sm px-2 py-0.5",
+						"bg-primary text-primary-foreground rounded-sm px-2 py-0.5",
 						className,
 					)}
 					data-type={dataType}
