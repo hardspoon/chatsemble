@@ -10,10 +10,7 @@ import type {
 } from "@shared/types";
 import { generateObject } from "ai";
 
-import {
-	routeMessageToAgentSystemPrompt,
-	routeMessageToAgentUserPrompt,
-} from "@server/ai/prompts/router-prompt";
+import { routeMessageToAgentSystemPrompt } from "@server/ai/prompts/router-prompt";
 import type { Session } from "@server/types/session";
 import { drizzle } from "drizzle-orm/durable-sqlite";
 import type { DrizzleSqliteDODatabase } from "drizzle-orm/durable-sqlite";
@@ -21,6 +18,7 @@ import { migrate } from "drizzle-orm/durable-sqlite/migrator";
 import { z } from "zod";
 import migrations from "./db/migrations/migrations.js";
 import { createChatRoomDbServices } from "./db/services";
+import { contextAndNewchatRoomMessagesToAIMessages } from "@server/ai/utils/message.js";
 
 export class ChatDurableObject extends DurableObject<Env> {
 	storage: DurableObjectStorage;
@@ -347,6 +345,11 @@ export class ChatDurableObject extends DurableObject<Env> {
 				}),
 			);
 
+			const aiMessages = contextAndNewchatRoomMessagesToAIMessages({
+				contextMessages,
+				newMessages,
+			});
+
 			const { object: targetAgents } = await generateObject({
 				model: openAIClient("gpt-4o-mini"),
 				system: routeMessageToAgentSystemPrompt({ agents: agentList, room }),
@@ -357,10 +360,7 @@ export class ChatDurableObject extends DurableObject<Env> {
 							`List of agent IDs that should respond to the messages. Include ID only if agent is relevant. Max ${agents.length} agents. Possible IDs: ${agents.map((a) => a.id).join(", ")}.`,
 						),
 				}),
-				prompt: routeMessageToAgentUserPrompt({
-					newMessages,
-					contextMessages,
-				}),
+				messages: aiMessages,
 			});
 
 			const validAgentIds = (targetAgents.agentIds || []).filter((id) =>
