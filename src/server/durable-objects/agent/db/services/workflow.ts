@@ -133,5 +133,9 @@ export function createWorkflowService(db: DrizzleSqliteDODatabase) {
 		): Promise<void> {
 			await db.update(workflows).set(data).where(eq(workflows.id, id));
 		},
+
+		async deleteWorkflow(id: string): Promise<void> {
+			await db.delete(workflows).where(eq(workflows.id, id));
+		},
 	};
 }

@@ -320,18 +320,23 @@ export class AgentDurableObject extends DurableObject<Env> {
 		return chatRoomMessage;
 	}
 
-	async getAgentConfig() {
-		return this.dbServices.getAgentConfig();
-	}
-
 	async getWorkflows() {
 		return this.dbServices.getWorkflows();
+	}
+
+	async deleteWorkflow(chatRoomId: string, workflowId: string) {
+		await this.dbServices.deleteWorkflow(workflowId);
+		await this.broadcastWorkflowUpdate(chatRoomId);
 	}
 
 	async broadcastWorkflowUpdate(chatRoomId: string) {
 		const chatRoomDoId = this.env.CHAT_DURABLE_OBJECT.idFromString(chatRoomId);
 		const chatRoomDO = this.env.CHAT_DURABLE_OBJECT.get(chatRoomDoId);
 		await chatRoomDO.broadcastWorkflowUpdate();
+	}
+
+	async getAgentConfig() {
+		return this.dbServices.getAgentConfig();
 	}
 
 	async insertAgentConfig(
@@ -345,50 +350,4 @@ export class AgentDurableObject extends DurableObject<Env> {
 	) {
 		await this.dbServices.updateAgentConfig(agentConfigData);
 	}
-
-	/* async createWorkflow({
-		scheduleExpression,
-		goal,
-		steps,
-		chatRoomId,
-	}: {
-		scheduleExpression: string;
-		goal: string;
-		steps: WorkflowSteps;
-		chatRoomId: string;
-	}) {
-		let nextExecutionTime: number;
-		let isRecurring: boolean;
-
-		try {
-			const interval = CronExpressionParser.parse(scheduleExpression, {
-				tz: "UTC",
-			});
-
-			nextExecutionTime = interval.next().getTime();
-			isRecurring = true;
-		} catch (_error) {
-			const date = new Date(scheduleExpression);
-			if (!Number.isNaN(date.getTime())) {
-				nextExecutionTime = date.getTime();
-				isRecurring = false;
-				if (nextExecutionTime <= Date.now()) {
-					throw new Error("Scheduled time must be in the future.");
-				}
-			} else {
-				throw new Error(`Invalid scheduleExpression: ${scheduleExpression}`);
-			}
-		}
-
-		const workflow = await this.dbServices.createWorkflow({
-			goal,
-			steps,
-			scheduleExpression,
-			isRecurring,
-			nextExecutionTime,
-			chatRoomId,
-		});
-
-		return workflow;
-	} */
 }
