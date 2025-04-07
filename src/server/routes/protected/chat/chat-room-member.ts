@@ -180,6 +180,11 @@ const app = new Hono<HonoContextWithAuth>()
 			throw new Error("Unauthorized");
 		}
 
+		console.log("[deleteChatRoomMember] Removing member", {
+			memberId,
+			chatRoomId,
+		});
+
 		// Get the member to be removed
 		const member = await db
 			.select()

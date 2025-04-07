@@ -1,6 +1,11 @@
 import { DurableObject } from "cloudflare:workers";
 import { createOpenAI } from "@ai-sdk/openai";
-import { agentSystemPrompt } from "@server/ai/prompts/agent-prompt";
+import { getDefaultAgentSystemPrompt } from "@server/ai/prompts/agent/default-prompt";
+import {
+	getWorkflowAgentSystemPrompt,
+	getWorkflowAgentUserPrompt,
+} from "@server/ai/prompts/agent/workflow-prompt";
+import { agentToolSetKeys } from "@server/ai/tools";
 import { createMessageThreadTool } from "@server/ai/tools/create-thread-tool";
 import { deepResearchTool } from "@server/ai/tools/deep-search-tool";
 import { scheduleWorkflowTool } from "@server/ai/tools/schedule-workflow-tool";
@@ -8,7 +13,6 @@ import { webCrawlerTool } from "@server/ai/tools/web-crawler-tool";
 import { webSearchTool } from "@server/ai/tools/web-search-tool";
 import { processDataStream } from "@server/ai/utils/data-stream";
 import { contextAndNewchatRoomMessagesToAIMessages } from "@server/ai/utils/message";
-import { workflowToPrompt } from "@server/ai/utils/workflow";
 import type {
 	ChatRoomMessage,
 	ChatRoomMessagePartial,
@@ -58,6 +62,8 @@ export class AgentDurableObject extends DurableObject<Env> {
 		const now = Date.now();
 		const nextTime = await this.dbServices.findNextWorkflowTime(now);
 		const currentAlarm = await this.ctx.storage.getAlarm();
+		console.log("[scheduleNextWorkflowAlarm] nextTime", nextTime);
+		console.log("[scheduleNextWorkflowAlarm] currentAlarm", currentAlarm);
 
 		if (nextTime) {
 			if (currentAlarm !== nextTime) {
@@ -137,6 +143,7 @@ export class AgentDurableObject extends DurableObject<Env> {
 			} else {
 				await this.dbServices.updateWorkflow(workflow.id, {
 					lastExecutionTime: Date.now(),
+					isActive: false,
 				});
 				console.log(
 					`[AgentDO ${this.ctx.id}] Workflow ${workflow.id} completed.`,
@@ -158,7 +165,18 @@ export class AgentDurableObject extends DurableObject<Env> {
 	}: {
 		workflow: WorkflowPartial;
 	}) {
-		console.log(`[AgentDO ${this.ctx.id}] Processing workflow ${workflow.id}`);
+		console.log(`[AgentDO ${this.ctx.id}] Processing workflow :`, workflow);
+
+		const agentConfig = await this.dbServices.getAgentConfig();
+
+		const workflowPrompt = getWorkflowAgentUserPrompt({ workflow });
+
+		console.log(`[AgentDO ${this.ctx.id}] Workflow prompt: ${workflowPrompt}`);
+
+		const systemPrompt = getWorkflowAgentSystemPrompt({
+			agentConfig,
+			chatRoomId: workflow.chatRoomId,
+		});
 
 		await this.formulateResponse({
 			chatRoomId: workflow.chatRoomId,
@@ -166,10 +184,12 @@ export class AgentDurableObject extends DurableObject<Env> {
 			messages: [
 				{
 					id: "1",
-					content: workflowToPrompt(workflow),
+					content: workflowPrompt,
 					role: "user",
 				},
 			],
+			systemPrompt,
+			removeTools: ["scheduleWorkflow"],
 		});
 	}
 
@@ -184,19 +204,11 @@ export class AgentDurableObject extends DurableObject<Env> {
 		newMessages: ChatRoomMessage[];
 		contextMessages: ChatRoomMessage[];
 	}) {
-		console.log("[processAndRespondIncomingMessages] received messages", {
-			chatRoomId,
-			threadId,
-			newMessages,
-			contextMessages,
-		});
-
 		if (newMessages.length === 0) {
-			console.log(
-				"[processAndRespondIncomingMessages] No new messages to process.",
-			);
 			return;
 		}
+
+		const agentConfig = await this.dbServices.getAgentConfig();
 
 		const messages = contextAndNewchatRoomMessagesToAIMessages({
 			contextMessages,
@@ -204,10 +216,17 @@ export class AgentDurableObject extends DurableObject<Env> {
 			agentIdForAssistant: this.ctx.id.toString(),
 		});
 
+		const systemPrompt = getDefaultAgentSystemPrompt({
+			agentConfig,
+			chatRoomId: chatRoomId,
+			threadId: threadId, // Pass the current threadId
+		});
+
 		await this.formulateResponse({
 			chatRoomId,
 			threadId,
 			messages,
+			systemPrompt,
 		});
 	}
 
@@ -215,13 +234,16 @@ export class AgentDurableObject extends DurableObject<Env> {
 		chatRoomId,
 		threadId: originalThreadId,
 		messages,
+		systemPrompt,
+		removeTools,
 	}: {
 		chatRoomId: string;
 		threadId: number | null;
 		messages: Message[];
+		systemPrompt: string;
+		removeTools?: string[];
 	}) {
 		console.log("[formulateResponse] chatRoomId", chatRoomId);
-		const agentConfig = await this.dbServices.getAgentConfig();
 
 		const openAIClient = createOpenAI({
 			baseURL: this.env.AI_GATEWAY_OPENAI_URL,
@@ -256,11 +278,9 @@ export class AgentDurableObject extends DurableObject<Env> {
 			};
 		};
 
-		const systemPrompt = agentSystemPrompt({
-			agentConfig,
-			chatRoomId: chatRoomId,
-			threadId: sendMessageThreadId,
-		});
+		const activeTools = agentToolSetKeys.filter(
+			(tool) => !removeTools?.includes(tool),
+		);
 
 		try {
 			const dataStreamResponse = createDataStreamResponse({
@@ -277,6 +297,7 @@ export class AgentDurableObject extends DurableObject<Env> {
 						onError: (error) => {
 							console.error("[formulateResponse] onError", error);
 						},
+						experimental_activeTools: activeTools,
 					}).mergeIntoDataStream(dataStream);
 				},
 			});
