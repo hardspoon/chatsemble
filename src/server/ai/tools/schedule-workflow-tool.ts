@@ -18,9 +18,13 @@ export const scheduleWorkflowTool = ({
 			scheduleExpression: z
 				.string()
 				.describe(
-					"The schedule (e.g., Date string like '2025-04-06T12:00:00Z' for one-off, CRON string like '0 9 * * 1' for recurring).",
+					"The schedule (e.g., Date string ending with 'Z' like '2025-04-06T12:00:00Z' for one-off, CRON string like '0 9 * * 1' for recurring).",
 				),
-			goal: z.string().describe("The goal of the workflow."),
+			goal: z
+				.string()
+				.describe(
+					"The goal of the workflow, In this goal DO NOT include information about schedule like 'every Monday at 9am'.",
+				),
 			steps: z
 				.array(workflowStepSchema)
 				.describe("The JSON object defining the steps of the workflow."),
@@ -64,9 +68,9 @@ export const scheduleWorkflowTool = ({
 					nextExecutionTime,
 					chatRoomId,
 				});
+				console.log("[scheduleWorkflowTool] Workflow scheduled", workflow);
 				await agentInstance.scheduleNextWorkflowAlarm();
 
-				// Notify the chat room about the new workflow
 				try {
 					await agentInstance.broadcastWorkflowUpdate(chatRoomId);
 				} catch (error) {

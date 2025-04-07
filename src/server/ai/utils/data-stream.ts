@@ -55,11 +55,11 @@ export async function processDataStream({
 		const parsedData = JSON.parse(text.slice(2));
 
 		const currentThreadId = getThreadId();
-		console.log("[processDataStream] ", {
+		/* console.log("[processDataStream] ", {
 			currentThreadId,
 			type,
 			parsedData: JSON.stringify(parsedData, null, 2),
-		});
+		}); */
 
 		switch (type) {
 			case "step-start": {
@@ -208,9 +208,6 @@ export async function processDataStream({
 
 				const currentMessage = streamedMessages[streamedMessages.length - 1];
 				if (!currentMessage) {
-					console.error(
-						"[processDataStream] No current message found for annotation",
-					);
 					break;
 				}
 
@@ -222,10 +219,6 @@ export async function processDataStream({
 
 				// If tool use doesn't exist, create a temporary one
 				if (toolUseIndex === -1) {
-					console.warn(
-						`[processDataStream] Tool use with ID ${annotation.toolCallId} not found for annotation. Creating temporary tool.`,
-					);
-
 					// Create temporary tool call
 					const temporaryToolUse: AgentToolUse = {
 						type: "tool-call",
@@ -269,7 +262,6 @@ export async function processDataStream({
 				break;
 			}
 			case "finish": {
-				console.log("[processDataStream] Stream finished", streamedMessages);
 				break;
 			}
 			case "error": {

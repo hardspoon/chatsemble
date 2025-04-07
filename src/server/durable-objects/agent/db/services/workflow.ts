@@ -102,7 +102,6 @@ export function createWorkflowService(db: DrizzleSqliteDODatabase) {
 				.where(
 					and(
 						eq(workflows.isActive, true),
-						eq(workflows.isRecurring, true),
 						lte(workflows.nextExecutionTime, now),
 					),
 				);
@@ -117,7 +116,6 @@ export function createWorkflowService(db: DrizzleSqliteDODatabase) {
 				.where(
 					and(
 						eq(workflows.isActive, true),
-						eq(workflows.isRecurring, true),
 						gte(workflows.nextExecutionTime, now),
 					),
 				)
