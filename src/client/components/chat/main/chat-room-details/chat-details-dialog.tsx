@@ -13,11 +13,16 @@ import {
 	TabsList,
 	TabsTrigger,
 } from "@client/components/ui/tabs";
-import { Info, UserPlus } from "lucide-react";
+import { Calendar, Info, UserPlus } from "lucide-react";
 import { ChatDetailsMembersSection } from "./chat-details-members-section";
 import { ChatDetailsSection } from "./chat-details-section";
+import { ChatDetailsWorkflowsSection } from "./chat-details-workflows-section";
 
-type ChatDetailsDialogView = "details" | "configuration" | "members";
+type ChatDetailsDialogView =
+	| "details"
+	| "configuration"
+	| "members"
+	| "workflows";
 
 export type ChatDetailsDialogOpen = {
 	view: ChatDetailsDialogView;
@@ -44,8 +49,8 @@ export function ChatDetailsDialog({
 				}
 			}}
 		>
-			<DialogContent className="max-w-[94vw] max-h-[95vh] rounded-lg sm:max-w-lg 2xl:max-w-2xl h-full sm:max-h-[70vh] flex flex-col">
-				<DialogHeader>
+			<DialogContent className="max-w-[94vw] max-h-[95vh] rounded-lg sm:max-w-lg 2xl:max-w-2xl h-full sm:max-h-[70vh] flex flex-col p-0">
+				<DialogHeader className="p-4">
 					<DialogTitle>Chat Details</DialogTitle>
 					<DialogDescription>
 						Manage your chat room settings and members
@@ -78,22 +83,34 @@ function ChatDetailsDialogContent({
 	open: NonNullable<ChatDetailsDialogProps["open"]>;
 }) {
 	return (
-		<Tabs defaultValue={open.view} className="w-full flex-1 flex flex-col">
-			<TabsList className="grid w-full grid-cols-2">
-				<TabsTrigger value="details" className="flex items-center gap-2">
-					<Info className="h-4 w-4" />
-					Details
-				</TabsTrigger>
-				<TabsTrigger value="members" className="flex items-center gap-2">
-					<UserPlus className="h-4 w-4" />
-					Members
-				</TabsTrigger>
-			</TabsList>
-			<TabsContent value="details" className="flex-1">
+		<Tabs
+			defaultValue={open.view}
+			className="w-full flex-1 flex flex-col overflow-hidden"
+		>
+			<div className="px-4">
+				<TabsList className="grid w-full grid-cols-3">
+					<TabsTrigger value="details" className="flex items-center gap-2">
+						<Info className="h-4 w-4" />
+						Details
+					</TabsTrigger>
+					<TabsTrigger value="members" className="flex items-center gap-2">
+						<UserPlus className="h-4 w-4" />
+						Members
+					</TabsTrigger>
+					<TabsTrigger value="workflows" className="flex items-center gap-2">
+						<Calendar className="h-4 w-4" />
+						Workflows
+					</TabsTrigger>
+				</TabsList>
+			</div>
+			<TabsContent value="details" className="flex-1 p-4">
 				<ChatDetailsSection />
 			</TabsContent>
-			<TabsContent value="members" className="flex-1">
+			<TabsContent value="members" className="flex-1 p-4">
 				<ChatDetailsMembersSection />
+			</TabsContent>
+			<TabsContent value="workflows" className="flex-1 overflow-y-auto">
+				<ChatDetailsWorkflowsSection />
 			</TabsContent>
 		</Tabs>
 	);

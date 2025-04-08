@@ -45,22 +45,7 @@ const app = new Hono<HonoContextWithAuth>()
 				throw new Error("Unauthorized");
 			}
 
-			const room = await db
-				.select()
-				.from(globalSchema.chatRoom)
-				.where(
-					and(
-						eq(globalSchema.chatRoom.id, chatRoom.id),
-						eq(globalSchema.chatRoom.organizationId, activeOrganizationId),
-					),
-				)
-				.get();
-
-			if (!room) {
-				throw new Error("Room not found");
-			}
-
-			const chatRoomDoId = CHAT_DURABLE_OBJECT.idFromString(room.id);
+			const chatRoomDoId = CHAT_DURABLE_OBJECT.idFromString(chatRoom.id);
 			const chatRoomDo = CHAT_DURABLE_OBJECT.get(chatRoomDoId);
 
 			let member: {
@@ -134,7 +119,7 @@ const app = new Hono<HonoContextWithAuth>()
 			await chatRoomDo.addMembers([
 				{
 					id: member.memberId,
-					roomId: room.id,
+					roomId: chatRoom.id,
 					role,
 					type,
 					name: member.name,
@@ -147,7 +132,7 @@ const app = new Hono<HonoContextWithAuth>()
 				.insert(globalSchema.chatRoomMember)
 				.values({
 					memberId: member.memberId,
-					roomId: room.id,
+					roomId: chatRoom.id,
 					role,
 					type,
 				})
@@ -194,6 +179,11 @@ const app = new Hono<HonoContextWithAuth>()
 		if (!hasChatRoomMemberPermission) {
 			throw new Error("Unauthorized");
 		}
+
+		console.log("[deleteChatRoomMember] Removing member", {
+			memberId,
+			chatRoomId,
+		});
 
 		// Get the member to be removed
 		const member = await db

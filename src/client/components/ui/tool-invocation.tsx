@@ -1,57 +1,61 @@
 import { Card } from "@client/components/ui/card";
-import {
-	Collapsible,
-	CollapsibleContent,
-	CollapsibleTrigger,
-} from "@client/components/ui/collapsible";
 import { idToReadableText } from "@client/lib/id-parsing";
 import { cn } from "@client/lib/utils";
-import { ChevronDown } from "lucide-react";
-import React from "react";
+import { CheckCircleIcon } from "lucide-react";
+import { AnimatedPyramidIcon } from "../icons/loading-pyramid";
 
-interface ToolInvocationContextValue {
-	collapsible: boolean;
-	id?: string;
+export function ToolInvocation({
+	children,
+	className,
+}: {
+	children: React.ReactNode;
+	className?: string;
+}) {
+	return (
+		<Card className={cn("max-w-full py-3 gap-3", className)}>{children}</Card>
+	);
 }
-
-const ToolInvocationContext =
-	React.createContext<ToolInvocationContextValue | null>(null);
-
-export const useToolInvocation = () => {
-	const context = React.useContext(ToolInvocationContext);
-	if (!context) {
-		throw new Error(
-			"Tool Invocation components must be used within a ToolInvocationComponent",
-		);
-	}
-	return context;
-};
 
 export function ToolInvocationHeader({
 	children,
-}: { children: React.ReactNode }) {
-	return <div className="flex gap-2">{children}</div>;
+	className,
+}: { children: React.ReactNode; className?: string }) {
+	return (
+		<div className={cn("flex flex-col items-stretch gap-2 px-4", className)}>
+			{children}
+		</div>
+	);
 }
 
-export function ToolInvocationBody({
+export function ToolInvocationContent({
 	children,
-}: { children: React.ReactNode }) {
-	return <div className="flex flex-col gap-2 pb-2">{children}</div>;
+	className,
+}: { children: React.ReactNode; className?: string }) {
+	return <div className={cn("px-6", className)}>{children}</div>;
 }
 
-export function ToolNameComponent({
+export function ToolInvocationName({
 	name,
 	capitalize = true,
 	type,
-}: { name: string; capitalize?: boolean; type: "tool-call" | "tool-result" }) {
+	className,
+}: {
+	name: string;
+	capitalize?: boolean;
+	type: "tool-call" | "tool-result";
+	className?: string;
+}) {
 	return (
-		<span className="flex items-center gap-2">
-			<div
-				className={cn(
-					"h-2 w-2 rounded-full shrink-0",
-					type === "tool-result" ? "bg-green-500" : "bg-blue-500 animate-pulse",
-				)}
-			/>
+		<span className={cn("flex items-center gap-2 text-sm", className)}>
+			{type === "tool-call" && (
+				<AnimatedPyramidIcon
+					className="size-4 text-muted-foreground"
+					duration="2s"
+				/>
+			)}
+			{type === "tool-result" && (
+				<CheckCircleIcon className="size-4 text-muted-foreground" />
+			)}
 			<span className="font-medium">
 				{idToReadableText(name, { capitalize })}
 			</span>
@@ -59,102 +63,25 @@ export function ToolNameComponent({
 	);
 }
 
-function renderObjectAsListItems(obj: unknown, level = 0) {
-	// Handle non-object values (e.g., strings, numbers)
-	if (typeof obj !== "object" || obj === null) {
-		return <span className="break-words">{String(obj)}</span>;
-	}
-
-	// Render object as a list
+// biome-ignore lint/suspicious/noExplicitAny: <explanation>
+export function ToolInvocationResult({ result }: { result: any }) {
 	return (
-		<ul className={`list-disc ${level === 0 ? "" : "ml-4"} break-words`}>
-			{Object.entries(obj).map(([key, value]) => (
-				<li key={key} className="mt-1 break-words">
-					<span className="font-medium">{idToReadableText(key)}:</span>{" "}
-					{renderObjectAsListItems(value, level + 1)}
-				</li>
-			))}
-		</ul>
+		<div className="pl-4 text-sm">
+			<div className="font-medium mb-1">Result:</div>
+			<pre className="whitespace-pre-wrap font-mono text-xs bg-muted p-2 rounded-md overflow-auto">
+				{JSON.stringify(result, null, 2)}
+			</pre>
+		</div>
 	);
 }
 
-export function ToolInvocationDataTrigger() {
+// biome-ignore lint/suspicious/noExplicitAny: <explanation>
+export function ToolInvocationArgs({ args }: { args: any }) {
 	return (
-		<CollapsibleTrigger className="hover:text-accent-foreground transition-colors">
-			<ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200 data-[state=open]:rotate-180" />
-		</CollapsibleTrigger>
-	);
-}
-
-export function ToolInvocationData({
-	data,
-	collapsible,
-}: {
-	data: unknown;
-	collapsible?: boolean;
-}) {
-	const context = useToolInvocation();
-	const isCollapsible = collapsible ?? context.collapsible;
-
-	if (!isCollapsible) {
-		return (
-			<div className="pl-4">
-				{typeof data === "string" ? (
-					<span className="text-sm">{data}</span>
-				) : (
-					<div className="text-sm">{renderObjectAsListItems(data)}</div>
-				)}
-			</div>
-		);
-	}
-	return (
-		<CollapsibleContent className="pl-4 pb-1">
-			{typeof data === "string" ? (
-				<span className="text-sm">{data}</span>
-			) : (
-				<div className="text-sm">{renderObjectAsListItems(data)}</div>
-			)}
-		</CollapsibleContent>
-	);
-}
-
-export interface ToolInvocationProps {
-	children: React.ReactNode;
-	collapsible?: boolean;
-	id?: string;
-	defaultOpen?: boolean;
-}
-
-export function ToolInvocationComponent({
-	children,
-	collapsible = false,
-	defaultOpen = true,
-	id,
-}: ToolInvocationProps) {
-	const contextValue = React.useMemo(
-		() => ({
-			collapsible,
-			id,
-		}),
-		[collapsible, id],
-	);
-
-	if (collapsible) {
-		return (
-			<ToolInvocationContext.Provider value={contextValue}>
-				<Collapsible defaultOpen={defaultOpen} className="max-w-[23rem]">
-					<Card className="max-w-full pt-3 px-4 flex flex-col gap-2 pb-0">
-						{children}
-					</Card>
-				</Collapsible>
-			</ToolInvocationContext.Provider>
-		);
-	}
-	return (
-		<ToolInvocationContext.Provider value={contextValue}>
-			<Card className="max-w-[23rem] pt-3 px-4 flex flex-col gap-2 pb-0">
-				{children}
-			</Card>
-		</ToolInvocationContext.Provider>
+		<div className="pl-4 text-sm">
+			<pre className="whitespace-pre-wrap font-mono text-xs bg-muted p-2 rounded-md overflow-auto">
+				{JSON.stringify(args, null, 2)}
+			</pre>
+		</div>
 	);
 }

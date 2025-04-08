@@ -11,7 +11,7 @@ function Root() {
 	const { data: session, isPending } = authClient.useSession();
 
 	if (isPending) {
-		return <div>Loading...</div>;
+		return <div>Loading...</div>; // TODO: Add a loading state
 	}
 
 	if (!session) {

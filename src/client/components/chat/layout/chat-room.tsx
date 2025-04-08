@@ -39,9 +39,6 @@ function ChatRoomWithParams() {
 function ChatRoomContent() {
 	const { roomId, threadId } = useChatParams();
 
-	console.log("roomId", roomId);
-	console.log("threadId", threadId);
-
 	if (!roomId) {
 		return <ChatRoomNotSelected />;
 	}

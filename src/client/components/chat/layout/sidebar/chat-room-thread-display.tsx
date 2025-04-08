@@ -12,7 +12,6 @@ import type { ChatInputValue } from "@shared/types";
 import { useMemo } from "react";
 import { ChatMessageSkeleton, ChatRoomMessage } from "../../chat-room-message";
 import { ChatMessagesSkeleton } from "../../chat-room-message";
-import { useChatParams } from "../../providers/chat-params-provider";
 import { useChatWsContext } from "../../providers/chat-ws-provider";
 
 export function ChatRoomThreadDisplay() {
@@ -21,8 +20,6 @@ export function ChatRoomThreadDisplay() {
 		threadChat: { handleSubmit, messages, status, threadMessage },
 		connectionStatus,
 	} = useChatWsContext();
-
-	const { threadId } = useChatParams();
 
 	const { user } = useAuthSession();
 
@@ -34,10 +31,6 @@ export function ChatRoomThreadDisplay() {
 	);
 
 	const onSubmit = (value: ChatInputValue) => {
-		console.log("[ONSUBMIT]", {
-			value,
-			threadId,
-		});
 		handleSubmit({ value });
 	};
 

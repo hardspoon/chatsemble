@@ -135,10 +135,8 @@ export function useThreadChat({
 
 		if (threadIdChanged) {
 			activeThreadIdRef.current = threadId;
-			console.log("messages", JSON.parse(JSON.stringify(topLevelMessages)));
 			const threadMessage =
 				topLevelMessages.find((message) => message.id === threadId) ?? null;
-			console.log("threadMessage", JSON.parse(JSON.stringify(threadMessage)));
 			setThreadMessage(threadMessage);
 			setStatus("loading");
 		}

@@ -10,16 +10,15 @@ import type {
 } from "@shared/types";
 import { generateObject } from "ai";
 
-import {
-	routeMessageToAgentSystemPrompt,
-	routeMessageToAgentUserPrompt,
-} from "@server/ai/prompts/router-prompt";
+import { routeMessageToAgentSystemPrompt } from "@server/ai/prompts/router-prompt";
+import { contextAndNewchatRoomMessagesToAIMessages } from "@server/ai/utils/message";
 import type { Session } from "@server/types/session";
+import type { Workflow } from "@shared/types";
 import { drizzle } from "drizzle-orm/durable-sqlite";
 import type { DrizzleSqliteDODatabase } from "drizzle-orm/durable-sqlite";
 import { migrate } from "drizzle-orm/durable-sqlite/migrator";
 import { z } from "zod";
-import migrations from "./db/migrations/migrations.js";
+import migrations from "./db/migrations/migrations";
 import { createChatRoomDbServices } from "./db/services";
 
 export class ChatDurableObject extends DurableObject<Env> {
@@ -38,7 +37,7 @@ export class ChatDurableObject extends DurableObject<Env> {
 			await this.migrate();
 		});
 
-		this.dbServices = createChatRoomDbServices(this.db, this.ctx.id.toString());
+		this.dbServices = createChatRoomDbServices(this.db);
 
 		// Restore any existing WebSocket sessions
 		for (const webSocket of ctx.getWebSockets()) {
@@ -104,6 +103,7 @@ export class ChatDurableObject extends DurableObject<Env> {
 							}),
 							members: await this.getMembers(),
 							room: await this.getConfig(),
+							workflows: await this.getAgentWorkflows(),
 						},
 						session.userId,
 					);
@@ -284,7 +284,7 @@ export class ChatDurableObject extends DurableObject<Env> {
 					this.env.AGENT_DURABLE_OBJECT.idFromString(agentId),
 				);
 
-				await agentDO.processAndRespond({
+				await agentDO.processAndRespondIncomingMessages({
 					chatRoomId: this.ctx.id.toString(),
 					threadId: threadId,
 					newMessages: [newMessage],
@@ -347,6 +347,11 @@ export class ChatDurableObject extends DurableObject<Env> {
 				}),
 			);
 
+			const aiMessages = contextAndNewchatRoomMessagesToAIMessages({
+				contextMessages,
+				newMessages,
+			});
+
 			const { object: targetAgents } = await generateObject({
 				model: openAIClient("gpt-4o-mini"),
 				system: routeMessageToAgentSystemPrompt({ agents: agentList, room }),
@@ -357,10 +362,7 @@ export class ChatDurableObject extends DurableObject<Env> {
 							`List of agent IDs that should respond to the messages. Include ID only if agent is relevant. Max ${agents.length} agents. Possible IDs: ${agents.map((a) => a.id).join(", ")}.`,
 						),
 				}),
-				prompt: routeMessageToAgentUserPrompt({
-					newMessages,
-					contextMessages,
-				}),
+				messages: aiMessages,
 			});
 
 			const validAgentIds = (targetAgents.agentIds || []).filter((id) =>
@@ -416,5 +418,33 @@ export class ChatDurableObject extends DurableObject<Env> {
 
 	async getConfig() {
 		return this.dbServices.getConfig();
+	}
+
+	async getAgentWorkflows() {
+		const agentMembers = await this.getMembers({ type: "agent" });
+		const allWorkflows: Workflow[] = [];
+
+		for (const agent of agentMembers) {
+			try {
+				const agentDO = this.env.AGENT_DURABLE_OBJECT.get(
+					this.env.AGENT_DURABLE_OBJECT.idFromString(agent.id),
+				);
+
+				const workflows = await agentDO.getWorkflows();
+				allWorkflows.push(...workflows);
+			} catch (error) {
+				console.error(`Error fetching workflows for agent ${agent.id}:`, error);
+			}
+		}
+
+		return allWorkflows;
+	}
+
+	async broadcastWorkflowUpdate() {
+		const workflows = await this.getAgentWorkflows();
+		this.broadcastWebSocketMessage({
+			type: "workflow-update",
+			workflows,
+		});
 	}
 }
