@@ -8,6 +8,7 @@ import type {
 	ChatRoom,
 	ChatRoomMember,
 	ChatRoomMessage,
+	Workflow,
 	WsChatIncomingMessage,
 	WsChatOutgoingMessage,
 	WsMessageSend,
@@ -30,6 +31,7 @@ export function useMainChat({
 	const [messages, setMessages] = useState<ChatRoomMessage[]>([]);
 	const [members, setMembers] = useState<ChatRoomMember[]>([]);
 	const [room, setRoom] = useState<ChatRoom | null>(null);
+	const [workflows, setWorkflows] = useState<Workflow[]>([]);
 	const [status, setStatus] = useState<
 		"idle" | "loading" | "success" | "error"
 	>("idle");
@@ -41,10 +43,6 @@ export function useMainChat({
 	}, [connectionStatus, sendMessage]);
 
 	const handleMessage = useCallback((wsMessage: WsChatOutgoingMessage) => {
-		console.log(
-			"[useMainChat] handleMessage",
-			JSON.parse(JSON.stringify(wsMessage)),
-		);
 		switch (wsMessage.type) {
 			case "message-broadcast":
 				if (wsMessage.message.threadId === null) {
@@ -60,10 +58,14 @@ export function useMainChat({
 				setMessages(wsMessage.messages);
 				setMembers(wsMessage.members);
 				setRoom(wsMessage.room);
+				setWorkflows(wsMessage.workflows);
 				setStatus("success");
 				break;
 			case "member-update":
 				setMembers(wsMessage.members);
+				break;
+			case "workflow-update":
+				setWorkflows(wsMessage.workflows);
 				break;
 		}
 	}, []);
@@ -114,6 +116,7 @@ export function useMainChat({
 			setMessages([]);
 			setMembers([]);
 			setRoom(null);
+			setWorkflows([]);
 			setStatus("idle");
 		}
 	}, [roomId]);
@@ -122,6 +125,7 @@ export function useMainChat({
 		messages,
 		members,
 		room,
+		workflows,
 		status,
 		handleSubmit,
 		handleMessage,

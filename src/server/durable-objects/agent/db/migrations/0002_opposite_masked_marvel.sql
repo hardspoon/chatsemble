@@ -1,0 +1,1 @@
+ALTER TABLE `workflows` ADD `agent_id` text NOT NULL;

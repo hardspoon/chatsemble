@@ -8,11 +8,7 @@ export function createAgentConfigService(
 ) {
 	return {
 		async getAgentConfig() {
-			const config = await db
-				.select()
-				.from(agentConfig)
-				.where(eq(agentConfig.id, agentId))
-				.get();
+			const config = await db.select().from(agentConfig).get();
 			if (!config) {
 				throw new Error("Agent config not found");
 			}

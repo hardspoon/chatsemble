@@ -1,6 +1,13 @@
-import type { EmojiUsage, LanguageStyle, Tone, Verbosity } from "@shared/types";
+import type {
+	EmojiUsage,
+	LanguageStyle,
+	Tone,
+	Verbosity,
+	WorkflowSteps,
+} from "@shared/types";
 import { sql } from "drizzle-orm";
 import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import { nanoid } from "nanoid";
 
 export const agentConfig = sqliteTable("agent_config", {
 	id: text("id").primaryKey(), // Same as the DO ID
@@ -17,4 +24,21 @@ export const agentConfig = sqliteTable("agent_config", {
 	// Metadata
 	organizationId: text("organization_id").notNull(),
 	createdAt: integer("created_at").notNull().default(sql`(unixepoch() * 1000)`),
+});
+
+export const workflows = sqliteTable("workflows", {
+	id: text("id")
+		.primaryKey()
+		.$defaultFn(() => nanoid(36)), // Workflow unique ID
+	agentId: text("agent_id").notNull(),
+	chatRoomId: text("chat_room_id").notNull(),
+	goal: text("goal").notNull(),
+	steps: text("steps", { mode: "json" }).$type<WorkflowSteps>().notNull(),
+	scheduleExpression: text("schedule_expression").notNull(), // e.g., CRON or ISO
+	nextExecutionTime: integer("next_execution_time").notNull(), // Timestamp ms
+	lastExecutionTime: integer("last_execution_time"), // Timestamp ms
+	isActive: integer("is_active", { mode: "boolean" }).notNull(),
+	isRecurring: integer("is_recurring", { mode: "boolean" }).notNull(),
+	createdAt: integer("created_at").notNull().default(sql`(unixepoch() * 1000)`),
+	updatedAt: integer("updated_at").notNull().default(sql`(unixepoch() * 1000)`),
 });

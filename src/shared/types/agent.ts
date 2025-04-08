@@ -1,5 +1,4 @@
 import { z } from "zod";
-import type { ChatRoomMessage } from "./chat";
 
 export const toneOptions = [
 	"formal",
@@ -75,15 +74,6 @@ export const createAgentSchema = z.object({
 
 export type AgentFormValues = z.infer<typeof createAgentSchema>;
 
-// AgentTool
-export interface AgentToolPartial {
-	toolCallId: string;
-	toolName: string;
-	// biome-ignore lint/suspicious/noExplicitAny: <explanation>
-	args: Record<string, any>;
-	annotations: AgentToolAnnotation[];
-}
-
 /**
  * Represents an annotation associated with a specific tool use,
  * providing metadata like activity updates, statuses, or errors.
@@ -91,11 +81,20 @@ export interface AgentToolPartial {
 export interface AgentToolAnnotation {
 	id: string;
 	type: string;
+	status: "processing" | "complete" | "failed";
 	message: string;
 	timestamp: number;
 	toolCallId: string;
 	// biome-ignore lint/suspicious/noExplicitAny: Needs to be flexible for various tools
 	data?: any;
+}
+
+export interface AgentToolPartial {
+	toolCallId: string;
+	toolName: string;
+	// biome-ignore lint/suspicious/noExplicitAny: <explanation>
+	args: Record<string, any>;
+	annotations: AgentToolAnnotation[];
 }
 
 export interface AgentToolCall extends AgentToolPartial {
@@ -110,12 +109,10 @@ export interface AgentToolResult extends AgentToolPartial {
 
 export type AgentToolUse = AgentToolCall | AgentToolResult;
 
-export type AgentMessage = {
-	content: ChatRoomMessage["content"];
-	toolUses: ChatRoomMessage["toolUses"];
-	member: {
-		id: ChatRoomMessage["member"]["id"];
-		name: ChatRoomMessage["member"]["name"];
-		type: ChatRoomMessage["member"]["type"];
-	};
-};
+export interface ToolSource {
+	type: "url";
+	url: string;
+	title: string;
+	content: string;
+	icon?: string;
+}

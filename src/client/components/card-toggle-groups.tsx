@@ -26,7 +26,7 @@ export function CardToggleGroup<T extends string>({
 			type="single"
 			value={value}
 			onValueChange={onValueChange}
-			className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2"
+			className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
 		>
 			{options.map((option) => {
 				const Icon = iconMap[option] ?? (() => null);
@@ -35,13 +35,13 @@ export function CardToggleGroup<T extends string>({
 						key={option}
 						value={option}
 						variant="outline"
-						className="flex flex-col items-center gap-1 h-full py-3 px-4"
+						className="flex flex-col items-stretch gap-1 h-full py-3 px-4"
 					>
-						<Icon className="h-4 w-4" />
+						<Icon className="h-4 w-4 mx-auto" />
 						<span>{idToReadableText(option, { capitalize: true })}</span>
-						<span className="text-xs text-muted-foreground text-center break-words">
+						<p className="text-xs text-muted-foreground text-center text-wrap">
 							{descriptions[option]}
-						</span>
+						</p>
 					</ToggleGroupItem>
 				);
 			})}

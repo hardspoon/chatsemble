@@ -4,6 +4,7 @@ import type {
 	ChatRoomMessage,
 	ChatRoomMessagePartial,
 } from "./chat";
+import type { Workflow } from "./workflow";
 
 export type WsMessageChatInitRequest = {
 	type: "chat-init-request";
@@ -41,6 +42,7 @@ export type WsMessageChatInitResponse = {
 	messages: ChatRoomMessage[];
 	members: ChatRoomMember[];
 	room: ChatRoom;
+	workflows: Workflow[];
 };
 
 export type WsMemberUpdate = {
@@ -48,10 +50,16 @@ export type WsMemberUpdate = {
 	members: ChatRoomMember[];
 };
 
+export type WsWorkflowUpdate = {
+	type: "workflow-update";
+	workflows: Workflow[];
+};
+
 export type WsChatOutgoingMessage =
 	| WsMessageChatInitResponse
 	| WsMessageThreadInitResponse
 	| WsMemberUpdate
-	| WsMessageBroadcast;
+	| WsMessageBroadcast
+	| WsWorkflowUpdate;
 
 export type WsChatMessage = WsChatIncomingMessage | WsChatOutgoingMessage;

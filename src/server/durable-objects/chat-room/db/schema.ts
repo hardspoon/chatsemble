@@ -25,7 +25,7 @@ export const chatMessage = sqliteTable("chat_message", {
 	content: text("content").notNull(),
 	mentions: text("mentions", { mode: "json" }).$type<ChatMentions>().notNull(),
 	toolUses: text("tool_uses", { mode: "json" })
-		.$type<AgentToolUse[]>()
+		.$type<AgentToolUse[]>() // TODO: Add versioning to columns that are json type
 		.notNull(),
 	memberId: text("member_id")
 		.notNull()

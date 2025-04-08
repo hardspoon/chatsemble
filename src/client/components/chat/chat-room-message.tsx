@@ -1,21 +1,24 @@
-import { Skeleton } from "@client/components/ui/skeleton";
 import {
 	ChatMessage,
 	ChatMessageAvatar,
 	ChatMessageContent,
 	ChatMessageContentArea,
 	ChatMessageMetadata,
-} from "../ui/chat-message";
+} from "@client/components/ui/chat-message";
+import { Skeleton } from "@client/components/ui/skeleton";
 
+import { AnnotatedTool } from "@client/components/tools/annotated-tool";
 import {
-	ToolInvocationBody,
-	ToolInvocationComponent,
-	ToolInvocationData,
-	ToolInvocationDataTrigger,
+	ToolInvocation,
+	ToolInvocationArgs,
+	ToolInvocationContent,
 	ToolInvocationHeader,
-	ToolNameComponent,
+	ToolInvocationName,
+	ToolInvocationResult,
 } from "@client/components/ui/tool-invocation";
 import type { ChatRoomMessage as ChatRoomMessageType } from "@shared/types";
+import { ToolInvocationSourcesList } from "../tools/sources-tool";
+import { Separator } from "../ui/separator";
 
 export function ChatRoomMessage({
 	message,
@@ -43,27 +46,71 @@ export function ChatRoomMessage({
 					createdAt={message.createdAt}
 				/>
 				<ChatMessageContent content={message.content}>
-					{message.toolUses.map((toolUse) => (
-						<ToolInvocationComponent
-							key={toolUse.toolCallId}
-							collapsible={true}
-							defaultOpen={false}
-						>
-							<ToolInvocationHeader>
-								<ToolNameComponent
-									name={`Used ${toolUse.toolName}`}
-									type={toolUse.type}
-								/>
-								<ToolInvocationDataTrigger />
-							</ToolInvocationHeader>
-							<ToolInvocationBody>
-								<ToolInvocationData data={toolUse.args} />
-								{toolUse.type === "tool-result" && (
-									<ToolInvocationData data={toolUse.result} />
-								)}
-							</ToolInvocationBody>
-						</ToolInvocationComponent>
-					))}
+					{message.toolUses.map((toolUse) => {
+						if (
+							toolUse.toolName === "deepResearch" ||
+							toolUse.toolName === "webCrawl" ||
+							toolUse.toolName === "webSearch"
+						) {
+							let titleCall = "Running tool";
+							let titleResult = "Tool completed";
+							switch (toolUse.toolName) {
+								case "deepResearch":
+									titleCall = "Deep Research";
+									titleResult = "Deep Research Completed";
+									break;
+								case "webCrawl":
+									titleCall = "Web Crawl";
+									titleResult = "Web Crawl Completed";
+									break;
+								case "webSearch":
+									titleCall = "Web Search";
+									titleResult = "Web Search Completed";
+									break;
+							}
+							return (
+								<div className="flex flex-col gap-3">
+									<AnnotatedTool
+										key={toolUse.toolCallId}
+										toolUse={toolUse}
+										titleCall={titleCall}
+										titleResult={titleResult}
+									/>
+
+									{toolUse.type === "tool-result" &&
+										toolUse.result &&
+										"sources" in toolUse.result &&
+										toolUse.result.sources.length > 0 && (
+											<>
+												<Separator />
+												<ToolInvocationSourcesList
+													sources={toolUse.result.sources}
+													maxVisible={5}
+													maxHeight="10rem"
+												/>
+											</>
+										)}
+								</div>
+							);
+						}
+
+						return (
+							<ToolInvocation key={toolUse.toolCallId}>
+								<ToolInvocationHeader>
+									<ToolInvocationName
+										name={`Used ${toolUse.toolName}`}
+										type={toolUse.type}
+									/>
+								</ToolInvocationHeader>
+								<ToolInvocationContent>
+									{toolUse.args && <ToolInvocationArgs args={toolUse.args} />}
+									{toolUse.type === "tool-result" && toolUse.result && (
+										<ToolInvocationResult result={toolUse.result} />
+									)}
+								</ToolInvocationContent>
+							</ToolInvocation>
+						);
+					})}
 					{threadAreaComponent}
 				</ChatMessageContent>
 			</ChatMessageContentArea>

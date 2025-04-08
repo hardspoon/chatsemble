@@ -1,55 +1,11 @@
 import { createChatRoomMessagePartial } from "@shared/lib/chat";
 import type {
+	AgentToolAnnotation,
 	AgentToolUse,
 	ChatRoomMessage,
 	ChatRoomMessagePartial,
 } from "@shared/types";
-import type { AgentMessage } from "@shared/types";
-import type { CoreMessage } from "ai";
-
-export function chatRoomMessagesToAgentMessages(
-	messages: ChatRoomMessage[],
-): AgentMessage[] {
-	const aiMessages: AgentMessage[] = messages.map((msg) => {
-		return {
-			content: msg.content,
-			toolUses: msg.toolUses,
-			member: {
-				id: msg.member.id,
-				name: msg.member.name,
-				type: msg.member.type,
-			},
-		};
-	});
-
-	return aiMessages;
-}
-
-export function agentMessagesToContextCoreMessages(
-	contextMessages: ChatRoomMessage[],
-	newMessages: ChatRoomMessage[],
-): CoreMessage[] {
-	const agentMessagesContext = chatRoomMessagesToAgentMessages(contextMessages);
-	const agentMessagesNew = chatRoomMessagesToAgentMessages(newMessages);
-	return [
-		{
-			role: "system",
-			content: `
-			<conversation_history_context>
-			${JSON.stringify(agentMessagesContext, null, 2)}
-			</conversation_history_context>
-			`,
-		},
-		{
-			role: "user",
-			content: `
-			<new_messages_to_process>
-			${JSON.stringify(agentMessagesNew, null, 2)}
-			</new_messages_to_process>
-			`,
-		},
-	];
-}
+import { nanoid } from "nanoid";
 
 const dataStreamTypes = {
 	f: "step-start",
@@ -80,7 +36,7 @@ export async function processDataStream({
 		existingMessageId,
 	}: {
 		newMessagePartial: ChatRoomMessagePartial;
-		existingMessageId?: number | null;
+		existingMessageId: number | null;
 	}) => Promise<ChatRoomMessage>;
 }) {
 	const streamedMessages: Omit<ChatRoomMessage, "member">[] = [];
@@ -99,11 +55,11 @@ export async function processDataStream({
 		const parsedData = JSON.parse(text.slice(2));
 
 		const currentThreadId = getThreadId();
-		console.log("[processDataStream] ", {
+		/* console.log("[processDataStream] ", {
 			currentThreadId,
 			type,
 			parsedData: JSON.stringify(parsedData, null, 2),
-		});
+		}); */
 
 		switch (type) {
 			case "step-start": {
@@ -185,7 +141,16 @@ export async function processDataStream({
 							toolCallId: dataObject.toolCallId,
 							toolName: dataObject.toolName,
 							args: dataObject.args,
-							annotations: [],
+							annotations: [
+								{
+									id: nanoid(),
+									type: "start",
+									message: "Starting",
+									timestamp: Date.now(),
+									toolCallId: dataObject.toolCallId,
+									status: "processing",
+								},
+							],
 						};
 						newToolUses.push(parsedToolUse);
 					}
@@ -239,51 +204,42 @@ export async function processDataStream({
 				break;
 			}
 			case "message-annotation-part": {
-				/* const {
-					toolCallId,
-					type: annotationType,
-					message: annotationMessage,
-					data: annotationData,
-				} = parsedData; */
-				console.log(
-					"[processDataStream] Message annotation",
-					JSON.parse(JSON.stringify(parsedData, null, 2)),
-				);
-				/* const currentMessage = streamedMessages[streamedMessages.length - 1];
+				const annotation = parsedData[0] as AgentToolAnnotation;
+
+				const currentMessage = streamedMessages[streamedMessages.length - 1];
 				if (!currentMessage) {
-					console.error(
-						"[processDataStream] No current message found for annotation",
-					);
 					break;
 				}
 
 				const toolUseIndex = currentMessage.toolUses.findIndex(
-					(t) => t.toolCallId === toolCallId,
+					(t) => t.toolCallId === annotation.toolCallId,
 				);
-				if (toolUseIndex === -1) {
-					console.warn(
-						`[processDataStream] Tool use with ID ${toolCallId} not found for annotation.`,
-					);
-					break;
-				}
-
-				const annotation: Annotation = {
-					id: nanoid(),
-					type: annotationType,
-					message: annotationMessage,
-					timestamp: Date.now(),
-					toolCallId,
-					data: annotationData,
-				};
 
 				const updatedToolUses = [...currentMessage.toolUses];
-				updatedToolUses[toolUseIndex] = {
-					...updatedToolUses[toolUseIndex],
-					annotations: [
-						...updatedToolUses[toolUseIndex].annotations,
-						annotation,
-					],
-				};
+
+				// If tool use doesn't exist, create a temporary one
+				if (toolUseIndex === -1) {
+					// Create temporary tool call
+					const temporaryToolUse: AgentToolUse = {
+						type: "tool-call",
+						toolCallId: annotation.toolCallId,
+						toolName: "temporary-tool-call",
+						args: {},
+						annotations: [annotation],
+					};
+
+					// Add the temporary tool to the list
+					updatedToolUses.push(temporaryToolUse);
+				} else {
+					// Update existing tool with the new annotation
+					updatedToolUses[toolUseIndex] = {
+						...updatedToolUses[toolUseIndex],
+						annotations: [
+							...updatedToolUses[toolUseIndex].annotations,
+							annotation,
+						],
+					};
+				}
 
 				const haventSentCurrentMessage =
 					currentMessage.id === currentMessage.metadata.optimisticData?.id;
@@ -302,11 +258,10 @@ export async function processDataStream({
 						: currentMessage.id,
 				});
 
-				streamedMessages[streamedMessages.length - 1] = newMessage; */
+				streamedMessages[streamedMessages.length - 1] = newMessage;
 				break;
 			}
 			case "finish": {
-				console.log("[processDataStream] Stream finished", streamedMessages);
 				break;
 			}
 			case "error": {

@@ -60,9 +60,9 @@ function LoginForm() {
 		},
 		onSuccess: ({ redirect, url }) => {
 			toast.success("Signed in successfully");
-			if (redirect) {
-				router.navigate({ to: url });
-			}
+			console.log("[LoginForm] onSuccess", { redirect, url });
+
+			router.navigate({ to: "/chat" });
 		},
 	});
 
