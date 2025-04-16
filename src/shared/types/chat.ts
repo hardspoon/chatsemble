@@ -70,7 +70,7 @@ export const createChatRoomMemberSchema = z.object({
 export type CreateChatRoomMember = z.infer<typeof createChatRoomMemberSchema>;
 
 // ChatRoom
-const CHAT_ROOM_TYPES = ["publicGroup", "privateGroup", "oneToOne"] as const;
+const CHAT_ROOM_TYPES = ["public"] as const;
 export type ChatRoomType = (typeof CHAT_ROOM_TYPES)[number];
 
 export interface ChatRoom {
@@ -83,6 +83,5 @@ export interface ChatRoom {
 
 export const createChatRoomSchema = z.object({
 	name: z.string().min(1),
-	type: z.enum(CHAT_ROOM_TYPES),
 	members: z.array(createChatRoomMemberSchema.omit({ roomId: true })),
 });

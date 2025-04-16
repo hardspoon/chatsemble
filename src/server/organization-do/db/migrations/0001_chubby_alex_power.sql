@@ -1,0 +1,1 @@
+DROP INDEX `chat_room_member_email_unique`;

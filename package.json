@@ -11,6 +11,7 @@
 		"deploy": "wrangler deploy",
 		"cf-types": "wrangler types",
 		"db:generate": "drizzle-kit generate",
+		"db:generate:organization": "DRIZZLE_SCHEMA=./src/server/organization-do/db/schema.ts DRIZZLE_OUT=./src/server/organization-do/db/migrations drizzle-kit generate --config=drizzle.do.config.ts",
 		"db:migrate:dev": "wrangler d1 migrations apply chatsemble-db --local",
 		"db:migrate:prod": "wrangler d1 migrations apply chatsemble-db --remote",
 		"db:seed:dev:sql": "wrangler d1 execute chatsemble-db --file=src/server/db/seed.sql --local",
@@ -84,7 +85,7 @@
 	},
 	"devDependencies": {
 		"@biomejs/biome": "1.9.4",
-		"@cloudflare/vite-plugin": "^0.1.19",
+		"@cloudflare/vite-plugin": "^1.0.7",
 		"@tanstack/react-router-devtools": "^1.114.29",
 		"@tanstack/router-plugin": "^1.114.30",
 		"@types/better-sqlite3": "^7.6.12",
@@ -98,6 +99,6 @@
 		"typescript": "~5.7.2",
 		"vite": "^6.2.0",
 		"vite-raw-plugin": "^1.0.2",
-		"wrangler": "^4.6.0"
+		"wrangler": "^4.11.1"
 	}
 }
