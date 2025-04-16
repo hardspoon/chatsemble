@@ -81,39 +81,3 @@ CREATE TABLE `verification` (
 	`created_at` integer DEFAULT (unixepoch() * 1000) NOT NULL,
 	`updated_at` integer DEFAULT (unixepoch() * 1000) NOT NULL
 );
---> statement-breakpoint
-CREATE TABLE `chat_room` (
-	`id` text PRIMARY KEY NOT NULL,
-	`name` text NOT NULL,
-	`type` text NOT NULL,
-	`organization_id` text NOT NULL,
-	`created_at` integer DEFAULT (unixepoch() * 1000) NOT NULL,
-	FOREIGN KEY (`organization_id`) REFERENCES `organization`(`id`) ON UPDATE no action ON DELETE no action
-);
---> statement-breakpoint
-CREATE TABLE `chat_room_member` (
-	`member_id` text NOT NULL,
-	`room_id` text NOT NULL,
-	`type` text NOT NULL,
-	`role` text NOT NULL,
-	`created_at` integer DEFAULT (unixepoch() * 1000) NOT NULL,
-	PRIMARY KEY(`room_id`, `member_id`),
-	FOREIGN KEY (`room_id`) REFERENCES `chat_room`(`id`) ON UPDATE no action ON DELETE no action
-);
---> statement-breakpoint
-CREATE TABLE `agent` (
-	`id` text PRIMARY KEY NOT NULL,
-	`email` text NOT NULL,
-	`name` text NOT NULL,
-	`image` text NOT NULL,
-	`description` text NOT NULL,
-	`tone` text NOT NULL,
-	`verbosity` text NOT NULL,
-	`emoji_usage` text NOT NULL,
-	`language_style` text NOT NULL,
-	`organization_id` text NOT NULL,
-	`created_at` integer DEFAULT (unixepoch() * 1000) NOT NULL,
-	FOREIGN KEY (`organization_id`) REFERENCES `organization`(`id`) ON UPDATE no action ON DELETE no action
-);
---> statement-breakpoint
-CREATE UNIQUE INDEX `agent_email_unique` ON `agent` (`email`);

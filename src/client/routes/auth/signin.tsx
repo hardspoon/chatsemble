@@ -24,7 +24,7 @@ import {
 import { Input } from "@client/components/ui/input";
 import { authClient } from "@client/lib/auth-client";
 import { cn } from "@client/lib/utils";
-import { Link, createFileRoute, useRouter } from "@tanstack/react-router";
+import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/auth/signin")({
@@ -37,7 +37,7 @@ const formSchema = z.object({
 });
 
 function LoginForm() {
-	const router = useRouter();
+	const navigate = useNavigate();
 	const form = useForm<z.infer<typeof formSchema>>({
 		resolver: zodResolver(formSchema),
 		defaultValues: {
@@ -58,11 +58,12 @@ function LoginForm() {
 			}
 			return data;
 		},
-		onSuccess: ({ redirect, url }) => {
+		onSuccess: async ({ redirect, url }) => {
 			toast.success("Signed in successfully");
 			console.log("[LoginForm] onSuccess", { redirect, url });
-
-			router.navigate({ to: "/chat" });
+			setTimeout(async () => {
+				await navigate({ to: "/chat" });
+			}, 500);
 		},
 	});
 

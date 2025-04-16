@@ -1,7 +1,6 @@
 import { env } from "cloudflare:workers";
 import { auth } from "@server/auth";
 import protectedRoutes from "@server/routes/protected";
-import websocketRoutes from "@server/routes/websocket/chat-room";
 import type { HonoContext } from "@server/types/hono";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
@@ -22,7 +21,7 @@ app.on(["POST", "GET"], "/api/auth/**", (c) => auth.handler(c.req.raw));
 
 const routes = app
 	.route("/api", protectedRoutes)
-	.route("/websocket", websocketRoutes);
+	//.route("/websocket", websocketRoutes);
 
 app.all("*", async (c) => {
 	return c.env.ASSETS.fetch(c.req.raw);

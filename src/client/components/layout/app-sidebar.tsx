@@ -19,9 +19,8 @@ import {
 } from "@client/components/ui/sidebar";
 import { cn } from "@client/lib/utils";
 import { Link, useRouterState } from "@tanstack/react-router";
-import { useState } from "react";
+/* import { useState } from "react"; */
 import { LogoIcon } from "../icons/logo-icon";
-import { type SettingIds, SettingsDialog } from "../settings/settings-dialog";
 import { ThemeToggle } from "../theme-toggle";
 
 // Updated sample data with activeMatch regex
@@ -127,15 +126,15 @@ function NavSecondary({
 }: { currentPath: string } & React.ComponentPropsWithoutRef<
 	typeof SidebarGroup
 >) {
-	const [openedSettingsId, setOpenedSettingsId] = useState<SettingIds | null>(
+	/* const [openedSettingsId, setOpenedSettingsId] = useState<SettingIds | null>(
 		null,
-	);
+	); */
 	return (
 		<>
-			<SettingsDialog
+			{/* <SettingsDialog
 				openedSettingsId={openedSettingsId}
 				setOpenedSettingsId={setOpenedSettingsId}
-			/>
+			/> */}
 			<SidebarGroup {...props}>
 				<SidebarGroupContent>
 					<SidebarMenu>
@@ -143,8 +142,8 @@ function NavSecondary({
 							<SidebarMenuButton
 								size="sm"
 								tooltip="Settings"
-								isActive={!!openedSettingsId}
-								onClick={() => setOpenedSettingsId("profile")}
+								/* isActive={!!openedSettingsId}
+								onClick={() => setOpenedSettingsId("profile")} */
 							>
 								<Settings />
 								<span>Settings</span>
