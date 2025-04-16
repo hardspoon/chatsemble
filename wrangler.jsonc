@@ -22,19 +22,15 @@
 	],
 	"migrations": [
 		{
-			"new_sqlite_classes": ["ChatDurableObject", "AgentDurableObject"],
+			"new_sqlite_classes": ["OrganizationDurableObject"],
 			"tag": "v1"
 		}
 	],
 	"durable_objects": {
 		"bindings": [
 			{
-				"name": "CHAT_DURABLE_OBJECT",
-				"class_name": "ChatDurableObject"
-			},
-			{
-				"name": "AGENT_DURABLE_OBJECT",
-				"class_name": "AgentDurableObject"
+				"name": "ORGANIZATION_DURABLE_OBJECT",
+				"class_name": "OrganizationDurableObject"
 			}
 		]
 	},
