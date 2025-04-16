@@ -1,3 +1,4 @@
+import { OrganizationConnectionProvider } from "@client/components/organization/organization-connection-provider";
 import { AuthProvider } from "@client/components/providers/auth-provider";
 import { SidebarProvider } from "@client/components/ui/sidebar";
 import { authClient } from "@client/lib/auth-client";
@@ -8,21 +9,30 @@ export const Route = createFileRoute("/(app)")({
 });
 
 function Root() {
-	const { data: session, isPending } = authClient.useSession();
+	const { data, isPending } = authClient.useSession();
 
 	if (isPending) {
 		return <div>Loading...</div>; // TODO: Add a loading state
 	}
 
-	if (!session) {
+	if (!data || !data.session) {
+		return <Navigate to="/auth/signin" />;
+	}
+
+	if (!data.session.activeOrganizationId) {
+		// TODO: Redirect to the organization selection page
 		return <Navigate to="/auth/signin" />;
 	}
 
 	return (
 		<AuthProvider>
-			<SidebarProvider>
-				<Outlet />
-			</SidebarProvider>
+			<OrganizationConnectionProvider
+				organizationSlug={data.session.activeOrganizationId} // TODO: Make this be the slug instead of the ID???
+			>
+				<SidebarProvider>
+					<Outlet />
+				</SidebarProvider>
+			</OrganizationConnectionProvider>
 		</AuthProvider>
 	);
 }

@@ -1,0 +1,97 @@
+import { Hono } from "hono";
+
+import { zValidator } from "@hono/zod-validator";
+import { db } from "@server/db";
+import * as globalSchema from "@server/db/schema";
+import type { HonoContextWithAuth } from "@server/types/hono";
+import { createChatRoomSchema } from "@shared/types";
+import { inArray } from "drizzle-orm";
+
+const chatRoom = new Hono<HonoContextWithAuth>().post(
+	"/",
+	zValidator("json", createChatRoomSchema),
+	async (c) => {
+		const { ORGANIZATION_DURABLE_OBJECT } = c.env;
+		const user = c.get("user");
+		const session = c.get("session");
+		const { activeOrganizationId } = session;
+		const { name, members } = c.req.valid("json");
+
+		// Prepare members
+		const newMembersWithoutCurrentUser = members.filter(
+			(member) => member.id !== user.id,
+		);
+
+		const newUserMembers = newMembersWithoutCurrentUser.filter(
+			(member) => member.type === "user",
+		);
+
+		/* const newAgentMembers = newMembersWithoutCurrentUser.filter(
+			(member) => member.type === "agent",
+		); */
+
+		const newOwnerChatRoomMember = {
+			id: user.id,
+			name: user.name,
+			email: user.email,
+			image: user.image,
+			role: "owner" as const,
+			type: "user" as const,
+		};
+
+		const [newUserMemberDetails] = await Promise.all([
+			db
+				.select()
+				.from(globalSchema.user)
+				.where(
+					inArray(
+						globalSchema.user.id,
+						newUserMembers.map((member) => member.id),
+					),
+				),
+		]);
+
+		const membersToAddDetailsPartial = [
+			newOwnerChatRoomMember,
+			...newUserMemberDetails.map((member) => ({
+				id: member.id,
+				name: member.name,
+				email: member.email,
+				image: member.image,
+				role: "member" as const,
+				type: "user" as const,
+			})),
+			/* ...newAgentMemberDetails.map((member) => ({
+				id: member.id,
+				name: member.name,
+				email: `agent-${member.name}@${member.organizationId}.com`,
+				image: member.image,
+				//roomId: newChatRoom.id,
+				role: "member" as const,
+				type: "agent" as const,
+			})), */
+		];
+
+		try {
+			const organizationDoId =
+				ORGANIZATION_DURABLE_OBJECT.idFromName(activeOrganizationId);
+			const organizationDo = ORGANIZATION_DURABLE_OBJECT.get(organizationDoId);
+
+			const newChatRoom = await organizationDo.createChatRoom({
+				newChatRoom: {
+					name,
+					type: "public",
+					organizationId: activeOrganizationId,
+				},
+				members: membersToAddDetailsPartial,
+			});
+
+			return c.json({ roomId: newChatRoom.id });
+		} catch (error) {
+			console.error(error);
+			return c.json({ error: "Failed to create chat room" }, 500);
+		}
+	},
+);
+
+export default chatRoom;

@@ -1,65 +1,23 @@
-import type {
-	ChatRoom,
-	ChatRoomMember,
-	ChatRoomMessage,
-	ChatRoomMessagePartial,
-} from "./chat";
-import type { Workflow } from "./workflow";
+import type { ChatRoom } from "./chat";
 
-export type WsMessageChatInitRequest = {
-	type: "chat-init-request";
-};
-export type WsMessageSend = {
-	type: "message-send";
-	message: ChatRoomMessagePartial;
+export type WsMessageUserInitRequest = {
+	type: "user-init-request";
 };
 
-export type WsMessageThreadInitRequest = {
-	type: "thread-init-request";
-	threadId: number;
+export type WsChatIncomingMessage = WsMessageUserInitRequest;
+
+export type WsMessageUserInitResponse = {
+	type: "user-init-response";
+	chatRooms: ChatRoom[];
 };
 
-export type WsMessageThreadInitResponse = {
-	type: "thread-init-response";
-	threadId: number;
-	threadMessage: ChatRoomMessage;
-	messages: ChatRoomMessage[];
-};
-
-export type WsChatIncomingMessage =
-	| WsMessageSend
-	| WsMessageChatInitRequest
-	| WsMessageThreadInitRequest;
-
-export type WsMessageBroadcast = {
-	type: "message-broadcast";
-	threadId: number | null;
-	message: ChatRoomMessage;
-};
-
-export type WsMessageChatInitResponse = {
-	type: "chat-init-response";
-	messages: ChatRoomMessage[];
-	members: ChatRoomMember[];
-	room: ChatRoom;
-	workflows: Workflow[];
-};
-
-export type WsMemberUpdate = {
-	type: "member-update";
-	members: ChatRoomMember[];
-};
-
-export type WsWorkflowUpdate = {
-	type: "workflow-update";
-	workflows: Workflow[];
+export type WsMessageChatRoomsUpdate = {
+	type: "chat-rooms-update";
+	chatRooms: ChatRoom[];
 };
 
 export type WsChatOutgoingMessage =
-	| WsMessageChatInitResponse
-	| WsMessageThreadInitResponse
-	| WsMemberUpdate
-	| WsMessageBroadcast
-	| WsWorkflowUpdate;
+	| WsMessageUserInitResponse
+	| WsMessageChatRoomsUpdate;
 
 export type WsChatMessage = WsChatIncomingMessage | WsChatOutgoingMessage;
