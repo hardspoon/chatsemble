@@ -35,6 +35,7 @@ export interface ChatRoomMessagePartial {
 	toolUses: AgentToolUse[];
 	createdAt: number;
 	threadId: number | null;
+	roomId: string;
 }
 
 export interface ChatRoomMessage extends ChatRoomMessagePartial {
