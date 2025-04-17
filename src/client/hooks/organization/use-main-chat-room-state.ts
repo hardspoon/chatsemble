@@ -45,34 +45,40 @@ export function useMainChatRoomState({
 		}
 	}, [connectionStatus, sendMessage, roomId]);
 
-	const handleMessage = useCallback((wsMessage: WsChatOutgoingMessage) => {
-		switch (wsMessage.type) {
-			case "chat-room-init-response":
-				setMessages(wsMessage.messages);
-				setMembers(wsMessage.members);
-				setRoom(wsMessage.room);
-				setWorkflows(wsMessage.workflows);
-				setStatus("success");
-				break;
-			/* case "message-broadcast":
-				if (wsMessage.message.threadId === null) {
-					setMessages((prev) =>
-						updateMessageList({
-							messages: prev,
-							newMessage: wsMessage.message,
-						}),
-					);
-				}
-				break;
+	const handleMessage = useCallback(
+		(wsMessage: WsChatOutgoingMessage) => {
+			switch (wsMessage.type) {
+				case "chat-room-init-response":
+					setMessages(wsMessage.messages);
+					setMembers(wsMessage.members);
+					setRoom(wsMessage.room);
+					setWorkflows(wsMessage.workflows);
+					setStatus("success");
+					break;
+				case "chat-room-message-broadcast":
+					if (
+						wsMessage.message.roomId === roomId && // TODO: Check if this is correct
+						wsMessage.message.threadId === null
+					) {
+						setMessages((prev) =>
+							updateMessageList({
+								messages: prev,
+								newMessage: wsMessage.message,
+							}),
+						);
+					}
+					break;
 
-			case "member-update":
+				/* case "member-update":
 				setMembers(wsMessage.members);
 				break;
 			case "workflow-update":
 				setWorkflows(wsMessage.workflows);
 				break; */
-		}
-	}, []);
+			}
+		},
+		[roomId],
+	);
 
 	const handleSubmit = useCallback(
 		({ value }: { value: ChatInputValue }) => {

@@ -36,6 +36,7 @@ export function ChatRoomMessage({
 		threadArea && message.threadMetadata
 			? threadArea(message, message.threadMetadata)
 			: null;
+
 	return (
 		<ChatMessage key={String(message.id)} id={String(message.id)}>
 			{actionArea}

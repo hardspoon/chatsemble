@@ -6,6 +6,8 @@ import type { DrizzleSqliteDODatabase } from "drizzle-orm/durable-sqlite";
 import { migrate } from "drizzle-orm/durable-sqlite/migrator";
 import migrations from "./db/migrations/migrations";
 import type {
+	ChatRoomMessage,
+	ChatRoomMessagePartial,
 	WsChatIncomingMessage,
 	WsChatOutgoingMessage,
 } from "@shared/types";
@@ -102,6 +104,8 @@ export class OrganizationDurableObject extends DurableObject<Env> {
 						threadId: null,
 					});
 
+					console.log("Messages: ", messages);
+
 					if (!room) {
 						console.error("Room not found");
 						throw new Error("Room not found");
@@ -117,6 +121,17 @@ export class OrganizationDurableObject extends DurableObject<Env> {
 						},
 						session.userId,
 					);
+					break;
+				}
+
+				case "chat-room-message-send": {
+					await this.receiveChatRoomMessage({
+						memberId: session.userId,
+						roomId: parsedMsg.roomId,
+						message: parsedMsg.message,
+						existingMessageId: null,
+						notifyAgents: true,
+					});
 					break;
 				}
 			}
@@ -148,7 +163,7 @@ export class OrganizationDurableObject extends DurableObject<Env> {
 		}
 	}
 
-	/* private broadcastWebSocketMessage(
+	private broadcastWebSocketMessage(
 		message: WsChatOutgoingMessage,
 		excludeUserId?: string,
 	) {
@@ -157,7 +172,79 @@ export class OrganizationDurableObject extends DurableObject<Env> {
 				ws.send(JSON.stringify(message));
 			}
 		}
-	} */
+	}
+
+	async receiveChatRoomMessage({
+		memberId,
+		roomId,
+		message,
+		existingMessageId,
+		//notifyAgents,
+	}: {
+		memberId: string;
+		roomId: string;
+		message: ChatRoomMessagePartial;
+		existingMessageId: number | null;
+		notifyAgents: boolean;
+	}): Promise<ChatRoomMessage> {
+		let chatRoomMessage: ChatRoomMessage;
+
+		if (existingMessageId) {
+			chatRoomMessage = await this.dbServices.updateChatRoomMessage(
+				existingMessageId,
+				{
+					content: message.content,
+					mentions: message.mentions,
+					toolUses: message.toolUses,
+				},
+			);
+		} else {
+			chatRoomMessage = await this.dbServices.insertChatRoomMessage({
+				memberId,
+				content: message.content,
+				mentions: message.mentions,
+				toolUses: message.toolUses,
+				threadId: message.threadId,
+				roomId,
+				metadata: {
+					optimisticData: {
+						createdAt: message.createdAt,
+						id: message.id,
+					},
+				},
+				threadMetadata: null,
+			});
+
+			if (message.threadId) {
+				const updatedThreadMessage =
+					await this.dbServices.updateChatRoomMessageThreadMetadata(
+						message.threadId,
+						chatRoomMessage,
+					);
+
+				this.broadcastWebSocketMessage({
+					type: "chat-room-message-broadcast",
+					roomId,
+					threadId: updatedThreadMessage.threadId,
+					message: updatedThreadMessage,
+				});
+			}
+		}
+
+		this.broadcastWebSocketMessage({
+			// TODO: Broadcast only to members of chatroom
+			type: "chat-room-message-broadcast",
+			roomId,
+			threadId: chatRoomMessage.threadId,
+			message: chatRoomMessage,
+		});
+
+		/* if (notifyAgents && !existingMessageId) {
+			await this.routeMessageAndNotifyAgents(chatRoomMessage); // TODO: Add this
+		} */
+
+		return chatRoomMessage;
+	}
 
 	async createChatRoom(
 		newChatRoom: Parameters<typeof this.dbServices.createChatRoom>[0],
