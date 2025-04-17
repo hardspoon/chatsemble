@@ -3,7 +3,7 @@ import {
 	AppHeaderIcon,
 	AppHeaderSeparator,
 } from "@client/components/layout/app-header";
-import { useOrganizationConnectionContext } from "@client/components/organization/organization-connection-provider";
+import { useOrganizationConnectionContext } from "@client/components/providers/organization-connection-provider";
 import { cn } from "@client/lib/utils";
 import { MessagesSquare, Users } from "lucide-react";
 import {

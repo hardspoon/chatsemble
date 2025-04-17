@@ -83,47 +83,21 @@ export class OrganizationDurableObject extends DurableObject<Env> {
 			);
 			switch (parsedMsg.type) {
 				case "user-init-request": {
-					this.sendWebSocketMessageToUser(
-						{
-							type: "user-init-response",
-							chatRooms: await this.dbServices.getChatRoomsUserIsMemberOf(
-								session.userId,
-							),
-						},
-						session.userId,
-					);
+					this.handleUserInitRequest(session);
 					break;
 				}
 				case "chat-room-init-request": {
-					const room = await this.dbServices.getChatRoomById(parsedMsg.roomId);
-					const members = await this.dbServices.getChatRoomMembers(
+					this.handleChatRoomInitRequest(session, parsedMsg.roomId);
+					break;
+				}
+				case "chat-room-thread-init-request": {
+					this.handleChatRoomThreadInitRequest(
+						session,
 						parsedMsg.roomId,
-					);
-					const messages = await this.dbServices.getChatRoomMessages({
-						roomId: parsedMsg.roomId,
-						threadId: null,
-					});
-
-					console.log("Messages: ", messages);
-
-					if (!room) {
-						console.error("Room not found");
-						throw new Error("Room not found");
-					}
-
-					this.sendWebSocketMessageToUser(
-						{
-							type: "chat-room-init-response",
-							messages,
-							members,
-							room,
-							workflows: [],
-						},
-						session.userId,
+						parsedMsg.threadId,
 					);
 					break;
 				}
-
 				case "chat-room-message-send": {
 					await this.receiveChatRoomMessage({
 						memberId: session.userId,
@@ -172,6 +146,78 @@ export class OrganizationDurableObject extends DurableObject<Env> {
 				ws.send(JSON.stringify(message));
 			}
 		}
+	}
+
+	async handleUserInitRequest(session: Session) {
+		const chatRooms = await this.dbServices.getChatRoomsUserIsMemberOf(
+			session.userId,
+		);
+
+		this.sendWebSocketMessageToUser(
+			{
+				type: "user-init-response",
+				chatRooms,
+			},
+			session.userId,
+		);
+	}
+
+	async handleChatRoomInitRequest(session: Session, roomId: string) {
+		const [room, members, messages] = await Promise.all([
+			this.dbServices.getChatRoomById(roomId),
+			this.dbServices.getChatRoomMembers(roomId),
+			this.dbServices.getChatRoomMessages({
+				roomId,
+				threadId: null,
+			}),
+		]);
+
+		if (!room) {
+			console.error("Room not found");
+			throw new Error("Room not found");
+		}
+
+		this.sendWebSocketMessageToUser(
+			{
+				type: "chat-room-init-response",
+				roomId,
+				messages,
+				members,
+				room,
+				workflows: [], // TODO: Add workflows
+			},
+			session.userId,
+		);
+	}
+
+	async handleChatRoomThreadInitRequest(
+		session: Session,
+		roomId: string,
+		threadId: number,
+	) {
+		const [threadMessage, messages] = await Promise.all([
+			this.dbServices.getChatRoomMessageById(threadId),
+			this.dbServices.getChatRoomMessages({
+				roomId,
+				threadId,
+			}),
+		]);
+
+		if (!threadMessage) {
+			console.error("Thread message not found");
+			throw new Error("Thread message not found");
+		}
+
+		this.sendWebSocketMessageToUser(
+			{
+				type: "chat-room-thread-init-response",
+				roomId,
+				threadId,
+				threadMessage,
+				messages,
+			},
+			session.userId,
+		);
 	}
 
 	async receiveChatRoomMessage({
@@ -261,20 +307,19 @@ export class OrganizationDurableObject extends DurableObject<Env> {
 	}
 
 	async sendChatRoomsUpdateToUsers(userIds: string[]) {
-		for (const userId of userIds) {
+		const chatRoomsPromises = userIds.map((userId) =>
+			this.dbServices.getChatRoomsUserIsMemberOf(userId),
+		);
+		const chatRoomsResults = await Promise.all(chatRoomsPromises);
+
+		userIds.forEach((userId, index) => {
 			this.sendWebSocketMessageToUser(
 				{
 					type: "chat-rooms-update",
-					chatRooms: await this.dbServices.getChatRoomsUserIsMemberOf(userId),
+					chatRooms: chatRoomsResults[index],
 				},
 				userId,
 			);
-		}
-	}
-
-	async getChatRoomMessages(
-		options: Parameters<typeof this.dbServices.getChatRoomMessages>[0],
-	) {
-		return this.dbServices.getChatRoomMessages(options);
+		});
 	}
 }

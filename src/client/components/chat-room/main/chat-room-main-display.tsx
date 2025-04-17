@@ -20,7 +20,7 @@ import {
 import { useRouter } from "@tanstack/react-router";
 import { BookmarkIcon, MessageSquareIcon } from "lucide-react";
 import { useMemo } from "react";
-import { useOrganizationConnectionContext } from "@client/components/organization/organization-connection-provider";
+import { useOrganizationConnectionContext } from "@client/components/providers/organization-connection-provider";
 
 export function ChatRoomMainDisplay() {
 	const {

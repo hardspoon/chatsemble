@@ -1,5 +1,5 @@
 import { ChatMemberList } from "@client/components/chat-room-member/chat-member-list";
-import { useOrganizationConnectionContext } from "@client/components/organization/organization-connection-provider";
+import { useOrganizationConnectionContext } from "@client/components/providers/organization-connection-provider";
 
 export function ChatDetailsMembersSection() {
 	const {

@@ -16,7 +16,7 @@ import { Calendar, Info, UserPlus } from "lucide-react";
 import { ChatDetailsMembersSection } from "./chat-details-members-section";
 import { ChatDetailsSection } from "./chat-details-section";
 import { ChatDetailsWorkflowsSection } from "./chat-details-workflows-section";
-import { useOrganizationConnectionContext } from "@client/components/organization/organization-connection-provider";
+import { useOrganizationConnectionContext } from "@client/components/providers/organization-connection-provider";
 
 type ChatDetailsDialogView =
 	| "details"

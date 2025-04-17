@@ -1,5 +1,5 @@
 import { ChatMemberAddForm } from "@client/components/chat-room-member/new/chat-member-add-form";
-import { useOrganizationConnectionContext } from "@client/components/organization/organization-connection-provider";
+import { useOrganizationConnectionContext } from "@client/components/providers/organization-connection-provider";
 import { Button } from "@client/components/ui/button";
 import {
 	Dialog,

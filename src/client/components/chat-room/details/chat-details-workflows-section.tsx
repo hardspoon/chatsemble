@@ -1,4 +1,4 @@
-import { useOrganizationConnectionContext } from "@client/components/organization/organization-connection-provider";
+import { useOrganizationConnectionContext } from "@client/components/providers/organization-connection-provider";
 import {
 	Avatar,
 	AvatarFallback,
