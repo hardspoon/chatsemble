@@ -49,7 +49,8 @@ export function createChatRoomMemberService(db: DrizzleSqliteDODatabase) {
 			return await db
 				.insert(chatRoomMember)
 				.values(newChatRoomMember)
-				.returning().get();
+				.returning()
+				.get();
 		},
 	};
 }

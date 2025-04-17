@@ -11,7 +11,7 @@ import {
 } from "@client/components/ui/dialog";
 import { honoClient } from "@client/lib/api-client";
 import type { ChatRoomType, createChatRoomSchema } from "@shared/types";
-//import { useRouter } from "@tanstack/react-router";
+import { useRouter } from "@tanstack/react-router";
 import type { Dispatch, SetStateAction } from "react";
 import { toast } from "sonner";
 
@@ -70,8 +70,7 @@ function NewChatRoomDialogContent({
 			}
 			return data;
 		},
-		onSuccess: (_data) => {
-			//queryClient.invalidateQueries({ queryKey: ["chatRooms"] });
+		onSuccess: (data) => {
 			router.navigate({
 				to: "/chat",
 				search: { roomId: data.roomId },
