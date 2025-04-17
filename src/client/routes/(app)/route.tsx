@@ -2,7 +2,12 @@ import { OrganizationConnectionProvider } from "@client/components/organization/
 import { AuthProvider } from "@client/components/providers/auth-provider";
 import { SidebarProvider } from "@client/components/ui/sidebar";
 import { authClient } from "@client/lib/auth-client";
-import { Navigate, Outlet, createFileRoute } from "@tanstack/react-router";
+import {
+	Navigate,
+	Outlet,
+	createFileRoute,
+	useSearch,
+} from "@tanstack/react-router";
 
 export const Route = createFileRoute("/(app)")({
 	component: Root,
@@ -10,6 +15,8 @@ export const Route = createFileRoute("/(app)")({
 
 function Root() {
 	const { data, isPending } = authClient.useSession();
+
+	const searchParams = useSearch({ strict: false });
 
 	if (isPending) {
 		return <div>Loading...</div>; // TODO: Add a loading state
@@ -28,6 +35,9 @@ function Root() {
 		<AuthProvider>
 			<OrganizationConnectionProvider
 				organizationSlug={data.session.activeOrganizationId} // TODO: Make this be the slug instead of the ID???
+				roomId={searchParams.roomId}
+				threadId={searchParams.threadId}
+				user={data.user}
 			>
 				<SidebarProvider>
 					<Outlet />

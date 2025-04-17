@@ -18,7 +18,6 @@ export function createChatRoomService(db: DrizzleSqliteDODatabase) {
 			newChatRoom: typeof chatRoom.$inferInsert;
 			members: Omit<ChatRoomMember, "roomId">[];
 		}) {
-
 			// TODO: Transactions have some weird error
 			const [createdChatRoom] = await db
 				.insert(chatRoom)
@@ -34,6 +33,16 @@ export function createChatRoomService(db: DrizzleSqliteDODatabase) {
 
 			return createdChatRoom;
 		},
+
+		/**
+		 * Get a chat room by id
+		 * @param id - The id of the chat room
+		 * @returns The chat room
+		 */
+		async getChatRoomById(id: string): Promise<ChatRoom | undefined> {
+			return await db.select().from(chatRoom).where(eq(chatRoom.id, id)).get();
+		},
+
 		/**
 		 * Get all chat rooms
 		 * @returns All chat rooms

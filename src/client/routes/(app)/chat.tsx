@@ -1,3 +1,4 @@
+import { ChatRoom } from "@client/components/chat-room/chat-room";
 import { ChatRoomList } from "@client/components/chat-room/list/chat-room-list";
 import { AppLayout } from "@client/components/layout/app-layout";
 import { createFileRoute } from "@tanstack/react-router";
@@ -16,7 +17,7 @@ export const Route = createFileRoute("/(app)/chat")({
 function Chat() {
 	return (
 		<AppLayout sidebarChildren={<ChatRoomList />}>
-			<div>Chat</div>
+			<ChatRoom />
 		</AppLayout>
 	);
 }

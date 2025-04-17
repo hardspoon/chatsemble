@@ -1,4 +1,4 @@
-import { ChatMemberBadge } from "@client/components/chat-member/chat-member-badge";
+import { ChatMemberBadge } from "@client/components/chat-room-member/chat-member-badge";
 import {
 	Avatar,
 	AvatarFallback,

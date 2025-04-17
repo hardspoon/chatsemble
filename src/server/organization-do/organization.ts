@@ -80,7 +80,7 @@ export class OrganizationDurableObject extends DurableObject<Env> {
 				parsedMsg,
 			);
 			switch (parsedMsg.type) {
-				case "user-init-request":
+				case "user-init-request": {
 					this.sendWebSocketMessageToUser(
 						{
 							type: "user-init-response",
@@ -91,6 +91,34 @@ export class OrganizationDurableObject extends DurableObject<Env> {
 						session.userId,
 					);
 					break;
+				}
+				case "chat-room-init-request": {
+					const room = await this.dbServices.getChatRoomById(parsedMsg.roomId);
+					const members = await this.dbServices.getChatRoomMembers(
+						parsedMsg.roomId,
+					);
+					const messages = await this.dbServices.getChatRoomMessages({
+						roomId: parsedMsg.roomId,
+						threadId: null,
+					});
+
+					if (!room) {
+						console.error("Room not found");
+						throw new Error("Room not found");
+					}
+
+					this.sendWebSocketMessageToUser(
+						{
+							type: "chat-room-init-response",
+							messages,
+							members,
+							room,
+							workflows: [],
+						},
+						session.userId,
+					);
+					break;
+				}
 			}
 		} catch (err) {
 			if (err instanceof Error) {
@@ -155,5 +183,11 @@ export class OrganizationDurableObject extends DurableObject<Env> {
 				userId,
 			);
 		}
+	}
+
+	async getChatRoomMessages(
+		options: Parameters<typeof this.dbServices.getChatRoomMessages>[0],
+	) {
+		return this.dbServices.getChatRoomMessages(options);
 	}
 }
