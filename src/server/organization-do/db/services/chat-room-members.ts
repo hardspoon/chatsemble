@@ -1,4 +1,4 @@
-import type { ChatRoomMember } from "@shared/types";
+import type { ChatRoomMember, ChatRoomMemberType } from "@shared/types";
 import { and, eq } from "drizzle-orm";
 import type { DrizzleSqliteDODatabase } from "drizzle-orm/durable-sqlite";
 import { chatRoomMember } from "../schema";
@@ -10,11 +10,22 @@ export function createChatRoomMemberService(db: DrizzleSqliteDODatabase) {
 		 * @param roomId - The id of the chat room
 		 * @returns All members of the chat room
 		 */
-		async getChatRoomMembers(roomId: string): Promise<ChatRoomMember[]> {
-			return await db
-				.select()
-				.from(chatRoomMember)
-				.where(eq(chatRoomMember.roomId, roomId));
+		async getChatRoomMembers({
+			roomId,
+			type,
+		}: {
+			roomId: string;
+			type?: ChatRoomMemberType;
+		}): Promise<ChatRoomMember[]> {
+			const query = db.select().from(chatRoomMember);
+
+			const whereClauses = [eq(chatRoomMember.roomId, roomId)];
+
+			if (type) {
+				whereClauses.push(eq(chatRoomMember.type, type));
+			}
+
+			return await query.where(and(...whereClauses)).all();
 		},
 
 		/**
