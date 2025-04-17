@@ -49,11 +49,13 @@ export function useMainChatRoomState({
 		(wsMessage: WsChatOutgoingMessage) => {
 			switch (wsMessage.type) {
 				case "chat-room-init-response":
-					setMessages(wsMessage.messages);
-					setMembers(wsMessage.members);
-					setRoom(wsMessage.room);
-					setWorkflows(wsMessage.workflows);
-					setStatus("success");
+					if (wsMessage.roomId === roomId) {
+						setMessages(wsMessage.messages);
+						setMembers(wsMessage.members);
+						setRoom(wsMessage.room);
+						setWorkflows(wsMessage.workflows);
+						setStatus("success");
+					}
 					break;
 				case "chat-room-message-broadcast":
 					if (

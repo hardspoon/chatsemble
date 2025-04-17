@@ -3,6 +3,7 @@ import { useWebSocket } from "../use-web-socket";
 
 import { useMainChatRoomState } from "./use-main-chat-room-state";
 import type { User } from "better-auth";
+import { useThreadChatRoomState } from "./use-thread-chat-room-state";
 
 export interface UseOrganizationConnectionProps {
 	organizationSlug: string;
@@ -14,6 +15,7 @@ export interface UseOrganizationConnectionProps {
 export function useOrganizationConnection({
 	organizationSlug,
 	roomId,
+	threadId,
 	user,
 }: UseOrganizationConnectionProps) {
 	const { sendMessage, connectionStatus } = useWebSocket({
@@ -22,6 +24,7 @@ export function useOrganizationConnection({
 			//console.log("[useChat] onMessage", JSON.parse(JSON.stringify(message)));
 			userState.handleMessage(message);
 			mainChatRoomState.handleMessage(message);
+			chatRoomThreadState.handleMessage(message);
 		},
 	});
 
@@ -37,9 +40,19 @@ export function useOrganizationConnection({
 		connectionStatus,
 	});
 
+	const chatRoomThreadState = useThreadChatRoomState({
+		roomId,
+		threadId,
+		user,
+		topLevelMessages: mainChatRoomState.messages,
+		sendMessage,
+		connectionStatus,
+	});
+
 	return {
 		connectionStatus,
 		userState,
 		mainChatRoomState,
+		chatRoomThreadState,
 	};
 }

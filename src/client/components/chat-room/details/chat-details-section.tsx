@@ -1,5 +1,5 @@
 import { ChatRoomTypeBadge } from "@client/components/chat-room/common/chat-room-type-badge";
-import { useOrganizationConnectionContext } from "@client/components/organization/organization-connection-provider";
+import { useOrganizationConnectionContext } from "@client/components/providers/organization-connection-provider";
 import { Separator } from "@client/components/ui/separator";
 import { CalendarIcon } from "lucide-react";
 import { UsersIcon } from "lucide-react";

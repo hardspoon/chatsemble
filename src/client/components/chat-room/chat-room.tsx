@@ -8,6 +8,7 @@ import { ChatRoomMainHeader } from "@client/components/chat-room/main/chat-room-
 import { ChatRoomThreadHeader } from "@client/components/chat-room/thread/chat-room-thread-header";
 import { ChatRoomMainDisplay } from "@client/components/chat-room/main/chat-room-main-display";
 import { useSearch } from "@tanstack/react-router";
+import { ChatRoomThreadDisplay } from "./thread/chat-room-thread-display";
 
 export function ChatRoom() {
 	return <ChatRoomContent />;
@@ -44,7 +45,7 @@ function ChatRoomContent() {
 					>
 						<div className="flex-1 flex flex-col h-full border-border border-l rounded-l-xl shadow">
 							<ChatRoomThreadHeader />
-							<div>Thread</div>
+							<ChatRoomThreadDisplay />
 						</div>
 					</ResizablePanel>
 				)}

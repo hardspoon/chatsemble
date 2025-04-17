@@ -1,4 +1,4 @@
-import { OrganizationConnectionProvider } from "@client/components/organization/organization-connection-provider";
+import { OrganizationConnectionProvider } from "@client/components/providers/organization-connection-provider";
 import { AuthProvider } from "@client/components/providers/auth-provider";
 import { SidebarProvider } from "@client/components/ui/sidebar";
 import { authClient } from "@client/lib/auth-client";

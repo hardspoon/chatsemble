@@ -35,7 +35,7 @@ import {
 	NewChatRoomDialog,
 	type NewChatDialogState,
 } from "../new/new-chat-dialog";
-import { useOrganizationConnectionContext } from "@client/components/organization/organization-connection-provider";
+import { useOrganizationConnectionContext } from "@client/components/providers/organization-connection-provider";
 
 export function ChatRoomList() {
 	const [dialogState, setDialogState] = useState<NewChatDialogState>(null);

@@ -15,6 +15,12 @@ export type WsMessageChatRoomInitRequest = {
 	roomId: string;
 };
 
+export type WsMessageChatRoomThreadInitRequest = {
+	type: "chat-room-thread-init-request";
+	roomId: string;
+	threadId: number;
+};
+
 export type WsMessageChatRoomMessageSend = {
 	type: "chat-room-message-send";
 	roomId: string;
@@ -25,7 +31,8 @@ export type WsMessageChatRoomMessageSend = {
 export type WsChatIncomingMessage =
 	| WsMessageUserInitRequest
 	| WsMessageChatRoomInitRequest
-	| WsMessageChatRoomMessageSend;
+	| WsMessageChatRoomMessageSend
+	| WsMessageChatRoomThreadInitRequest;
 
 export type WsMessageUserInitResponse = {
 	type: "user-init-response";
@@ -34,10 +41,19 @@ export type WsMessageUserInitResponse = {
 
 export type WsMessageChatRoomInitResponse = {
 	type: "chat-room-init-response";
+	roomId: string;
 	messages: ChatRoomMessage[];
 	members: ChatRoomMember[];
 	room: ChatRoom;
 	workflows: Workflow[];
+};
+
+export type WsMessageChatRoomThreadInitResponse = {
+	type: "chat-room-thread-init-response";
+	roomId: string;
+	threadId: number;
+	threadMessage: ChatRoomMessage;
+	messages: ChatRoomMessage[];
 };
 
 export type WsMessageChatRoomsUpdate = {
@@ -56,6 +72,7 @@ export type WsChatOutgoingMessage =
 	| WsMessageUserInitResponse
 	| WsMessageChatRoomsUpdate
 	| WsMessageChatRoomInitResponse
-	| WsMessageChatRoomMessageBroadcast;
+	| WsMessageChatRoomMessageBroadcast
+	| WsMessageChatRoomThreadInitResponse;
 
 export type WsChatMessage = WsChatIncomingMessage | WsChatOutgoingMessage;
