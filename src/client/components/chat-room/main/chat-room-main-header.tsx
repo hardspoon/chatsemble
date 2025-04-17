@@ -3,11 +3,30 @@ import {
 	AppHeaderIcon,
 	AppHeaderSeparator,
 } from "@client/components/layout/app-header";
-import { MessagesSquare } from "lucide-react";
+import { useOrganizationConnectionContext } from "@client/components/organization/organization-connection-provider";
+import { cn } from "@client/lib/utils";
+import { MessagesSquare, Users } from "lucide-react";
+import {
+	ChatDetailsDialog,
+	type ChatDetailsDialogOpen,
+} from "../details/chat-details-dialog";
+import { type Dispatch, type SetStateAction, useState } from "react";
+import { Skeleton } from "@client/components/ui/skeleton";
+import { Button } from "@client/components/ui/button";
+import {
+	Tooltip,
+	TooltipContent,
+	TooltipTrigger,
+} from "@client/components/ui/tooltip";
 
 export function ChatRoomMainHeader() {
-	/* const [openChatDetailsDialog, setOpenChatDetailsDialog] =
-		useState<ChatDetailsDialogOpen>(null); */
+	const [openChatDetailsDialog, setOpenChatDetailsDialog] =
+		useState<ChatDetailsDialogOpen>(null);
+
+	const {
+		mainChatRoomState: { status },
+		connectionStatus,
+	} = useOrganizationConnectionContext();
 
 	return (
 		<AppHeader>
@@ -15,7 +34,7 @@ export function ChatRoomMainHeader() {
 				<MessagesSquare />
 			</AppHeaderIcon>
 			<AppHeaderSeparator className="hidden md:block" />
-			{/* {connectionStatus === "connected" && status === "success" ? (
+			{connectionStatus === "connected" && status === "success" ? (
 				<>
 					<ChatRoomName setOpenChatDetailsDialog={setOpenChatDetailsDialog} />
 					<div className="ml-auto flex items-center gap-2">
@@ -34,19 +53,19 @@ export function ChatRoomMainHeader() {
 					<Skeleton className="ml-2 h-4 w-28" />
 					<Skeleton className="ml-auto h-4 w-28" />
 				</>
-			)} */}
+			)}
 		</AppHeader>
 	);
 }
-/* 
+
 function ChatRoomName({
 	setOpenChatDetailsDialog,
 }: {
 	setOpenChatDetailsDialog: Dispatch<SetStateAction<ChatDetailsDialogOpen>>;
 }) {
 	const {
-		mainChat: { room },
-	} = useChatWsContext();
+		mainChatRoomState: { room },
+	} = useOrganizationConnectionContext();
 
 	return (
 		<Button
@@ -70,8 +89,8 @@ function ChatRoomMembers({
 	setOpenChatDetailsDialog: Dispatch<SetStateAction<ChatDetailsDialogOpen>>;
 }) {
 	const {
-		mainChat: { members },
-	} = useChatWsContext();
+		mainChatRoomState: { members },
+	} = useOrganizationConnectionContext();
 
 	return (
 		<Button
@@ -91,7 +110,7 @@ function ChatRoomMembers({
 }
 
 function ChatRoomConnectionStatus() {
-	const { connectionStatus } = useChatWsContext();
+	const { connectionStatus } = useOrganizationConnectionContext();
 
 	return (
 		<Tooltip>
@@ -110,4 +129,3 @@ function ChatRoomConnectionStatus() {
 		</Tooltip>
 	);
 }
- */

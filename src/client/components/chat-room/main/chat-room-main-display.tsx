@@ -26,6 +26,7 @@ export function ChatRoomMainDisplay() {
 	const {
 		mainChatRoomState: { messages, handleSubmit, members, status },
 	} = useOrganizationConnectionContext();
+	
 	const router = useRouter();
 
 	const { user } = useAuthSession();
