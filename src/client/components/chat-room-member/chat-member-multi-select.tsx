@@ -34,15 +34,15 @@ export function ChatMemberMultiSelect({
 		},
 	});
 
-	/* const { data: agents, isLoading: isLoadingAgents } = useQuery({
+	const { data: agents, isLoading: isLoadingAgents } = useQuery({
 		queryKey: ["agents"],
 		queryFn: async () => {
 			const response = await honoClient.api.agents.$get();
 			return response.json();
 		},
-	}); */
+	});
 
-	const isLoading = isLoadingUsers;
+	const isLoading = isLoadingUsers || isLoadingAgents;
 
 	// Combine users and agents with type information
 	const allMembers: Omit<ChatRoomMember, "roomId">[] = useMemo(() => {
@@ -56,8 +56,7 @@ export function ChatMemberMultiSelect({
 				email: user.email,
 			})) || [];
 
-		// TODO: Add agents to the list
-		/* const mappedAgents =
+		const mappedAgents =
 			agents?.map((agent) => ({
 				id: agent.id,
 				name: agent.name,
@@ -65,10 +64,10 @@ export function ChatMemberMultiSelect({
 				role: "member" as const,
 				image: agent.image ?? "",
 				email: "",
-			})) || []; */
+			})) || [];
 
-		return [...mappedUsers];
-	}, [users]);
+		return [...mappedUsers, ...mappedAgents];
+	}, [users, agents]);
 
 	if (isLoading) {
 		return <ChatMemberMultiSelectSkeleton />;

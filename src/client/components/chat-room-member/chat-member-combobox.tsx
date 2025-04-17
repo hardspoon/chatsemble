@@ -12,6 +12,7 @@ import {
 	CommandInput,
 	CommandItem,
 	CommandList,
+	CommandSeparator,
 } from "@client/components/ui/command";
 import {
 	Popover,
@@ -74,15 +75,15 @@ export function ChatMemberCombobox({
 		},
 	});
 
-	/* const { data: agents, isLoading: isLoadingAgents } = useQuery({
+	const { data: agents, isLoading: isLoadingAgents } = useQuery({
 		queryKey: ["agents"],
 		queryFn: async () => {
 			const response = await honoClient.api.agents.$get();
 			return response.json();
 		},
-	}); */ // TODO: Add agents
+	});
 
-	if (isLoadingUsers /* || isLoadingAgents */) {
+	if (isLoadingUsers || isLoadingAgents) {
 		return <ChatMemberComboboxSkeleton />;
 	}
 
@@ -97,7 +98,7 @@ export function ChatMemberCombobox({
 			),
 		})) || [];
 
-	/* const agentOptions: MemberOption[] =
+	const agentOptions: MemberOption[] =
 		agents?.map((agent) => ({
 			id: agent.id,
 			name: agent.name,
@@ -106,15 +107,15 @@ export function ChatMemberCombobox({
 			disabled: currentMembers.some(
 				(member) => member.id === agent.id && member.type === "agent",
 			),
-		})) || []; */
+		})) || [];
 
 	const selectedUser = userOptions.find(
 		(user) => user.id === selectedMember?.id,
 	);
-	/* const selectedAgent = agentOptions.find(
+	const selectedAgent = agentOptions.find(
 		(agent) => agent.id === selectedMember?.id,
-	); */
-	const selectedOption = selectedUser /* || selectedAgent */;
+	);
+	const selectedOption = selectedUser || selectedAgent;
 
 	const renderSelectedContent = () => {
 		if (!selectedOption) {
@@ -210,7 +211,7 @@ export function ChatMemberCombobox({
 							</CommandGroup>
 						)}
 
-						{/* {agentOptions.length > 0 && (
+						{agentOptions.length > 0 && (
 							<>
 								{userOptions.length > 0 && <CommandSeparator />}
 								<CommandGroup heading="Agents">
@@ -262,7 +263,7 @@ export function ChatMemberCombobox({
 									))}
 								</CommandGroup>
 							</>
-						)} */}
+						)}
 					</CommandList>
 				</Command>
 			</PopoverContent>

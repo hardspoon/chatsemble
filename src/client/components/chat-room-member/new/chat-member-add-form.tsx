@@ -25,6 +25,9 @@ import { createChatRoomMemberSchema } from "@shared/types";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
 import { ChatMemberCombobox } from "../chat-member-combobox";
+import { honoClient } from "@client/lib/api-client";
+import { useMutation } from "@tanstack/react-query";
+import { Button } from "@client/components/ui/button";
 
 export type FormValues = z.infer<typeof createChatRoomMemberSchema>;
 
@@ -33,8 +36,10 @@ interface ChatMemberAddFormProps {
 	onSuccess: () => void;
 }
 
-export function ChatMemberAddForm({ roomId }: ChatMemberAddFormProps) {
-	/* const queryClient = useQueryClient(); */
+export function ChatMemberAddForm({
+	roomId,
+	onSuccess,
+}: ChatMemberAddFormProps) {
 	const {
 		mainChatRoomState: { members },
 	} = useOrganizationConnectionContext();
@@ -49,7 +54,7 @@ export function ChatMemberAddForm({ roomId }: ChatMemberAddFormProps) {
 		},
 	});
 
-	/* const addMemberMutation = useMutation({
+	const addMemberMutation = useMutation({
 		mutationFn: async (values: FormValues) => {
 			const response = await honoClient.api.chat["chat-rooms"][
 				":chatRoomId"
@@ -60,15 +65,12 @@ export function ChatMemberAddForm({ roomId }: ChatMemberAddFormProps) {
 			return response.json();
 		},
 		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: ["chat-room", roomId] });
 			form.reset();
 			onSuccess();
 		},
-	}); */ // TODO: Add add member mutation
+	});
 
-	const onSubmit = (_values: FormValues) => {
-		/* addMemberMutation.mutate(values); */
-	};
+	const onSubmit = (values: FormValues) => addMemberMutation.mutate(values);
 
 	const selectedMember = {
 		id: form.watch("id"),
@@ -122,9 +124,9 @@ export function ChatMemberAddForm({ roomId }: ChatMemberAddFormProps) {
 					/>
 
 					<DialogFooter>
-						{/* <Button type="submit" disabled={addMemberMutation.isPending}>
+						<Button type="submit" disabled={addMemberMutation.isPending}>
 							{addMemberMutation.isPending ? "Adding member..." : "Add member"}
-						</Button> */}
+						</Button>
 					</DialogFooter>
 				</form>
 			</Form>

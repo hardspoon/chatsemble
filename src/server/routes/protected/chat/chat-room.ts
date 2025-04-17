@@ -17,6 +17,10 @@ const chatRoom = new Hono<HonoContextWithAuth>().post(
 		const { activeOrganizationId } = session;
 		const { name, members } = c.req.valid("json");
 
+		const organizationDoId =
+			ORGANIZATION_DURABLE_OBJECT.idFromName(activeOrganizationId);
+		const organizationDo = ORGANIZATION_DURABLE_OBJECT.get(organizationDoId);
+
 		// Prepare members
 		const newMembersWithoutCurrentUser = members.filter(
 			(member) => member.id !== user.id,
@@ -26,9 +30,9 @@ const chatRoom = new Hono<HonoContextWithAuth>().post(
 			(member) => member.type === "user",
 		);
 
-		/* const newAgentMembers = newMembersWithoutCurrentUser.filter(
+		const newAgentMembers = newMembersWithoutCurrentUser.filter(
 			(member) => member.type === "agent",
-		); */
+		);
 
 		const newOwnerChatRoomMember = {
 			id: user.id,
@@ -39,7 +43,7 @@ const chatRoom = new Hono<HonoContextWithAuth>().post(
 			type: "user" as const,
 		};
 
-		const [newUserMemberDetails] = await Promise.all([
+		const [newUserMemberDetails, newAgentMemberDetails] = await Promise.all([
 			db
 				.select()
 				.from(globalSchema.user)
@@ -49,6 +53,7 @@ const chatRoom = new Hono<HonoContextWithAuth>().post(
 						newUserMembers.map((member) => member.id),
 					),
 				),
+			organizationDo.getAgentsByIds(newAgentMembers.map((member) => member.id)),
 		]);
 
 		const membersToAddDetailsPartial = [
@@ -61,22 +66,17 @@ const chatRoom = new Hono<HonoContextWithAuth>().post(
 				role: "member" as const,
 				type: "user" as const,
 			})),
-			/* ...newAgentMemberDetails.map((member) => ({
+			...newAgentMemberDetails.map((member) => ({
 				id: member.id,
 				name: member.name,
-				email: `agent-${member.name}@${member.organizationId}.com`,
+				email: member.email,
 				image: member.image,
-				//roomId: newChatRoom.id,
 				role: "member" as const,
 				type: "agent" as const,
-			})), */
+			})),
 		];
 
 		try {
-			const organizationDoId =
-				ORGANIZATION_DURABLE_OBJECT.idFromName(activeOrganizationId);
-			const organizationDo = ORGANIZATION_DURABLE_OBJECT.get(organizationDoId);
-
 			const newChatRoom = await organizationDo.createChatRoom({
 				newChatRoom: {
 					name,

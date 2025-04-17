@@ -57,7 +57,7 @@ function NewChatRoomDialogContent({
 }: NewGroupChatDialogProps & {
 	dialogState: NonNullable<NewChatDialogState>;
 }) {
-	//const router = useRouter();
+	const router = useRouter();
 
 	const createChatMutation = useMutation({
 		mutationFn: async (values: CreateChatRoomFormValues) => {
@@ -72,10 +72,10 @@ function NewChatRoomDialogContent({
 		},
 		onSuccess: (_data) => {
 			//queryClient.invalidateQueries({ queryKey: ["chatRooms"] });
-			/* router.navigate({
+			router.navigate({
 				to: "/chat",
 				search: { roomId: data.roomId },
-			}); */
+			});
 			setDialogState(null);
 			toast.success("Chat room created successfully");
 		},

@@ -73,7 +73,7 @@ export function useMainChatRoomState({
 
 				/* case "member-update":
 				setMembers(wsMessage.members);
-				break;
+				break; // TODO: Add this
 			case "workflow-update":
 				setWorkflows(wsMessage.workflows);
 				break; */

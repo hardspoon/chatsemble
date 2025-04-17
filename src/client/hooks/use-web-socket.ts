@@ -48,12 +48,6 @@ export function useWebSocket({
 			console.log("WebSocket connected");
 			setConnectionStatus("connected");
 			toast.success("Connected to organization");
-
-			/* const wsMessage: WsMessageChatInitRequest = {
-				type: "chat-init-request",
-			};
-			console.log("[startWebSocket] sending chat-init-request", wsMessage);
-			sendMessage(wsMessage); */
 		};
 
 		ws.onmessage = (event) => {
