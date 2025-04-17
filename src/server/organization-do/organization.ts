@@ -322,4 +322,25 @@ export class OrganizationDurableObject extends DurableObject<Env> {
 			);
 		});
 	}
+
+	async getAgents() {
+		return await this.dbServices.getAgents();
+	}
+
+	async createAgent(
+		newAgent: Parameters<typeof this.dbServices.createAgent>[0],
+	) {
+		return await this.dbServices.createAgent(newAgent);
+	}
+
+	async getAgentById(id: string) {
+		return await this.dbServices.getAgentById(id);
+	}
+
+	async updateAgent(
+		id: string,
+		agentUpdates: Parameters<typeof this.dbServices.updateAgent>[1],
+	) {
+		return await this.dbServices.updateAgent(id, agentUpdates);
+	}
 }

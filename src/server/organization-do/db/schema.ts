@@ -6,6 +6,10 @@ import type {
 	ChatRoomMemberRole,
 	ChatRoomMemberType,
 	ChatRoomType,
+	LanguageStyle,
+	EmojiUsage,
+	Verbosity,
+	Tone,
 } from "@shared/types";
 import { sql } from "drizzle-orm";
 import {
@@ -68,4 +72,22 @@ export const chatMessage = sqliteTable("chat_message", {
 		.notNull()
 		.references(() => chatRoom.id),
 	threadId: integer("thread_id"),
+});
+
+export const agent = sqliteTable("agent", {
+	id: text("id")
+		.primaryKey()
+		.$defaultFn(() => nanoid(36)),
+	email: text("email").notNull().unique(),
+	// Identity
+	name: text("name").notNull(),
+	image: text("image").notNull(),
+	description: text("description").notNull(),
+	// Personality
+	tone: text("tone").$type<Tone>().notNull(),
+	verbosity: text("verbosity").$type<Verbosity>().notNull(),
+	emojiUsage: text("emoji_usage").$type<EmojiUsage>().notNull(),
+	languageStyle: text("language_style").$type<LanguageStyle>().notNull(),
+	// Metadata
+	createdAt: integer("created_at").notNull().default(sql`(unixepoch() * 1000)`),
 });

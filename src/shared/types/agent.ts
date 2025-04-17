@@ -55,7 +55,6 @@ export interface Agent {
 	emojiUsage: EmojiUsage;
 	languageStyle: LanguageStyle;
 	// Metadata
-	organizationId: string;
 	createdAt: number;
 }
 
