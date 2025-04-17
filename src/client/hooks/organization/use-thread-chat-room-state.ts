@@ -1,3 +1,4 @@
+import type { UseWebSocketConnectionStatus } from "@client/hooks/use-web-socket";
 import { updateMessageList } from "@client/lib/chat";
 import {
 	createChatRoomMessagePartial,
@@ -13,7 +14,6 @@ import type {
 } from "@shared/types";
 import type { User } from "better-auth";
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { UseWebSocketConnectionStatus } from "@client/hooks/use-web-socket";
 
 export function useThreadChatRoomState({
 	roomId,

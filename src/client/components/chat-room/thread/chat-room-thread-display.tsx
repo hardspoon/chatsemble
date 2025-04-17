@@ -1,6 +1,12 @@
 "use client";
 
+import {
+	ChatMessageSkeleton,
+	ChatRoomMessage,
+} from "@client/components/chat-room/chat-room-message";
+import { ChatMessagesSkeleton } from "@client/components/chat-room/chat-room-message";
 import { useAuthSession } from "@client/components/providers/auth-provider";
+import { useOrganizationConnectionContext } from "@client/components/providers/organization-connection-provider";
 import { ChatMessageArea } from "@client/components/ui/chat-message-area";
 import { Separator } from "@client/components/ui/separator";
 import {
@@ -10,12 +16,6 @@ import {
 } from "@client/components/ui/tiptap-chat-input";
 import type { ChatInputValue } from "@shared/types";
 import { useMemo } from "react";
-import {
-	ChatMessageSkeleton,
-	ChatRoomMessage,
-} from "@client/components/chat-room/chat-room-message";
-import { ChatMessagesSkeleton } from "@client/components/chat-room/chat-room-message";
-import { useOrganizationConnectionContext } from "@client/components/providers/organization-connection-provider";
 
 export function ChatRoomThreadDisplay() {
 	const {

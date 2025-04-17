@@ -1,11 +1,11 @@
 import type {
-	ChatRoomMemberType,
-	ChatRoomMemberRole,
-	ChatRoomType,
-	ChatMessageThreadMetadata,
-	ChatMessageMetadata,
 	AgentToolUse,
 	ChatMentions,
+	ChatMessageMetadata,
+	ChatMessageThreadMetadata,
+	ChatRoomMemberRole,
+	ChatRoomMemberType,
+	ChatRoomType,
 } from "@shared/types";
 import { sql } from "drizzle-orm";
 import {

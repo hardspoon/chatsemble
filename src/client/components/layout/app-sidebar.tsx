@@ -3,7 +3,11 @@
 import { Bot, MessagesSquare, PanelLeft, Search, Settings } from "lucide-react";
 import type * as React from "react";
 
+import { ThemeToggle } from "@client/components/common/theme-toggle";
+import { LogoIcon } from "@client/components/icons/logo-icon";
 import { AppNavUser } from "@client/components/layout/app-nav-user";
+import type { SettingIds } from "@client/components/settings/settings-dialog";
+import { SettingsDialog } from "@client/components/settings/settings-dialog";
 import {
 	Sidebar,
 	SidebarContent,
@@ -20,10 +24,6 @@ import {
 import { cn } from "@client/lib/utils";
 import { Link, useRouterState } from "@tanstack/react-router";
 import { useState } from "react";
-import { LogoIcon } from "@client/components/icons/logo-icon";
-import { ThemeToggle } from "@client/components/common/theme-toggle";
-import type { SettingIds } from "@client/components/settings/settings-dialog";
-import { SettingsDialog } from "@client/components/settings/settings-dialog";
 
 // Updated sample data with activeMatch regex
 const navMain = [

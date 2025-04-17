@@ -1,12 +1,12 @@
+import { ChatRoomNotSelected } from "@client/components/chat-room/chat-room-not-selected";
+import { ChatRoomMainDisplay } from "@client/components/chat-room/main/chat-room-main-display";
+import { ChatRoomMainHeader } from "@client/components/chat-room/main/chat-room-main-header";
+import { ChatRoomThreadHeader } from "@client/components/chat-room/thread/chat-room-thread-header";
 import {
 	ResizableHandle,
 	ResizablePanel,
 	ResizablePanelGroup,
 } from "@client/components/ui/resizable";
-import { ChatRoomNotSelected } from "@client/components/chat-room/chat-room-not-selected";
-import { ChatRoomMainHeader } from "@client/components/chat-room/main/chat-room-main-header";
-import { ChatRoomThreadHeader } from "@client/components/chat-room/thread/chat-room-thread-header";
-import { ChatRoomMainDisplay } from "@client/components/chat-room/main/chat-room-main-display";
 import { useSearch } from "@tanstack/react-router";
 import { ChatRoomThreadDisplay } from "./thread/chat-room-thread-display";
 

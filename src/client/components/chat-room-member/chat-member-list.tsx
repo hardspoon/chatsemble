@@ -1,6 +1,6 @@
-import { ChatMemberAddDialog } from "@client/components/chat-room-member/new/chat-member-add-dialog";
 import { ChatMemberBadge } from "@client/components/chat-room-member/chat-member-badge";
 import { ChatMemberRemoveButton } from "@client/components/chat-room-member/chat-member-remove-button";
+import { ChatMemberAddDialog } from "@client/components/chat-room-member/new/chat-member-add-dialog";
 import { useOrganizationConnectionContext } from "@client/components/providers/organization-connection-provider";
 import {
 	Avatar,

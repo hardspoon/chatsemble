@@ -1,8 +1,8 @@
-import { useUserState } from "./use-user-state";
 import { useWebSocket } from "../use-web-socket";
+import { useUserState } from "./use-user-state";
 
-import { useMainChatRoomState } from "./use-main-chat-room-state";
 import type { User } from "better-auth";
+import { useMainChatRoomState } from "./use-main-chat-room-state";
 import { useThreadChatRoomState } from "./use-thread-chat-room-state";
 
 export interface UseOrganizationConnectionProps {

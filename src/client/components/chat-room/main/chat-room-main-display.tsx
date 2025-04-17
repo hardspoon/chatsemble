@@ -12,6 +12,7 @@ import {
 	ChatRoomMessage,
 } from "@client/components/chat-room/chat-room-message";
 import { useAuthSession } from "@client/components/providers/auth-provider";
+import { useOrganizationConnectionContext } from "@client/components/providers/organization-connection-provider";
 import {
 	ChatInput,
 	ChatInputSubmit,
@@ -20,13 +21,12 @@ import {
 import { useRouter } from "@tanstack/react-router";
 import { BookmarkIcon, MessageSquareIcon } from "lucide-react";
 import { useMemo } from "react";
-import { useOrganizationConnectionContext } from "@client/components/providers/organization-connection-provider";
 
 export function ChatRoomMainDisplay() {
 	const {
 		mainChatRoomState: { messages, handleSubmit, members, status },
 	} = useOrganizationConnectionContext();
-	
+
 	const router = useRouter();
 
 	const { user } = useAuthSession();

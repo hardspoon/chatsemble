@@ -4,20 +4,20 @@ import {
 	AppHeaderSeparator,
 } from "@client/components/layout/app-header";
 import { useOrganizationConnectionContext } from "@client/components/providers/organization-connection-provider";
-import { cn } from "@client/lib/utils";
-import { MessagesSquare, Users } from "lucide-react";
-import {
-	ChatDetailsDialog,
-	type ChatDetailsDialogOpen,
-} from "../details/chat-details-dialog";
-import { type Dispatch, type SetStateAction, useState } from "react";
-import { Skeleton } from "@client/components/ui/skeleton";
 import { Button } from "@client/components/ui/button";
+import { Skeleton } from "@client/components/ui/skeleton";
 import {
 	Tooltip,
 	TooltipContent,
 	TooltipTrigger,
 } from "@client/components/ui/tooltip";
+import { cn } from "@client/lib/utils";
+import { MessagesSquare, Users } from "lucide-react";
+import { type Dispatch, type SetStateAction, useState } from "react";
+import {
+	ChatDetailsDialog,
+	type ChatDetailsDialogOpen,
+} from "../details/chat-details-dialog";
 
 export function ChatRoomMainHeader() {
 	const [openChatDetailsDialog, setOpenChatDetailsDialog] =
