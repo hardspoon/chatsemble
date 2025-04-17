@@ -45,6 +45,7 @@ export const languageStyleDescriptions: Record<LanguageStyle, string> = {
 
 export interface Agent {
 	id: string;
+	email: string;
 	// Identity
 	name: string;
 	image: string;

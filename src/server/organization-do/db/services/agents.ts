@@ -1,7 +1,7 @@
 import type { Agent } from "@shared/types";
 import type { DrizzleSqliteDODatabase } from "drizzle-orm/durable-sqlite";
 import { agent } from "../schema";
-import { eq } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 
 export function createAgentsService(db: DrizzleSqliteDODatabase) {
 	return {
@@ -33,6 +33,15 @@ export function createAgentsService(db: DrizzleSqliteDODatabase) {
 		 */
 		async getAgentById(id: string): Promise<Agent | undefined> {
 			return await db.select().from(agent).where(eq(agent.id, id)).get();
+		},
+
+		/**
+		 * Get agents by IDs
+		 * @param ids - The IDs of the agents
+		 * @returns The agents
+		 */
+		async getAgentsByIds(ids: string[]): Promise<Agent[]> {
+			return await db.select().from(agent).where(inArray(agent.id, ids));
 		},
 
 		/**

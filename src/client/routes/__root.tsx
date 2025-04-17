@@ -18,7 +18,6 @@ function Root() {
 			<QueryProvider>
 				<Toaster />
 				<Outlet />
-				{/* <TanStackRouterDevtools /> */}
 			</QueryProvider>
 		</ThemeProvider>
 	);

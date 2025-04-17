@@ -292,20 +292,6 @@ export class OrganizationDurableObject extends DurableObject<Env> {
 		return chatRoomMessage;
 	}
 
-	async createChatRoom(
-		newChatRoom: Parameters<typeof this.dbServices.createChatRoom>[0],
-	) {
-		const createdChatRoom = await this.dbServices.createChatRoom(newChatRoom);
-
-		const membersIds = newChatRoom.members
-			.filter((member) => member.type === "user")
-			.map((member) => member.id);
-
-		this.sendChatRoomsUpdateToUsers(membersIds);
-
-		return createdChatRoom;
-	}
-
 	async sendChatRoomsUpdateToUsers(userIds: string[]) {
 		const chatRoomsPromises = userIds.map((userId) =>
 			this.dbServices.getChatRoomsUserIsMemberOf(userId),
@@ -323,6 +309,57 @@ export class OrganizationDurableObject extends DurableObject<Env> {
 		});
 	}
 
+	// Chat room
+
+	async createChatRoom(
+		newChatRoom: Parameters<typeof this.dbServices.createChatRoom>[0],
+	) {
+		const createdChatRoom = await this.dbServices.createChatRoom(newChatRoom);
+
+		const membersIds = newChatRoom.members
+			.filter((member) => member.type === "user")
+			.map((member) => member.id);
+
+		this.sendChatRoomsUpdateToUsers(membersIds);
+
+		return createdChatRoom;
+	}
+
+	// Chat room member
+
+	async deleteChatRoomMember(
+		deleteChatRoomMemberParams: Parameters<
+			typeof this.dbServices.deleteChatRoomMember
+		>[0],
+	) {
+		const deletedChatRoomMember = await this.dbServices.deleteChatRoomMember(
+			deleteChatRoomMemberParams,
+		);
+
+		this.sendChatRoomsUpdateToUsers([deleteChatRoomMemberParams.memberId]);
+		// TODO: Send update to members of the chat room
+
+		return deletedChatRoomMember;
+	}
+
+	async addChatRoomMember(
+		addChatRoomMemberParams: Parameters<
+			typeof this.dbServices.addChatRoomMember
+		>[0],
+	) {
+		const addedChatRoomMember = await this.dbServices.addChatRoomMember(
+			addChatRoomMemberParams,
+		);
+
+		this.sendChatRoomsUpdateToUsers([addChatRoomMemberParams.id]);
+
+		// TODO: Send update to members of the chat room
+
+		return addedChatRoomMember;
+	}
+
+	// Agent
+
 	async getAgents() {
 		return await this.dbServices.getAgents();
 	}
@@ -335,6 +372,10 @@ export class OrganizationDurableObject extends DurableObject<Env> {
 
 	async getAgentById(id: string) {
 		return await this.dbServices.getAgentById(id);
+	}
+
+	async getAgentsByIds(ids: string[]) {
+		return await this.dbServices.getAgentsByIds(ids);
 	}
 
 	async updateAgent(

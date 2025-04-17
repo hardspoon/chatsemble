@@ -10,9 +10,9 @@ import {
 	DialogTitle,
 	DialogTrigger,
 } from "@client/components/ui/dialog";
-/* import { honoClient } from "@client/lib/api-client"; */
+import { honoClient } from "@client/lib/api-client";
 import type { ChatRoomMember } from "@shared/types";
-/* import { useMutation, useQueryClient } from "@tanstack/react-query"; */
+import { useMutation } from "@tanstack/react-query";
 import { Trash2 } from "lucide-react";
 import { useState } from "react";
 
@@ -23,11 +23,11 @@ interface ChatMemberRemoveButtonProps {
 
 export function ChatMemberRemoveButton({
 	member,
+	roomId,
 }: ChatMemberRemoveButtonProps) {
 	const [open, setOpen] = useState(false);
-	/* const queryClient = useQueryClient(); */
 
-	/* const removeMemberMutation = useMutation({ // TODO: Add remove member mutation
+	const removeMemberMutation = useMutation({
 		mutationFn: async () => {
 			const response = await honoClient.api.chat["chat-rooms"][
 				":chatRoomId"
@@ -40,10 +40,9 @@ export function ChatMemberRemoveButton({
 			return response.json();
 		},
 		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: ["chat-room", roomId] });
 			setOpen(false);
 		},
-	}); */
+	});
 
 	return (
 		<Dialog open={open} onOpenChange={setOpen}>
@@ -68,13 +67,13 @@ export function ChatMemberRemoveButton({
 					<Button variant="outline" onClick={() => setOpen(false)}>
 						Cancel
 					</Button>
-					{/* <Button
+					<Button
 						variant="destructive"
 						onClick={() => removeMemberMutation.mutate()}
 						disabled={removeMemberMutation.isPending}
 					>
 						{removeMemberMutation.isPending ? "Removing..." : "Remove"}
-					</Button> */}
+					</Button>
 				</DialogFooter>
 			</DialogContent>
 		</Dialog>
