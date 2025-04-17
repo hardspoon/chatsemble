@@ -45,9 +45,17 @@ export type WsMessageChatRoomsUpdate = {
 	chatRooms: ChatRoom[];
 };
 
+export type WsMessageChatRoomMessageBroadcast = {
+	type: "chat-room-message-broadcast";
+	roomId: string;
+	threadId: number | null;
+	message: ChatRoomMessage;
+};
+
 export type WsChatOutgoingMessage =
 	| WsMessageUserInitResponse
 	| WsMessageChatRoomsUpdate
-	| WsMessageChatRoomInitResponse;
+	| WsMessageChatRoomInitResponse
+	| WsMessageChatRoomMessageBroadcast;
 
 export type WsChatMessage = WsChatIncomingMessage | WsChatOutgoingMessage;
