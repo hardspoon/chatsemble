@@ -1,3 +1,4 @@
+import { ChatMemberBadge } from "@client/components/chat-room-member/chat-member-badge";
 import {
 	Avatar,
 	AvatarFallback,
@@ -9,7 +10,6 @@ import { honoClient } from "@client/lib/api-client";
 import type { ChatRoomMember, CreateChatRoomMember } from "@shared/types";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
-import { ChatMemberBadge } from "@client/components/chat-room-member/chat-member-badge";
 
 type CreateChatRoomMemberWithoutRoomId = Omit<CreateChatRoomMember, "roomId">;
 

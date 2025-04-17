@@ -1,5 +1,6 @@
 "use client";
 
+import { useOrganizationConnectionContext } from "@client/components/providers/organization-connection-provider";
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -32,10 +33,9 @@ import {
 } from "lucide-react";
 import { type Dispatch, type SetStateAction, useState } from "react";
 import {
-	NewChatRoomDialog,
 	type NewChatDialogState,
+	NewChatRoomDialog,
 } from "../new/new-chat-dialog";
-import { useOrganizationConnectionContext } from "@client/components/providers/organization-connection-provider";
 
 export function ChatRoomList() {
 	const [dialogState, setDialogState] = useState<NewChatDialogState>(null);

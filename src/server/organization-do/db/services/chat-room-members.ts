@@ -1,7 +1,7 @@
 import type { ChatRoomMember } from "@shared/types";
-import { chatRoomMember } from "../schema";
 import { eq } from "drizzle-orm";
 import type { DrizzleSqliteDODatabase } from "drizzle-orm/durable-sqlite";
+import { chatRoomMember } from "../schema";
 
 export function createChatRoomMemberService(db: DrizzleSqliteDODatabase) {
 	return {

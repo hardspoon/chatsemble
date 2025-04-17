@@ -2,8 +2,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { FileCode, GithubIcon, Mail, Server, Settings } from "lucide-react";
 
-import { LogoIcon } from "@client/components/icons/logo-icon";
 import { ThemeToggle } from "@client/components/common/theme-toggle";
+import { LogoIcon } from "@client/components/icons/logo-icon";
 import { Badge } from "@client/components/ui/badge";
 import { Button } from "@client/components/ui/button";
 import { Input } from "@client/components/ui/input";

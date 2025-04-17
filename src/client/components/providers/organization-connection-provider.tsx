@@ -1,8 +1,8 @@
 "use client";
 
 import {
-	useOrganizationConnection,
 	type UseOrganizationConnectionProps,
+	useOrganizationConnection,
 } from "@client/hooks/organization/use-organization-connection";
 
 import { type ReactNode, createContext, useContext } from "react";

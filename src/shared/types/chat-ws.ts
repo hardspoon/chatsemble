@@ -1,7 +1,7 @@
 import type {
 	ChatRoom,
-	ChatRoomMessage,
 	ChatRoomMember,
+	ChatRoomMessage,
 	ChatRoomMessagePartial,
 } from "@shared/types/chat";
 import type { Workflow } from "@shared/types/workflow";
