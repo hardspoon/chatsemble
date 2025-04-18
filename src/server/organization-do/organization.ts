@@ -477,14 +477,14 @@ export class OrganizationDurableObject extends DurableObject<Env> {
 			const contextSize = 10;
 
 			let contextMessages: ChatRoomMessage[] = [];
-			if (newMessage.id) {
-				contextMessages = await this.dbServices.getChatRoomMessages({
-					threadId,
-					roomId,
-					beforeId: newMessage.id,
-					limit: contextSize,
-				});
-			}
+
+			contextMessages = await this.dbServices.getChatRoomMessages({
+				threadId,
+				roomId,
+				beforeId: newMessage.id,
+				limit: contextSize,
+			});
+
 			if (threadId) {
 				const threadMessage =
 					await this.dbServices.getChatRoomMessageById(threadId);
@@ -497,6 +497,7 @@ export class OrganizationDurableObject extends DurableObject<Env> {
 				roomId,
 				type: "agent",
 			});
+			
 			if (agentMembers.length === 0) {
 				console.log("[routeMessageAndNotifyAgents] No agents in the room.");
 				return;

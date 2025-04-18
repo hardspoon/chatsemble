@@ -19,7 +19,7 @@ export function getWorkflowAgentSystemPrompt({
 	const persona = getAssistantPersonaPrompt(agentConfig);
 	const responseRules = getResponseFormattingRulesPrompt();
 	const workflowRules = getWorkflowExecutionRulesPrompt();
-	const dynamicContext = getChatRoomContextPrompt(chatRoomId, null);
+	const chatRoomContext = getChatRoomContextPrompt(chatRoomId, null);
 
 	return `
 ${coreContext}
@@ -30,7 +30,7 @@ ${responseRules}
 
 ${workflowRules}
 
-${dynamicContext}
+${chatRoomContext}
 
 `.trim();
 }
