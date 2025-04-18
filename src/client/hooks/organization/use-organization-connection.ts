@@ -6,22 +6,21 @@ import { useMainChatRoomState } from "./use-main-chat-room-state";
 import { useThreadChatRoomState } from "./use-thread-chat-room-state";
 
 export interface UseOrganizationConnectionProps {
-	organizationSlug: string;
+	organizationId: string;
 	roomId?: string;
 	threadId?: number;
 	user: User;
 }
 
 export function useOrganizationConnection({
-	organizationSlug,
+	organizationId,
 	roomId,
 	threadId,
 	user,
 }: UseOrganizationConnectionProps) {
 	const { sendMessage, connectionStatus } = useWebSocket({
-		organizationSlug,
+		organizationId,
 		onMessage: (message) => {
-			//console.log("[useChat] onMessage", JSON.parse(JSON.stringify(message)));
 			userState.handleMessage(message);
 			mainChatRoomState.handleMessage(message);
 			chatRoomThreadState.handleMessage(message);

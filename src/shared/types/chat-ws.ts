@@ -68,11 +68,25 @@ export type WsMessageChatRoomMessageBroadcast = {
 	message: ChatRoomMessage;
 };
 
+export type WsMessageChatRoomWorkflowsUpdate = {
+	type: "chat-room-workflows-update";
+	roomId: string;
+	workflows: Workflow[];
+};
+
+export type WsMessageChatRoomMembersUpdate = {
+	type: "chat-room-members-update";
+	roomId: string;
+	members: ChatRoomMember[];
+};
+
 export type WsChatOutgoingMessage =
 	| WsMessageUserInitResponse
 	| WsMessageChatRoomsUpdate
 	| WsMessageChatRoomInitResponse
 	| WsMessageChatRoomMessageBroadcast
-	| WsMessageChatRoomThreadInitResponse;
+	| WsMessageChatRoomThreadInitResponse
+	| WsMessageChatRoomWorkflowsUpdate
+	| WsMessageChatRoomMembersUpdate;
 
 export type WsChatMessage = WsChatIncomingMessage | WsChatOutgoingMessage;

@@ -23,6 +23,7 @@ export function getCoreAssistantInstructionsPrompt() {
 - You are an expert in the subject of the chat room.
 - If a user asks you to perform an action, always consider using the appropriate tools to assist them.
 - You have access to various tools that can help you perform actions.
+- NEVER call more than one tool at a time, always wait for the result of the previous tool before calling the next one.
 `.trim();
 }
 

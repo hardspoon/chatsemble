@@ -11,14 +11,11 @@ export type UseWebSocketConnectionStatus =
 	| "connected";
 
 export interface UseWebSocketProps {
-	organizationSlug: string;
+	organizationId: string;
 	onMessage: (message: WsChatOutgoingMessage) => void;
 }
 
-export function useWebSocket({
-	organizationSlug,
-	onMessage,
-}: UseWebSocketProps) {
+export function useWebSocket({ organizationId, onMessage }: UseWebSocketProps) {
 	const wsRef = useRef<WebSocket | null>(null);
 	const [connectionStatus, setConnectionStatus] =
 		useState<UseWebSocketConnectionStatus>("disconnected");
@@ -28,8 +25,8 @@ export function useWebSocket({
 		onMessageRef.current = onMessage;
 	}, [onMessage]);
 
-	const startWebSocket = useCallback((organizationSlug: string | null) => {
-		if (!organizationSlug) {
+	const startWebSocket = useCallback((organizationId: string | null) => {
+		if (!organizationId) {
 			setConnectionStatus("disconnected");
 			return;
 		}
@@ -41,7 +38,7 @@ export function useWebSocket({
 		const apiHost = appUrl?.replace(/^https?:\/\//, "") ?? "";
 		const wsProtocol = window.location.protocol === "https:" ? "wss" : "ws";
 		const ws = new WebSocket(
-			`${wsProtocol}://${apiHost}/websocket/organization/${organizationSlug}`,
+			`${wsProtocol}://${apiHost}/websocket/organization/${organizationId}`,
 		);
 
 		ws.onopen = () => {
@@ -81,7 +78,7 @@ export function useWebSocket({
 		}
 
 		setConnectionStatus("disconnected");
-		startWebSocket(organizationSlug);
+		startWebSocket(organizationId);
 
 		return () => {
 			if (wsRef.current) {
@@ -89,7 +86,7 @@ export function useWebSocket({
 				wsRef.current = null;
 			}
 		};
-	}, [organizationSlug, startWebSocket]);
+	}, [organizationId, startWebSocket]);
 
 	const sendMessage = useCallback((message: WsChatIncomingMessage) => {
 		if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {

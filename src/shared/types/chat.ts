@@ -71,7 +71,7 @@ export const createChatRoomMemberSchema = z.object({
 export type CreateChatRoomMember = z.infer<typeof createChatRoomMemberSchema>;
 
 // ChatRoom
-const CHAT_ROOM_TYPES = ["public"] as const;
+const CHAT_ROOM_TYPES = ["public"] as const; // TODO: Make everything private and add permissions
 export type ChatRoomType = (typeof CHAT_ROOM_TYPES)[number];
 
 export interface ChatRoom {

@@ -31,10 +31,12 @@ function Root() {
 		return <Navigate to="/auth/signin" />;
 	}
 
+	// TODO: Add organization routes to select an organization
+
 	return (
 		<AuthProvider>
 			<OrganizationConnectionProvider
-				organizationSlug={data.session.activeOrganizationId} // TODO: Make this be the slug instead of the ID???
+				organizationId={data.session.activeOrganizationId}
 				roomId={searchParams.roomId}
 				threadId={searchParams.threadId}
 				user={data.user}
