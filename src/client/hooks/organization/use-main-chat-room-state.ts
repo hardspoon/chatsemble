@@ -59,7 +59,7 @@ export function useMainChatRoomState({
 					break;
 				case "chat-room-message-broadcast":
 					if (
-						wsMessage.message.roomId === roomId && // TODO: Check if this is correct
+						wsMessage.message.roomId === roomId &&
 						wsMessage.message.threadId === null
 					) {
 						setMessages((prev) =>
@@ -70,13 +70,16 @@ export function useMainChatRoomState({
 						);
 					}
 					break;
-
-				/* case "member-update":
-				setMembers(wsMessage.members);
-				break; // TODO: Add this
-			case "workflow-update":
-				setWorkflows(wsMessage.workflows);
-				break; */
+				case "chat-room-workflows-update":
+					if (wsMessage.roomId === roomId) {
+						setWorkflows(wsMessage.workflows);
+					}
+					break;
+				case "chat-room-members-update":
+					if (wsMessage.roomId === roomId) {
+						setMembers(wsMessage.members);
+					}
+					break;
 			}
 		},
 		[roomId],

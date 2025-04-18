@@ -2,10 +2,15 @@ import { DurableObject } from "cloudflare:workers";
 
 import { createOpenAI } from "@ai-sdk/openai";
 import { getDefaultAgentSystemPrompt } from "@server/ai/prompts/agent/default-prompt";
+import {
+	getWorkflowAgentSystemPrompt,
+	getWorkflowAgentUserPrompt,
+} from "@server/ai/prompts/agent/workflow-prompt";
 import { routeMessageToAgentSystemPrompt } from "@server/ai/prompts/router-prompt";
 import { agentToolSetKeys } from "@server/ai/tools";
 import { createMessageThreadTool } from "@server/ai/tools/create-thread-tool";
 import { deepResearchTool } from "@server/ai/tools/deep-search-tool";
+import { scheduleWorkflowTool } from "@server/ai/tools/schedule-workflow-tool";
 import { webCrawlerTool } from "@server/ai/tools/web-crawler-tool";
 import { webSearchTool } from "@server/ai/tools/web-search-tool";
 import { processDataStream } from "@server/ai/utils/data-stream";
@@ -16,6 +21,7 @@ import type {
 	ChatRoomMember,
 	ChatRoomMessage,
 	ChatRoomMessagePartial,
+	WorkflowPartial,
 	WsChatIncomingMessage,
 	WsChatOutgoingMessage,
 } from "@shared/types";
@@ -27,6 +33,7 @@ import {
 	smoothStream,
 	streamText,
 } from "ai";
+import CronExpressionParser from "cron-parser";
 import { drizzle } from "drizzle-orm/durable-sqlite";
 import type { DrizzleSqliteDODatabase } from "drizzle-orm/durable-sqlite";
 import { migrate } from "drizzle-orm/durable-sqlite/migrator";
@@ -64,6 +71,63 @@ export class OrganizationDurableObject extends DurableObject<Env> {
 
 	async delete() {
 		this.storage.deleteAll();
+	}
+
+	async alarm() {
+		await this.handleWorkflowAlarm();
+		await this.scheduleNextWorkflowAlarm();
+	}
+
+	async scheduleNextWorkflowAlarm() {
+		const now = Date.now();
+		const nextTime = await this.dbServices.findNextWorkflowTime(now);
+		const currentAlarm = await this.ctx.storage.getAlarm();
+		console.log("[scheduleNextWorkflowAlarm] nextTime", nextTime);
+		console.log("[scheduleNextWorkflowAlarm] currentAlarm", currentAlarm);
+
+		if (nextTime) {
+			if (currentAlarm !== nextTime) {
+				console.log(
+					`[Setting next alarm for ${new Date(nextTime).toISOString()}`,
+				);
+				this.ctx.storage.setAlarm(nextTime);
+			} else {
+				console.log(
+					`Alarm already set correctly for ${new Date(nextTime).toISOString()}`,
+				);
+			}
+		} else {
+			if (currentAlarm) {
+				console.log("No active tasks, deleting alarm.");
+				this.ctx.storage.deleteAlarm();
+			} else {
+				console.log("No active tasks, no alarm to delete.");
+			}
+		}
+	}
+
+	async handleWorkflowAlarm() {
+		console.log(`Alarm triggered at ${new Date().toISOString()}`);
+		const now = Date.now();
+		const dueWorkflows = await this.dbServices.getDueWorkflows(now);
+
+		console.log(`Found ${dueWorkflows.length} due workflows.`);
+
+		await Promise.all(
+			dueWorkflows.map(async (workflow) => {
+				console.log(`Processing workflow ${workflow.id}`);
+				await this.executeWorkflow(workflow);
+			}),
+		);
+
+		const chatRoomIds = dueWorkflows.map((workflow) => workflow.chatRoomId);
+		const uniqueChatRoomIds = [...new Set(chatRoomIds)];
+
+		await Promise.all(
+			uniqueChatRoomIds.map(async (chatRoomId) => {
+				await this.broadcastWorkflowUpdate(chatRoomId);
+			}),
+		);
 	}
 
 	async fetch(request: Request) {
@@ -184,13 +248,14 @@ export class OrganizationDurableObject extends DurableObject<Env> {
 	}
 
 	async handleChatRoomInitRequest(session: Session, roomId: string) {
-		const [room, members, messages] = await Promise.all([
+		const [room, members, messages, workflows] = await Promise.all([
 			this.dbServices.getChatRoomById(roomId),
 			this.dbServices.getChatRoomMembers({ roomId }),
 			this.dbServices.getChatRoomMessages({
 				roomId,
 				threadId: null,
 			}),
+			this.dbServices.getChatRoomWorkflows(roomId),
 		]);
 
 		if (!room) {
@@ -205,7 +270,7 @@ export class OrganizationDurableObject extends DurableObject<Env> {
 				messages,
 				members,
 				room,
-				workflows: [], // TODO: Add workflows
+				workflows,
 			},
 			session.userId,
 		);
@@ -239,6 +304,95 @@ export class OrganizationDurableObject extends DurableObject<Env> {
 			},
 			session.userId,
 		);
+	}
+
+	async executeWorkflow(workflow: WorkflowPartial) {
+		console.log(
+			`Executing workflow ${workflow.id} for chatroom ${workflow.chatRoomId} and agent ${workflow.agentId}`,
+		);
+		try {
+			await this.processAndRespondWorkflow({ workflow });
+
+			if (workflow.isRecurring) {
+				try {
+					const interval = CronExpressionParser.parse(
+						workflow.scheduleExpression,
+						{
+							tz: "UTC",
+							currentDate: new Date(workflow.nextExecutionTime),
+						},
+					);
+					const nextExecutionTime = interval.next().getTime();
+					console.log(
+						`Rescheduling task ${workflow.id} for ${new Date(nextExecutionTime).toISOString()}`,
+					);
+					await this.dbServices.updateWorkflow(workflow.id, {
+						nextExecutionTime,
+						lastExecutionTime: Date.now(),
+					});
+				} catch (error) {
+					console.error(
+						`Failed to parse schedule for recurring workflow ${workflow.id}:`,
+						error,
+					);
+					await this.dbServices.updateWorkflow(workflow.id, {
+						lastExecutionTime: Date.now(),
+					});
+				}
+			} else {
+				await this.dbServices.updateWorkflow(workflow.id, {
+					lastExecutionTime: Date.now(),
+					isActive: false,
+				});
+				console.log(`Workflow ${workflow.id} completed.`);
+			}
+		} catch (error) {
+			console.error(`Error executing workflow ${workflow.id}:`, error);
+			await this.dbServices.updateWorkflow(workflow.id, {
+				lastExecutionTime: Date.now(),
+			});
+		}
+	}
+
+	async processAndRespondWorkflow({
+		workflow,
+	}: {
+		workflow: WorkflowPartial;
+	}) {
+		console.log("Processing workflow :", workflow);
+
+		const agentId = workflow.agentId;
+
+		const agentConfig = await this.dbServices.getAgentById(agentId);
+
+		if (!agentConfig) {
+			console.error(`Agent config not found for agent ${agentId}`);
+			throw new Error(`Agent config not found for agent ${agentId}`);
+		}
+
+		const workflowPrompt = getWorkflowAgentUserPrompt({ workflow });
+
+		console.log(`Workflow prompt: ${workflowPrompt}`);
+
+		const systemPrompt = getWorkflowAgentSystemPrompt({
+			agentConfig,
+			chatRoomId: workflow.chatRoomId,
+		});
+
+		await this.formulateResponse({
+			agentId,
+			chatRoomId: workflow.chatRoomId,
+			threadId: null,
+			messages: [
+				{
+					id: "1",
+					content: workflowPrompt,
+					role: "user",
+				},
+			],
+			systemPrompt,
+			removeTools: ["scheduleWorkflow"],
+		});
 	}
 
 	async receiveChatRoomMessage({
@@ -490,6 +644,8 @@ export class OrganizationDurableObject extends DurableObject<Env> {
 			agentIdForAssistant: agentId,
 		});
 
+		console.log("[processAndRespondIncomingMessages] messages", messages);
+
 		const systemPrompt = getDefaultAgentSystemPrompt({
 			agentConfig,
 			chatRoomId: chatRoomId,
@@ -535,20 +691,23 @@ export class OrganizationDurableObject extends DurableObject<Env> {
 				webSearch: webSearchTool(dataStream),
 				deepResearch: deepResearchTool(dataStream),
 				webCrawl: webCrawlerTool(dataStream),
-				/* scheduleWorkflow: scheduleWorkflowTool({
-					agentInstance: this,
+				scheduleWorkflow: scheduleWorkflowTool({
+					organizationInstance: this,
 					chatRoomId,
-				}), */
+					agentId,
+				}),
 
 				createMessageThread: createMessageThreadTool({
 					roomId: chatRoomId,
-					onMessage: async ({ newMessagePartial }) =>
-						await this.sendAgentResponse({
-							agentId,
-							chatRoomId: chatRoomId,
+					onMessage: async ({ newMessagePartial }) => {
+						return await this.receiveChatRoomMessage({
+							roomId: chatRoomId,
+							memberId: agentId,
 							message: newMessagePartial,
 							existingMessageId: null,
-						}),
+							notifyAgents: false,
+						});
+					},
 					onNewThread: (newThreadId) => {
 						console.log("[formulateResponse] onNewThread", newThreadId);
 						sendMessageThreadId = newThreadId;
@@ -585,39 +744,19 @@ export class OrganizationDurableObject extends DurableObject<Env> {
 				response: dataStreamResponse,
 				getThreadId: () => sendMessageThreadId,
 				omitSendingTool: ["createMessageThread"],
-				onMessageSend: async ({ newMessagePartial, existingMessageId }) =>
-					await this.sendAgentResponse({
-						agentId,
-						chatRoomId: chatRoomId,
+				onMessageSend: async ({ newMessagePartial, existingMessageId }) => {
+					return await this.receiveChatRoomMessage({
+						roomId: chatRoomId,
+						memberId: agentId,
 						message: newMessagePartial,
 						existingMessageId,
-					}),
+						notifyAgents: false,
+					});
+				},
 			});
 		} catch (error) {
 			console.error("[formulateResponse] error", error);
 		}
-	}
-
-	private async sendAgentResponse({
-		chatRoomId,
-		agentId,
-		message,
-		existingMessageId,
-	}: {
-		chatRoomId: string;
-		agentId: string;
-		message: ChatRoomMessagePartial;
-		existingMessageId: number | null;
-	}) {
-		const chatRoomMessage = await this.receiveChatRoomMessage({
-			roomId: chatRoomId,
-			memberId: agentId,
-			message,
-			existingMessageId,
-			notifyAgents: false,
-		});
-
-		return chatRoomMessage;
 	}
 
 	async sendChatRoomsUpdateToUsers(userIds: string[]) {
@@ -634,6 +773,28 @@ export class OrganizationDurableObject extends DurableObject<Env> {
 				},
 				userId,
 			);
+		});
+	}
+
+	async broadcastWorkflowUpdate(chatRoomId: string) {
+		const workflows = await this.dbServices.getChatRoomWorkflows(chatRoomId);
+
+		this.broadcastWebSocketMessage({
+			type: "chat-room-workflows-update",
+			roomId: chatRoomId,
+			workflows,
+		});
+	}
+
+	async broadcastChatRoomMembersUpdate(chatRoomId: string) {
+		const members = await this.dbServices.getChatRoomMembers({
+			roomId: chatRoomId,
+		});
+
+		this.broadcastWebSocketMessage({
+			type: "chat-room-members-update",
+			roomId: chatRoomId,
+			members,
 		});
 	}
 
@@ -665,7 +826,8 @@ export class OrganizationDurableObject extends DurableObject<Env> {
 		);
 
 		this.sendChatRoomsUpdateToUsers([deleteChatRoomMemberParams.memberId]);
-		// TODO: Send update to members of the chat room
+
+		this.broadcastChatRoomMembersUpdate(deleteChatRoomMemberParams.roomId);
 
 		return deletedChatRoomMember;
 	}
@@ -681,7 +843,7 @@ export class OrganizationDurableObject extends DurableObject<Env> {
 
 		this.sendChatRoomsUpdateToUsers([addChatRoomMemberParams.id]);
 
-		// TODO: Send update to members of the chat room
+		this.broadcastChatRoomMembersUpdate(addChatRoomMemberParams.roomId);
 
 		return addedChatRoomMember;
 	}
@@ -711,5 +873,11 @@ export class OrganizationDurableObject extends DurableObject<Env> {
 		agentUpdates: Parameters<typeof this.dbServices.updateAgent>[1],
 	) {
 		return await this.dbServices.updateAgent(id, agentUpdates);
+	}
+
+	// Workflow services
+
+	async deleteWorkflow(workflowId: string) {
+		return await this.dbServices.deleteWorkflow(workflowId);
 	}
 }

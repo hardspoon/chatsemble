@@ -18,8 +18,11 @@ import { formatDistanceToNow } from "date-fns";
 import { Calendar, Clock, Goal, Repeat, Trash2 } from "lucide-react";
 
 import { ConfirmationDialog } from "@client/components/common/confirmation-dialog";
+import { honoClient } from "@client/lib/api-client";
 import type { Workflow } from "@shared/types";
+import { useMutation } from "@tanstack/react-query";
 import { useState } from "react";
+import { toast } from "sonner";
 
 export function ChatDetailsWorkflowsSection() {
 	const {
@@ -55,26 +58,21 @@ export function ChatDetailsWorkflowsSection() {
 
 function WorkflowCard({ workflow }: { workflow: Workflow; roomId: string }) {
 	const [open, setOpen] = useState(false);
-	/* const queryClient = useQueryClient(); */
 
-	/* const deleteWorkflowMutation = useMutation({
+	const deleteWorkflowMutation = useMutation({
 		mutationFn: async () => {
-			const response = await honoClient.api.chat["chat-rooms"][
-				":chatRoomId"
-			].agents[":agentId"].workflows[":workflowId"].$delete({
+			const response = await honoClient.api.workflows[":workflowId"].$delete({
 				param: {
-					chatRoomId: roomId,
-					agentId: workflow.agent.id,
 					workflowId: workflow.id,
 				},
 			});
 			return response.json();
 		},
 		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: ["chat-room", roomId] });
+			toast.success("Workflow deleted successfully");
 			setOpen(false);
 		},
-	}); */ // TODO: Add delete workflow mutation
+	});
 
 	return (
 		<Card>
@@ -112,7 +110,7 @@ function WorkflowCard({ workflow }: { workflow: Workflow; roomId: string }) {
 							open={open}
 							onOpenChange={setOpen}
 							onConfirm={() => {
-								/* deleteWorkflowMutation.mutate(); */
+								deleteWorkflowMutation.mutate();
 							}}
 						>
 							<Button variant="ghost" size="icon">
