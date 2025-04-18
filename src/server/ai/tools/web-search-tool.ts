@@ -4,6 +4,8 @@ import { type DataStreamWriter, tool } from "ai";
 import { nanoid } from "nanoid";
 import { z } from "zod";
 
+// TODO: Export result andd args types for tools
+
 export const webSearchTool = (dataStream: DataStreamWriter) =>
 	tool({
 		description:

@@ -679,11 +679,6 @@ export class OrganizationDurableObject extends DurableObject<Env> {
 	}) {
 		console.log("[formulateResponse] chatRoomId", chatRoomId);
 
-		const openAIClient = createOpenAI({
-			baseURL: this.env.AI_GATEWAY_OPENAI_URL,
-			apiKey: this.env.OPENAI_API_KEY,
-		});
-
 		let sendMessageThreadId: number | null = originalThreadId;
 		console.log("[formulateResponse] sendMessageThreadId", sendMessageThreadId);
 
@@ -721,11 +716,21 @@ export class OrganizationDurableObject extends DurableObject<Env> {
 			(tool) => !removeTools?.includes(tool),
 		);
 
+		/* const geminiClient = createGoogleGenerativeAI({
+			apiKey: this.env.GEMINI_API_KEY,
+			baseURL: `${this.env.AI_GATEWAY_GEMINI_URL}/v1beta`,
+		}); */
+
+		const openAIClient = createOpenAI({
+			baseURL: this.env.AI_GATEWAY_OPENAI_URL,
+			apiKey: this.env.OPENAI_API_KEY,
+		});
+
 		try {
 			const dataStreamResponse = createDataStreamResponse({
 				execute: async (dataStream) => {
 					streamText({
-						model: openAIClient("gpt-4o"),
+						model: openAIClient("gpt-4.1"),
 						system: systemPrompt,
 						tools: agentToolSet(dataStream),
 						messages,
