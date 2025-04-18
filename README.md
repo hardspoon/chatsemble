@@ -8,7 +8,7 @@
 [![X](https://img.shields.io/twitter/url?url=https%3A%2F%2Fx.com%2FAlwurts&label=Alwurts
 )](https://x.com/Alwurts)
 
-![hero](/public/chatsemble-app.png)
+![hero](/public/chatsemble-app.jpg)
 
 Chatsemble is an **open-source**, real-time platform designed to revolutionize how teams work together with AI. It brings humans and intelligent AI agents into the same collaborative space, enabling seamless communication, task automation, and shared workflows – all powered by the robust and scalable Cloudflare ecosystem.
 
