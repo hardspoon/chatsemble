@@ -1,4 +1,4 @@
-import type { agentConfig as agentConfigT } from "@server/durable-objects/agent/db/schema";
+import type { Agent } from "@shared/types";
 import {
 	getAssistantPersonaPrompt,
 	getChatRoomContextPrompt,
@@ -12,7 +12,7 @@ export function getDefaultAgentSystemPrompt({
 	chatRoomId,
 	threadId,
 }: {
-	agentConfig: typeof agentConfigT.$inferSelect;
+	agentConfig: Agent;
 	chatRoomId: string;
 	threadId: number | null;
 }): string {
@@ -20,7 +20,7 @@ export function getDefaultAgentSystemPrompt({
 	const persona = getAssistantPersonaPrompt(agentConfig);
 	const responseRules = getResponseFormattingRulesPrompt();
 	const toolRules = getStandardToolUsageRulesPrompt();
-	const dynamicContext = getChatRoomContextPrompt(chatRoomId, threadId);
+	const chatRoomContext = getChatRoomContextPrompt(chatRoomId, threadId);
 
 	return `
 ${coreContext}
@@ -31,6 +31,6 @@ ${responseRules}
 
 ${toolRules}
 
-${dynamicContext}
+${chatRoomContext}
 `.trim();
 }

@@ -34,7 +34,6 @@ export function AppNavUser() {
 	const { data: activeOrganization, isPending: isActiveOrganizationPending } =
 		authClient.useActiveOrganization();
 
-	// TODO: Get session and org from context
 	const handleSignOut = async () => {
 		await authClient.signOut({
 			fetchOptions: {

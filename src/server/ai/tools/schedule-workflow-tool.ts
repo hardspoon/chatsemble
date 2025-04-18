@@ -1,15 +1,17 @@
+import type { OrganizationDurableObject } from "@server/organization-do/organization";
 import { workflowStepSchema } from "@shared/types";
 import { tool } from "ai";
 import { CronExpressionParser } from "cron-parser";
 import { z } from "zod";
-import type { AgentDurableObject } from "../../durable-objects/agent/agent-durable-object";
 
 export const scheduleWorkflowTool = ({
-	agentInstance,
+	organizationInstance,
 	chatRoomId,
+	agentId,
 }: {
-	agentInstance: AgentDurableObject;
+	organizationInstance: OrganizationDurableObject;
 	chatRoomId: string;
+	agentId: string;
 }) =>
 	tool({
 		description:
@@ -56,23 +58,25 @@ export const scheduleWorkflowTool = ({
 					}
 				}
 
-				const workflow = await agentInstance.dbServices.createWorkflow({
-					goal,
-					steps: {
-						version: 1,
-						type: "workflowSteps",
-						data: steps,
-					},
-					scheduleExpression,
-					isRecurring,
-					nextExecutionTime,
-					chatRoomId,
-				});
+				const workflow =
+					await organizationInstance.dbServices.createAgentWorkflow({
+						agentId,
+						goal,
+						steps: {
+							version: 1,
+							type: "workflowSteps",
+							data: steps,
+						},
+						scheduleExpression,
+						isRecurring,
+						nextExecutionTime,
+						chatRoomId,
+					});
 				console.log("[scheduleWorkflowTool] Workflow scheduled", workflow);
-				await agentInstance.scheduleNextWorkflowAlarm();
+				await organizationInstance.scheduleNextWorkflowAlarm();
 
 				try {
-					await agentInstance.broadcastWorkflowUpdate(chatRoomId);
+					await organizationInstance.broadcastWorkflowUpdate(chatRoomId);
 				} catch (error) {
 					console.error("Error broadcasting workflow update:", error);
 				}

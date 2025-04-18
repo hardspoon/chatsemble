@@ -1,4 +1,4 @@
-import type { agentConfig as agentConfigT } from "@server/durable-objects/agent/db/schema";
+import type { Agent } from "@shared/types";
 import type { WorkflowPartial } from "@shared/types/workflow";
 import {
 	getAssistantPersonaPrompt,
@@ -12,14 +12,14 @@ export function getWorkflowAgentSystemPrompt({
 	agentConfig,
 	chatRoomId,
 }: {
-	agentConfig: typeof agentConfigT.$inferSelect;
+	agentConfig: Agent;
 	chatRoomId: string;
 }): string {
 	const coreContext = getCoreAssistantInstructionsPrompt();
 	const persona = getAssistantPersonaPrompt(agentConfig);
 	const responseRules = getResponseFormattingRulesPrompt();
 	const workflowRules = getWorkflowExecutionRulesPrompt();
-	const dynamicContext = getChatRoomContextPrompt(chatRoomId, null);
+	const chatRoomContext = getChatRoomContextPrompt(chatRoomId, null);
 
 	return `
 ${coreContext}
@@ -30,7 +30,7 @@ ${responseRules}
 
 ${workflowRules}
 
-${dynamicContext}
+${chatRoomContext}
 
 `.trim();
 }

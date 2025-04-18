@@ -6,6 +6,7 @@ import { z } from "zod";
 export const createMessageThreadTool = ({
 	onMessage,
 	onNewThread,
+	roomId,
 }: {
 	onMessage: ({
 		newMessagePartial,
@@ -13,6 +14,7 @@ export const createMessageThreadTool = ({
 		newMessagePartial: ChatRoomMessagePartial;
 	}) => Promise<ChatRoomMessage>;
 	onNewThread: (newThreadId: number) => void;
+	roomId: string;
 }) =>
 	tool({
 		description:
@@ -29,6 +31,7 @@ export const createMessageThreadTool = ({
 					toolUses: [],
 					createdAt: Date.now(),
 					threadId: null,
+					roomId,
 				},
 			});
 			onNewThread(newThreadId);

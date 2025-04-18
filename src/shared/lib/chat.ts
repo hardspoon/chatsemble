@@ -7,13 +7,15 @@ export function createChatRoomMessagePartial({
 	toolUses,
 	mentions,
 	threadId,
+	roomId,
 }: Pick<
 	ChatRoomMessagePartial,
-	"content" | "toolUses" | "threadId" | "mentions"
+	"content" | "toolUses" | "threadId" | "mentions" | "roomId"
 >): ChatRoomMessagePartial {
 	return {
 		id: Number(customAlphabet("0123456789", 20)()),
 		threadId,
+		roomId,
 		content,
 		toolUses,
 		mentions,

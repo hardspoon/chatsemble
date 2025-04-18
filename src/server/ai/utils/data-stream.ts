@@ -24,11 +24,13 @@ const dataStreamTypes = {
 
 export async function processDataStream({
 	response,
+	roomId,
 	getThreadId,
 	omitSendingTool,
 	onMessageSend,
 }: {
 	response: Response;
+	roomId: string;
 	getThreadId: () => number | null;
 	omitSendingTool: string[];
 	onMessageSend: ({
@@ -68,6 +70,7 @@ export async function processDataStream({
 					toolUses: [],
 					mentions: [],
 					threadId: currentThreadId,
+					roomId,
 				});
 				streamedMessages.push({
 					...newPartialMessage,
@@ -101,6 +104,7 @@ export async function processDataStream({
 						toolUses: currentMessage.toolUses,
 						threadId: currentThreadId,
 						createdAt: currentMessage.createdAt,
+						roomId: currentMessage.roomId,
 					},
 					existingMessageId: haventSentCurrentMessage
 						? null
@@ -194,6 +198,7 @@ export async function processDataStream({
 						toolUses: newToolUses,
 						threadId: currentThreadId,
 						createdAt: currentMessage.createdAt,
+						roomId: currentMessage.roomId,
 					},
 					existingMessageId: haventSentCurrentMessage
 						? null
@@ -252,6 +257,7 @@ export async function processDataStream({
 						toolUses: updatedToolUses,
 						threadId: currentThreadId,
 						createdAt: currentMessage.createdAt,
+						roomId: currentMessage.roomId,
 					},
 					existingMessageId: haventSentCurrentMessage
 						? null

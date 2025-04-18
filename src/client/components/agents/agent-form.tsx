@@ -1,5 +1,7 @@
 "use client";
 
+import { AvatarPicker } from "@client/components/common/avatar-picker";
+import { CardToggleGroup } from "@client/components/common/card-toggle-groups";
 import {
 	FormControl,
 	FormDescription,
@@ -36,8 +38,6 @@ import {
 	Sparkles,
 	Users,
 } from "lucide-react";
-import { AvatarPicker } from "../avatar-picker";
-import { CardToggleGroup } from "../card-toggle-groups";
 
 export function AgentForm({ className }: React.ComponentProps<"div">) {
 	return (
