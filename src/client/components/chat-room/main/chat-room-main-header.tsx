@@ -12,12 +12,13 @@ import {
 	TooltipTrigger,
 } from "@client/components/ui/tooltip";
 import { cn } from "@client/lib/utils";
-import { MessagesSquare, Users } from "lucide-react";
+import { MessagesSquare, Users, Calendar } from "lucide-react";
 import { type Dispatch, type SetStateAction, useState } from "react";
 import {
 	ChatDetailsDialog,
 	type ChatDetailsDialogOpen,
 } from "../details/chat-details-dialog";
+import { Separator } from "@client/components/ui/separator";
 
 export function ChatRoomMainHeader() {
 	const [openChatDetailsDialog, setOpenChatDetailsDialog] =
@@ -37,10 +38,15 @@ export function ChatRoomMainHeader() {
 			{connectionStatus === "connected" && status === "success" ? (
 				<>
 					<ChatRoomName setOpenChatDetailsDialog={setOpenChatDetailsDialog} />
-					<div className="ml-auto flex items-center gap-2">
+					<div className="ml-auto flex items-center">
 						<ChatRoomMembers
 							setOpenChatDetailsDialog={setOpenChatDetailsDialog}
 						/>
+						<AppHeaderSeparator />
+						<ChatRoomWorkflows
+							setOpenChatDetailsDialog={setOpenChatDetailsDialog}
+						/>
+						<AppHeaderSeparator />
 						<ChatRoomConnectionStatus />
 					</div>
 					<ChatDetailsDialog
@@ -105,6 +111,33 @@ function ChatRoomMembers({
 		>
 			<Users className="h-4 w-4" />
 			<span>{members.length} Members</span>
+		</Button>
+	);
+}
+
+function ChatRoomWorkflows({
+	setOpenChatDetailsDialog,
+}: {
+	setOpenChatDetailsDialog: Dispatch<SetStateAction<ChatDetailsDialogOpen>>;
+}) {
+	const {
+		mainChatRoomState: { workflows },
+	} = useOrganizationConnectionContext();
+
+	return (
+		<Button
+			variant="ghost"
+			size="sm"
+			className="gap-2 h-7"
+			onClick={() =>
+				setOpenChatDetailsDialog({
+					view: "workflows",
+				})
+			}
+		>
+			<Calendar className="h-4 w-4" />
+			<span>{workflows.filter((workflow) => workflow.isActive).length}</span>
+			<span className="sr-only">Workflows</span>
 		</Button>
 	);
 }
