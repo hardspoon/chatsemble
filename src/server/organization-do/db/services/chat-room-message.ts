@@ -1,5 +1,5 @@
 import type { ChatRoomMessage } from "@shared/types";
-import { and, desc, eq, gt, isNull, lte } from "drizzle-orm";
+import { and, desc, eq, gt, isNull, lt } from "drizzle-orm";
 import type { DrizzleSqliteDODatabase } from "drizzle-orm/durable-sqlite";
 import { chatMessage, chatRoomMember } from "../schema";
 
@@ -61,7 +61,7 @@ export function createChatRoomMessageService(db: DrizzleSqliteDODatabase) {
 		}
 
 		if (options.beforeId) {
-			conditions.push(lte(chatMessage.id, options.beforeId));
+			conditions.push(lt(chatMessage.id, options.beforeId));
 		}
 
 		if (conditions.length > 0) {

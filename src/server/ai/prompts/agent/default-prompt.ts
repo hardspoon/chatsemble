@@ -20,7 +20,7 @@ export function getDefaultAgentSystemPrompt({
 	const persona = getAssistantPersonaPrompt(agentConfig);
 	const responseRules = getResponseFormattingRulesPrompt();
 	const toolRules = getStandardToolUsageRulesPrompt();
-	const dynamicContext = getChatRoomContextPrompt(chatRoomId, threadId);
+	const chatRoomContext = getChatRoomContextPrompt(chatRoomId, threadId);
 
 	return `
 ${coreContext}
@@ -31,6 +31,6 @@ ${responseRules}
 
 ${toolRules}
 
-${dynamicContext}
+${chatRoomContext}
 `.trim();
 }
