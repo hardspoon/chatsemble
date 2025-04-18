@@ -116,5 +116,3 @@ Chatsemble is organized into three main packages:
       │   └── index.ts      # Main entry point for shared resources
       └── package.json      # Shared dependencies and scripts
       ```
-
-// TODO: Check development branch with multi project and also dev branch with o per chatroom for todos and code to port
