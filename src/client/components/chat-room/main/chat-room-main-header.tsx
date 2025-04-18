@@ -12,13 +12,12 @@ import {
 	TooltipTrigger,
 } from "@client/components/ui/tooltip";
 import { cn } from "@client/lib/utils";
-import { MessagesSquare, Users, Calendar } from "lucide-react";
+import { Calendar, MessagesSquare, Users } from "lucide-react";
 import { type Dispatch, type SetStateAction, useState } from "react";
 import {
 	ChatDetailsDialog,
 	type ChatDetailsDialogOpen,
 } from "../details/chat-details-dialog";
-import { Separator } from "@client/components/ui/separator";
 
 export function ChatRoomMainHeader() {
 	const [openChatDetailsDialog, setOpenChatDetailsDialog] =

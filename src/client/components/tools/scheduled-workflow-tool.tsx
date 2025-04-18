@@ -1,8 +1,8 @@
 import {
 	ToolInvocation,
+	ToolInvocationContent,
 	ToolInvocationHeader,
 	ToolInvocationName,
-	ToolInvocationContent,
 } from "@client/components/ui/tool-invocation";
 import type { AgentToolUse } from "@shared/types";
 

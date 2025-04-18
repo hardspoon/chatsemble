@@ -138,12 +138,16 @@ function WorkflowCard({ workflow }: { workflow: Workflow; roomId: string }) {
 					{workflow.nextExecutionTime < Date.now() ? (
 						<>
 							<span>Last run:</span>{" "}
-							{formatDistanceToNow(workflow.nextExecutionTime, { addSuffix: true })}
+							{formatDistanceToNow(workflow.nextExecutionTime, {
+								addSuffix: true,
+							})}
 						</>
 					) : (
 						<>
 							<span>Next run:</span>{" "}
-							{formatDistanceToNow(workflow.nextExecutionTime, { addSuffix: true })}
+							{formatDistanceToNow(workflow.nextExecutionTime, {
+								addSuffix: true,
+							})}
 						</>
 					)}
 				</CardDescription>
