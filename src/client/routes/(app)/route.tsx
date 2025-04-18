@@ -1,3 +1,4 @@
+import { AppLayoutSkeleton } from "@client/components/layout/app-layout-skeleton";
 import { AuthProvider } from "@client/components/providers/auth-provider";
 import { OrganizationConnectionProvider } from "@client/components/providers/organization-connection-provider";
 import { SidebarProvider } from "@client/components/ui/sidebar";
@@ -8,7 +9,6 @@ import {
 	createFileRoute,
 	useSearch,
 } from "@tanstack/react-router";
-import { AppLayoutSkeleton } from "@client/components/layout/app-layout-skeleton";
 
 export const Route = createFileRoute("/(app)")({
 	component: Root,

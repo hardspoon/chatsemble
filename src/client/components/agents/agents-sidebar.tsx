@@ -22,6 +22,7 @@ import {
 	Trash2,
 } from "lucide-react";
 import { useState } from "react";
+import { AppSidebarGroupSkeleton } from "../layout/app-sidebar-group-skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import {
 	DropdownMenu,
@@ -31,7 +32,6 @@ import {
 	DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
 import { NewAgentDialog } from "./new-agent-dialog";
-import { AppSidebarGroupSkeleton } from "../layout/app-sidebar-group-skeleton";
 
 export function AgentsSidebar() {
 	const {

@@ -2,8 +2,8 @@ import {
 	SidebarGroup,
 	SidebarGroupAction,
 	SidebarGroupLabel,
-	SidebarMenuItem,
 	SidebarMenu,
+	SidebarMenuItem,
 	SidebarMenuSkeleton,
 } from "@client/components/ui/sidebar";
 import { Skeleton } from "@client/components/ui/skeleton";
