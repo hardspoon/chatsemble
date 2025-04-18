@@ -16,10 +16,8 @@ import {
 	SidebarMenuAction,
 	SidebarMenuButton,
 	SidebarMenuItem,
-	SidebarMenuSkeleton,
 	useSidebar,
 } from "@client/components/ui/sidebar";
-import { Skeleton } from "@client/components/ui/skeleton";
 import type { ChatRoom, ChatRoomType } from "@shared/types";
 import { Link, getRouteApi } from "@tanstack/react-router";
 import {
@@ -36,6 +34,7 @@ import {
 	type NewChatDialogState,
 	NewChatRoomDialog,
 } from "../new/new-chat-dialog";
+import { AppSidebarGroupSkeleton } from "@client/components/layout/app-sidebar-group-skeleton";
 
 export function ChatRoomList() {
 	const [dialogState, setDialogState] = useState<NewChatDialogState>(null);
@@ -49,7 +48,7 @@ export function ChatRoomList() {
 				setDialogState={setDialogState}
 			/>
 			{organizationState.status === "loading" ? (
-				<ChatRoomsSkeleton />
+				<AppSidebarGroupSkeleton listLength={3} />
 			) : organizationState.status === "error" ? (
 				<ChatRoomsError />
 			) : (
@@ -178,35 +177,5 @@ function ChatRoomsError() {
 			<AlertCircle className="h-4 w-4" />
 			Error fetching chats
 		</div>
-	);
-}
-
-function SkeletonGroup({ listLength }: { listLength: number }) {
-	return (
-		<SidebarGroup className="group-data-[collapsible=icon]:hidden">
-			<SidebarGroupLabel>
-				<Skeleton className="h-4 w-32" />
-			</SidebarGroupLabel>
-			<SidebarGroupAction>
-				<Skeleton className="size-4" />
-			</SidebarGroupAction>
-			<SidebarMenu>
-				{Array.from({ length: listLength }).map((_, index) => (
-					// biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
-					<SidebarMenuItem key={index}>
-						<SidebarMenuSkeleton />
-					</SidebarMenuItem>
-				))}
-			</SidebarMenu>
-		</SidebarGroup>
-	);
-}
-
-function ChatRoomsSkeleton() {
-	return (
-		<>
-			<SkeletonGroup listLength={2} />
-			<SkeletonGroup listLength={3} />
-		</>
 	);
 }

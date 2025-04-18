@@ -8,6 +8,7 @@ import {
 	createFileRoute,
 	useSearch,
 } from "@tanstack/react-router";
+import { AppLayoutSkeleton } from "@client/components/layout/app-layout-skeleton";
 
 export const Route = createFileRoute("/(app)")({
 	component: Root,
@@ -19,19 +20,24 @@ function Root() {
 	const searchParams = useSearch({ strict: false });
 
 	if (isPending) {
-		return <div>Loading...</div>; // TODO: Add a loading state
+		console.log("isPending");
+		return <AppLayoutSkeleton />;
 	}
 
 	if (!data || !data.session) {
+		console.log("!data || !data.session");
 		return <Navigate to="/auth/signin" />;
 	}
 
 	if (!data.session.activeOrganizationId) {
+		console.log("!data.session.activeOrganizationId");
 		// TODO: Redirect to the organization selection page
 		return <Navigate to="/auth/signin" />;
 	}
 
 	// TODO: Add organization routes to select an organization
+
+	console.log("Success data", data);
 
 	return (
 		<AuthProvider>
