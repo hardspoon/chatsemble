@@ -497,7 +497,7 @@ export class OrganizationDurableObject extends DurableObject<Env> {
 				roomId,
 				type: "agent",
 			});
-			
+
 			if (agentMembers.length === 0) {
 				console.log("[routeMessageAndNotifyAgents] No agents in the room.");
 				return;
