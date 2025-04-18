@@ -40,7 +40,7 @@ import {
 export function ChatRoomList() {
 	const [dialogState, setDialogState] = useState<NewChatDialogState>(null);
 
-	const { userState } = useOrganizationConnectionContext();
+	const { organizationState } = useOrganizationConnectionContext();
 
 	return (
 		<>
@@ -48,14 +48,14 @@ export function ChatRoomList() {
 				dialogState={dialogState}
 				setDialogState={setDialogState}
 			/>
-			{userState.status === "loading" ? (
+			{organizationState.status === "loading" ? (
 				<ChatRoomsSkeleton />
-			) : userState.status === "error" ? (
+			) : organizationState.status === "error" ? (
 				<ChatRoomsError />
 			) : (
-				userState.chatRooms && (
+				organizationState.chatRooms && (
 					<ChatRoomsGroups
-						chatRooms={userState.chatRooms}
+						chatRooms={organizationState.chatRooms}
 						setDialogState={setDialogState}
 					/>
 				)

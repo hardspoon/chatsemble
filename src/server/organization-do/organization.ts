@@ -167,7 +167,7 @@ export class OrganizationDurableObject extends DurableObject<Env> {
 				parsedMsg,
 			);
 			switch (parsedMsg.type) {
-				case "user-init-request": {
+				case "organization-init-request": {
 					this.handleUserInitRequest(session);
 					break;
 				}
@@ -240,7 +240,7 @@ export class OrganizationDurableObject extends DurableObject<Env> {
 
 		this.sendWebSocketMessageToUser(
 			{
-				type: "user-init-response",
+				type: "organization-init-response",
 				chatRooms,
 			},
 			session.userId,
@@ -743,6 +743,7 @@ export class OrganizationDurableObject extends DurableObject<Env> {
 
 			await processDataStream({
 				response: dataStreamResponse,
+				roomId: chatRoomId,
 				getThreadId: () => sendMessageThreadId,
 				omitSendingTool: ["createMessageThread"],
 				onMessageSend: async ({ newMessagePartial, existingMessageId }) => {

@@ -6,8 +6,8 @@ import type {
 } from "@shared/types/chat";
 import type { Workflow } from "@shared/types/workflow";
 
-export type WsMessageUserInitRequest = {
-	type: "user-init-request";
+export type WsMessageOrganizationInitRequest = {
+	type: "organization-init-request";
 };
 
 export type WsMessageChatRoomInitRequest = {
@@ -29,13 +29,13 @@ export type WsMessageChatRoomMessageSend = {
 };
 
 export type WsChatIncomingMessage =
-	| WsMessageUserInitRequest
+	| WsMessageOrganizationInitRequest
 	| WsMessageChatRoomInitRequest
 	| WsMessageChatRoomMessageSend
 	| WsMessageChatRoomThreadInitRequest;
 
-export type WsMessageUserInitResponse = {
-	type: "user-init-response";
+export type WsMessageOrganizationInitResponse = {
+	type: "organization-init-response";
 	chatRooms: ChatRoom[];
 };
 
@@ -81,7 +81,7 @@ export type WsMessageChatRoomMembersUpdate = {
 };
 
 export type WsChatOutgoingMessage =
-	| WsMessageUserInitResponse
+	| WsMessageOrganizationInitResponse
 	| WsMessageChatRoomsUpdate
 	| WsMessageChatRoomInitResponse
 	| WsMessageChatRoomMessageBroadcast
