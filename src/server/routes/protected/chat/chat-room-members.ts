@@ -82,7 +82,7 @@ const chatRoomMembers = new Hono<HonoContextWithAuth>()
 			}
 
 			if (type === "agent") {
-				const agent = await organizationDo.dbServices.getAgentById(id);
+				const agent = await organizationDo.getAgentById(id);
 
 				if (!agent) {
 					throw new Error("Agent not found");

@@ -13,7 +13,7 @@ const app = new Hono<HonoContextWithAuth>().delete(
 			ORGANIZATION_DURABLE_OBJECT.idFromName(activeOrganizationId);
 		const organizationDo = ORGANIZATION_DURABLE_OBJECT.get(organizationDoId);
 
-		await organizationDo.dbServices.deleteWorkflow(workflowId);
+		await organizationDo.deleteWorkflow(workflowId);
 
 		return c.json({
 			success: true,
