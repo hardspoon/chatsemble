@@ -22,7 +22,7 @@ const app = new Hono<HonoContextWithAuth>()
 			ORGANIZATION_DURABLE_OBJECT.idFromName(activeOrganizationId);
 		const organizationDo = ORGANIZATION_DURABLE_OBJECT.get(organizationDoId);
 
-		const agents: Agent[] = await organizationDo.getAgents();
+		const agents: Agent[] = await organizationDo.dbServices.getAgents();
 
 		return c.json(agents);
 	})
@@ -51,7 +51,7 @@ const app = new Hono<HonoContextWithAuth>()
 
 		const email = `${nanoid(10)}@chatsemble.com`;
 
-		const agent = await organizationDo.createAgent({
+		const agent = await organizationDo.dbServices.createAgent({
 			email,
 			name,
 			image,
@@ -78,7 +78,7 @@ const app = new Hono<HonoContextWithAuth>()
 			ORGANIZATION_DURABLE_OBJECT.idFromName(activeOrganizationId);
 		const organizationDo = ORGANIZATION_DURABLE_OBJECT.get(organizationDoId);
 
-		const agent = await organizationDo.getAgentById(id);
+		const agent = await organizationDo.dbServices.getAgentById(id);
 
 		if (!agent) {
 			throw new Error("Agent not found");
@@ -109,7 +109,7 @@ const app = new Hono<HonoContextWithAuth>()
 			ORGANIZATION_DURABLE_OBJECT.idFromName(activeOrganizationId);
 		const organizationDo = ORGANIZATION_DURABLE_OBJECT.get(organizationDoId);
 
-		const agent = await organizationDo.updateAgent(id, {
+		const agent = await organizationDo.dbServices.updateAgent(id, {
 			name,
 			image,
 			description,
