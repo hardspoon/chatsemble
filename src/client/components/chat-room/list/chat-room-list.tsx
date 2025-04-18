@@ -1,5 +1,6 @@
 "use client";
 
+import { AppSidebarGroupSkeleton } from "@client/components/layout/app-sidebar-group-skeleton";
 import { useOrganizationConnectionContext } from "@client/components/providers/organization-connection-provider";
 import {
 	DropdownMenu,
@@ -34,7 +35,6 @@ import {
 	type NewChatDialogState,
 	NewChatRoomDialog,
 } from "../new/new-chat-dialog";
-import { AppSidebarGroupSkeleton } from "@client/components/layout/app-sidebar-group-skeleton";
 
 export function ChatRoomList() {
 	const [dialogState, setDialogState] = useState<NewChatDialogState>(null);

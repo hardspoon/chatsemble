@@ -53,9 +53,7 @@ const chatRoom = new Hono<HonoContextWithAuth>().post(
 						newUserMembers.map((member) => member.id),
 					),
 				),
-			organizationDo.getAgentsByIds(
-				newAgentMembers.map((member) => member.id),
-			),
+			organizationDo.getAgentsByIds(newAgentMembers.map((member) => member.id)),
 		]);
 
 		const membersToAddDetailsPartial = [
