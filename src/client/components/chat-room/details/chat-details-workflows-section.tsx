@@ -135,10 +135,17 @@ function WorkflowCard({ workflow }: { workflow: Workflow; roomId: string }) {
 				</div>
 				<CardDescription className="flex items-center gap-1 text-xs mt-1">
 					<Clock className="h-3 w-3" />
-					Next run:{" "}
-					{formatDistanceToNow(workflow.nextExecutionTime, {
-						addSuffix: true,
-					})}
+					{workflow.nextExecutionTime < Date.now() ? (
+						<>
+							<span>Last run:</span>{" "}
+							{formatDistanceToNow(workflow.nextExecutionTime, { addSuffix: true })}
+						</>
+					) : (
+						<>
+							<span>Next run:</span>{" "}
+							{formatDistanceToNow(workflow.nextExecutionTime, { addSuffix: true })}
+						</>
+					)}
 				</CardDescription>
 			</CardHeader>
 			<CardContent className="pb-4">
