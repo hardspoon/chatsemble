@@ -6,7 +6,7 @@ import type {
 import { useCallback, useEffect, useState } from "react";
 import type { UseWebSocketConnectionStatus } from "../use-web-socket";
 
-export function useUserState({
+export function useOrganizationState({
 	sendMessage,
 	connectionStatus,
 }: {
@@ -20,13 +20,13 @@ export function useUserState({
 
 	useEffect(() => {
 		if (connectionStatus === "connected") {
-			sendMessage({ type: "user-init-request" });
+			sendMessage({ type: "organization-init-request" });
 		}
 	}, [connectionStatus, sendMessage]);
 
 	const handleMessage = useCallback((wsMessage: WsChatOutgoingMessage) => {
 		switch (wsMessage.type) {
-			case "user-init-response":
+			case "organization-init-response":
 				setChatRooms(wsMessage.chatRooms);
 				setStatus("success");
 				break;

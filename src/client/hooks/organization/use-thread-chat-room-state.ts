@@ -97,6 +97,7 @@ export function useThreadChatRoomState({
 				mentions: value.mentions,
 				toolUses: [],
 				threadId: threadId ?? null,
+				roomId,
 			});
 
 			const wsMessage: WsMessageChatRoomMessageSend = {
