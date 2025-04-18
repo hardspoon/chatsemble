@@ -318,7 +318,7 @@ const ChatMessageAction = React.forwardRef<
 				<span className="sr-only">{label}</span>
 			</Button>
 		</TooltipTrigger>
-		<TooltipContent side="left">
+		<TooltipContent>
 			<p>{label}</p>
 		</TooltipContent>
 	</Tooltip>
@@ -337,7 +337,7 @@ const ChatMessageActionsArea = React.forwardRef<
 	<Card
 		ref={ref}
 		className={cn(
-			"absolute right-2 top-1 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1 p-1",
+			"absolute right-2 top-1 opacity-0 group-hover:opacity-100 transition-opacity flex flex-row gap-1 p-1",
 			className,
 		)}
 		{...props}

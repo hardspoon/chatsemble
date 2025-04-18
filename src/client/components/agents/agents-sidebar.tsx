@@ -8,10 +8,8 @@ import {
 	SidebarMenuAction,
 	SidebarMenuButton,
 	SidebarMenuItem,
-	SidebarMenuSkeleton,
 	useSidebar,
 } from "@client/components/ui/sidebar";
-import { Skeleton } from "@client/components/ui/skeleton";
 import { honoClient } from "@client/lib/api-client";
 import type { Agent } from "@shared/types";
 import { useQuery } from "@tanstack/react-query";
@@ -24,6 +22,7 @@ import {
 	Trash2,
 } from "lucide-react";
 import { useState } from "react";
+import { AppSidebarGroupSkeleton } from "../layout/app-sidebar-group-skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import {
 	DropdownMenu,
@@ -52,7 +51,7 @@ export function AgentsSidebar() {
 	return (
 		<>
 			{isLoading ? (
-				<SkeletonGroup listLength={2} />
+				<AppSidebarGroupSkeleton listLength={2} />
 			) : error ? (
 				<AgentsError />
 			) : (
@@ -81,7 +80,7 @@ function AgentGroup({
 			<SidebarGroup className="group-data-[collapsible=icon]:hidden">
 				<SidebarGroupLabel>Agents</SidebarGroupLabel>
 				<SidebarGroupAction
-					title="Add Project"
+					title="Add Agent"
 					onClick={() => setNewAgentDialogOpen(true)}
 				>
 					<Plus /> <span className="sr-only">Add Agent</span>
@@ -152,26 +151,5 @@ function AgentsError() {
 			<AlertCircle className="h-4 w-4" />
 			Error fetching agents
 		</div>
-	);
-}
-
-function SkeletonGroup({ listLength }: { listLength: number }) {
-	return (
-		<SidebarGroup className="group-data-[collapsible=icon]:hidden">
-			<SidebarGroupLabel>
-				<Skeleton className="h-4 w-32" />
-			</SidebarGroupLabel>
-			<SidebarGroupAction>
-				<Skeleton className="size-4" />
-			</SidebarGroupAction>
-			<SidebarMenu>
-				{Array.from({ length: listLength }).map((_, index) => (
-					// biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
-					<SidebarMenuItem key={index}>
-						<SidebarMenuSkeleton />
-					</SidebarMenuItem>
-				))}
-			</SidebarMenu>
-		</SidebarGroup>
 	);
 }

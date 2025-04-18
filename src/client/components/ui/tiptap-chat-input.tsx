@@ -91,7 +91,7 @@ function ChatInput({
 						if (child.type === ChatInputTiptap) {
 							return React.cloneElement(child, {
 								ref: editorRef,
-								//@ts-ignore // TODO: fix this
+								//@ts-expect-error
 								...child.props,
 							});
 						}

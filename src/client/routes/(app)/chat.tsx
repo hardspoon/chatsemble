@@ -1,5 +1,5 @@
-import { ChatRoom } from "@client/components/chat/layout/chat-room";
-import { ChatRoomList } from "@client/components/chat/layout/sidebar/chat-room-list";
+import { ChatRoom } from "@client/components/chat-room/chat-room";
+import { ChatRoomList } from "@client/components/chat-room/list/chat-room-list";
 import { AppLayout } from "@client/components/layout/app-layout";
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";

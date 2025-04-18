@@ -1,28 +1,56 @@
+import { AppLayoutSkeleton } from "@client/components/layout/app-layout-skeleton";
 import { AuthProvider } from "@client/components/providers/auth-provider";
+import { OrganizationConnectionProvider } from "@client/components/providers/organization-connection-provider";
 import { SidebarProvider } from "@client/components/ui/sidebar";
 import { authClient } from "@client/lib/auth-client";
-import { Navigate, Outlet, createFileRoute } from "@tanstack/react-router";
+import {
+	Navigate,
+	Outlet,
+	createFileRoute,
+	useSearch,
+} from "@tanstack/react-router";
 
 export const Route = createFileRoute("/(app)")({
 	component: Root,
 });
 
 function Root() {
-	const { data: session, isPending } = authClient.useSession();
+	const { data, isPending } = authClient.useSession();
+
+	const searchParams = useSearch({ strict: false });
 
 	if (isPending) {
-		return <div>Loading...</div>; // TODO: Add a loading state
+		console.log("isPending");
+		return <AppLayoutSkeleton />;
 	}
 
-	if (!session) {
+	if (!data || !data.session) {
+		console.log("!data || !data.session");
 		return <Navigate to="/auth/signin" />;
 	}
 
+	if (!data.session.activeOrganizationId) {
+		console.log("!data.session.activeOrganizationId");
+		// TODO: Redirect to the organization selection page
+		return <Navigate to="/auth/signin" />;
+	}
+
+	// TODO: Add organization routes to select an organization
+
+	console.log("Success data", data);
+
 	return (
 		<AuthProvider>
-			<SidebarProvider>
-				<Outlet />
-			</SidebarProvider>
+			<OrganizationConnectionProvider
+				organizationId={data.session.activeOrganizationId}
+				roomId={searchParams.roomId}
+				threadId={searchParams.threadId}
+				user={data.user}
+			>
+				<SidebarProvider>
+					<Outlet />
+				</SidebarProvider>
+			</OrganizationConnectionProvider>
 		</AuthProvider>
 	);
 }

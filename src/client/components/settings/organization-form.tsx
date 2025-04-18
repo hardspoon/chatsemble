@@ -1,6 +1,6 @@
 "use client";
 
-import { CopyButton } from "@client/components/copy-button";
+import { CopyButton } from "@client/components/common/copy-button";
 import {
 	Avatar,
 	AvatarFallback,
