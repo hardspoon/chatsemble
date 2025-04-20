@@ -23,8 +23,8 @@ export function useThreadChatRoomState({
 	sendMessage,
 	connectionStatus,
 }: {
-	roomId: string | undefined;
-	threadId: number | undefined;
+	roomId: string | null;
+	threadId: number | null;
 	user: User;
 	topLevelMessages: ChatRoomMessage[];
 	sendMessage: (message: WsChatIncomingMessage) => void;
@@ -37,35 +37,41 @@ export function useThreadChatRoomState({
 	const [status, setStatus] = useState<"loading" | "success" | "error">(
 		"loading",
 	);
-	const isLoadingRef = useRef(false);
+	const isLoadingRef = useRef<boolean>(false);
 	const activeThreadIdRef = useRef<number | null>(null);
 
 	const handleMessage = useCallback(
 		(wsMessage: WsChatOutgoingMessage) => {
-			if (threadId === null) {
+			const currentActiveThreadId = activeThreadIdRef.current;
+			if (currentActiveThreadId === null) {
 				return;
 			}
 
 			switch (wsMessage.type) {
 				case "chat-room-thread-init-response": {
-					console.log("chat-room-thread-init-response", wsMessage);
-					if (wsMessage.roomId === roomId && wsMessage.threadId === threadId) {
+					if (
+						wsMessage.roomId === roomId &&
+						wsMessage.threadId === currentActiveThreadId
+					) {
+						console.log(
+							"Received chat-room-thread-init-response for active thread",
+							wsMessage.threadId,
+						);
 						setThreadMessage(wsMessage.threadMessage);
 						setMessages(wsMessage.messages);
 						setStatus("success");
-						isLoadingRef.current = false;
 					}
 					break;
 				}
 				case "chat-room-message-broadcast": {
 					if (
 						wsMessage.roomId === roomId &&
-						wsMessage.message.id === threadId
+						wsMessage.message.id === currentActiveThreadId
 					) {
 						setThreadMessage(wsMessage.message);
 					} else if (
 						wsMessage.roomId === roomId &&
-						wsMessage.message.threadId === threadId
+						wsMessage.message.threadId === currentActiveThreadId
 					) {
 						setMessages((prev) =>
 							updateMessageList({
@@ -78,7 +84,7 @@ export function useThreadChatRoomState({
 				}
 			}
 		},
-		[roomId, threadId],
+		[roomId],
 	);
 
 	const handleSubmit = useCallback(
@@ -96,7 +102,7 @@ export function useThreadChatRoomState({
 				content: value.content,
 				mentions: value.mentions,
 				toolUses: [],
-				threadId: threadId ?? null,
+				threadId,
 				roomId,
 			});
 
@@ -127,52 +133,76 @@ export function useThreadChatRoomState({
 	);
 
 	useEffect(() => {
-		if (!threadId) {
+		if (threadId === null) {
 			setThreadMessage(null);
 			setMessages([]);
 			setStatus("loading");
 			activeThreadIdRef.current = null;
+			isLoadingRef.current = false;
 		}
 	}, [threadId]);
 
 	useEffect(() => {
-		// We need to update the thread if either:
-		// 1. The threadId has changed
-		// 2. Connection status changes to 'ready' while we have an active threadId
 		const threadIdChanged = threadId !== activeThreadIdRef.current;
-		const connectionBecameReady =
-			connectionStatus === "connected" &&
-			threadId !== null &&
-			status !== "success";
 
 		if (threadIdChanged) {
-			activeThreadIdRef.current = threadId ?? null;
-			const threadMessage =
-				topLevelMessages.find((message) => message.id === threadId) ?? null;
-			setThreadMessage(threadMessage);
+			console.log(
+				`Thread ID changed from ${activeThreadIdRef.current} to ${threadId}`,
+			);
+			activeThreadIdRef.current = threadId;
+			const initialThreadMessage = topLevelMessages.find(
+				(message) => message.id === threadId,
+			);
+			setThreadMessage(initialThreadMessage ?? null);
+			setMessages([]);
 			setStatus("loading");
+			isLoadingRef.current = false;
 		}
 
+		const shouldFetch =
+			threadId !== null &&
+			roomId !== null &&
+			connectionStatus === "connected" &&
+			!isLoadingRef.current;
+
+		const connectionBecameReadyForActiveThread =
+			connectionStatus === "connected" &&
+			threadId !== null &&
+			activeThreadIdRef.current === threadId &&
+			status !== "success" &&
+			!isLoadingRef.current;
+
 		if (
-			(threadIdChanged || connectionBecameReady) &&
-			threadId &&
-			roomId &&
-			connectionStatus === "connected"
+			shouldFetch &&
+			(threadIdChanged || connectionBecameReadyForActiveThread)
 		) {
+			console.log(
+				`Requesting thread init for roomId: ${roomId}, threadId: ${threadId}. Changed: ${threadIdChanged}, ConnReady: ${connectionBecameReadyForActiveThread}`,
+			);
+
+			isLoadingRef.current = true;
+			setStatus("loading");
+
 			const wsMessage: WsMessageChatRoomThreadInitRequest = {
 				type: "chat-room-thread-init-request",
 				roomId,
 				threadId,
-			}; // TODO: This is being sent twice
+			};
 			sendMessage(wsMessage);
+		}
+
+		if (status === "success" || status === "error") {
+			if (activeThreadIdRef.current === threadId) {
+				isLoadingRef.current = false;
+			}
 		}
 	}, [
 		threadId,
+		roomId,
 		sendMessage,
 		connectionStatus,
 		topLevelMessages,
 		status,
-		roomId,
 	]);
 
 	return {

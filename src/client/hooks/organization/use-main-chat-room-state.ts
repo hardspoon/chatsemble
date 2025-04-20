@@ -23,7 +23,7 @@ export function useMainChatRoomState({
 	sendMessage,
 	connectionStatus,
 }: {
-	roomId: string | undefined;
+	roomId: string | null;
 	user: User;
 	sendMessage: (message: WsChatIncomingMessage) => void;
 	connectionStatus: UseWebSocketConnectionStatus;

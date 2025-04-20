@@ -20,12 +20,10 @@ function Root() {
 	const searchParams = useSearch({ strict: false });
 
 	if (isPending) {
-		console.log("isPending");
 		return <AppLayoutSkeleton />;
 	}
 
 	if (!data || !data.session) {
-		console.log("!data || !data.session");
 		return <Navigate to="/auth/signin" />;
 	}
 
@@ -37,14 +35,12 @@ function Root() {
 
 	// TODO: Add organization routes to select an organization
 
-	console.log("Success data", data);
-
 	return (
 		<AuthProvider>
 			<OrganizationConnectionProvider
 				organizationId={data.session.activeOrganizationId}
-				roomId={searchParams.roomId}
-				threadId={searchParams.threadId}
+				roomId={searchParams.roomId ?? null}
+				threadId={searchParams.threadId ?? null}
 				user={data.user}
 			>
 				<SidebarProvider>

@@ -65,6 +65,10 @@ function LoginForm() {
 				await navigate({ to: "/chat" });
 			}, 500);
 		},
+		onError: (error) => {
+			toast.error("Failed to sign in");
+			console.error("[LoginForm] onError", error);
+		},
 	});
 
 	const onSubmit = (values: z.infer<typeof formSchema>) => {
@@ -119,7 +123,9 @@ function LoginForm() {
 
 							{error && (
 								<Alert variant="destructive">
-									<AlertDescription>{error.message}</AlertDescription>
+									<AlertDescription>
+										There was an error signing in. Please try again.
+									</AlertDescription>
 								</Alert>
 							)}
 

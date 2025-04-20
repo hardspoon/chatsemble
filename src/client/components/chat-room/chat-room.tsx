@@ -11,10 +11,6 @@ import { useSearch } from "@tanstack/react-router";
 import { ChatRoomThreadDisplay } from "./thread/chat-room-thread-display";
 
 export function ChatRoom() {
-	return <ChatRoomContent />;
-}
-
-function ChatRoomContent() {
 	const { roomId, threadId } = useSearch({ strict: false });
 
 	if (!roomId) {
