@@ -20,3 +20,5 @@ export function createChatRoomDbServices(db: DrizzleSqliteDODatabase) {
 		...workflowService,
 	};
 }
+
+export type ChatRoomDbServices = ReturnType<typeof createChatRoomDbServices>;
