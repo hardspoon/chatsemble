@@ -58,28 +58,21 @@ export const scheduleWorkflowTool = ({
 					}
 				}
 
-				const workflow =
-					await organizationInstance.dbServices.createAgentWorkflow({
-						agentId,
-						goal,
-						steps: {
-							version: 1,
-							type: "workflowSteps",
-							data: steps,
-						},
-						scheduleExpression,
-						isRecurring,
-						nextExecutionTime,
-						chatRoomId,
-					});
+				const workflow = await organizationInstance.workflows.createWorkflow({
+					agentId,
+					goal,
+					steps: {
+						version: 1,
+						type: "workflowSteps",
+						data: steps,
+					},
+					scheduleExpression,
+					isRecurring,
+					nextExecutionTime,
+					chatRoomId,
+				});
 				console.log("[scheduleWorkflowTool] Workflow scheduled", workflow);
-				await organizationInstance.scheduleNextWorkflowAlarm();
-
-				try {
-					await organizationInstance.broadcastWorkflowUpdate(chatRoomId);
-				} catch (error) {
-					console.error("Error broadcasting workflow update:", error);
-				}
+				await organizationInstance.workflows.scheduleNextWorkflowAlarm();
 
 				return {
 					success: true,

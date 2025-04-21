@@ -4,27 +4,27 @@ import type { Session } from "@server/types/session";
 import type {
 	ChatRoomMessage,
 	ChatRoomMessagePartial,
-	WorkflowPartial,
 	WsChatIncomingMessage,
 	WsChatOutgoingMessage,
 } from "@shared/types";
-import CronExpressionParser from "cron-parser";
 import { drizzle } from "drizzle-orm/durable-sqlite";
 import type { DrizzleSqliteDODatabase } from "drizzle-orm/durable-sqlite";
 import { migrate } from "drizzle-orm/durable-sqlite/migrator";
+import { Agents } from "./agent";
 import migrations from "./db/migrations/migrations";
 import {
 	type ChatRoomDbServices,
 	createChatRoomDbServices,
 } from "./db/services";
-import { Agents } from "./agent";
+import { Workflows } from "./workflow";
 
 export class OrganizationDurableObject extends DurableObject<Env> {
 	storage: DurableObjectStorage;
 	db: DrizzleSqliteDODatabase;
 	sessions: Map<WebSocket, Session>;
 	dbServices: ChatRoomDbServices;
-	private agents: Agents;
+	agents: Agents;
+	workflows: Workflows;
 
 	constructor(ctx: DurableObjectState, env: Env) {
 		super(ctx, env);
@@ -37,7 +37,8 @@ export class OrganizationDurableObject extends DurableObject<Env> {
 		});
 
 		this.dbServices = createChatRoomDbServices(this.db);
-		this.agents = new Agents(env, this.dbServices, this);
+		this.agents = new Agents(env, this);
+		this.workflows = new Workflows(this);
 
 		for (const webSocket of ctx.getWebSockets()) {
 			const meta = webSocket.deserializeAttachment() || {
@@ -57,60 +58,8 @@ export class OrganizationDurableObject extends DurableObject<Env> {
 	}
 
 	async alarm() {
-		await this.handleWorkflowAlarm();
-		await this.scheduleNextWorkflowAlarm();
-	}
-
-	async scheduleNextWorkflowAlarm() {
-		const now = Date.now();
-		const nextTime = await this.dbServices.findNextWorkflowTime(now);
-		const currentAlarm = await this.ctx.storage.getAlarm();
-		console.log("[scheduleNextWorkflowAlarm] nextTime", nextTime);
-		console.log("[scheduleNextWorkflowAlarm] currentAlarm", currentAlarm);
-
-		if (nextTime) {
-			if (currentAlarm !== nextTime) {
-				console.log(
-					`[Setting next alarm for ${new Date(nextTime).toISOString()}`,
-				);
-				this.ctx.storage.setAlarm(nextTime);
-			} else {
-				console.log(
-					`Alarm already set correctly for ${new Date(nextTime).toISOString()}`,
-				);
-			}
-		} else {
-			if (currentAlarm) {
-				console.log("No active tasks, deleting alarm.");
-				this.ctx.storage.deleteAlarm();
-			} else {
-				console.log("No active tasks, no alarm to delete.");
-			}
-		}
-	}
-
-	async handleWorkflowAlarm() {
-		console.log(`Alarm triggered at ${new Date().toISOString()}`);
-		const now = Date.now();
-		const dueWorkflows = await this.dbServices.getDueWorkflows(now);
-
-		console.log(`Found ${dueWorkflows.length} due workflows.`);
-
-		await Promise.all(
-			dueWorkflows.map(async (workflow) => {
-				console.log(`Processing workflow ${workflow.id}`);
-				await this.executeWorkflow(workflow);
-			}),
-		);
-
-		const chatRoomIds = dueWorkflows.map((workflow) => workflow.chatRoomId);
-		const uniqueChatRoomIds = [...new Set(chatRoomIds)];
-
-		await Promise.all(
-			uniqueChatRoomIds.map(async (chatRoomId) => {
-				await this.broadcastWorkflowUpdate(chatRoomId);
-			}),
-		);
+		await this.workflows.handleWorkflowAlarm();
+		await this.workflows.scheduleNextWorkflowAlarm();
 	}
 
 	async fetch(request: Request) {
@@ -258,7 +207,7 @@ export class OrganizationDurableObject extends DurableObject<Env> {
 		}
 	}
 
-	private broadcastWebSocketMessageToRoom(
+	broadcastWebSocketMessageToRoom(
 		message: WsChatOutgoingMessage,
 		targetRoomId: string,
 	) {
@@ -409,54 +358,6 @@ export class OrganizationDurableObject extends DurableObject<Env> {
 		);
 	}
 
-	private async executeWorkflow(workflow: WorkflowPartial) {
-		console.log(
-			`Executing workflow ${workflow.id} for chatroom ${workflow.chatRoomId} and agent ${workflow.agentId}`,
-		);
-		try {
-			await this.agents.processAndRespondWorkflow({ workflow });
-
-			if (workflow.isRecurring) {
-				try {
-					const interval = CronExpressionParser.parse(
-						workflow.scheduleExpression,
-						{
-							tz: "UTC",
-							currentDate: new Date(workflow.nextExecutionTime),
-						},
-					);
-					const nextExecutionTime = interval.next().getTime();
-					console.log(
-						`Rescheduling task ${workflow.id} for ${new Date(nextExecutionTime).toISOString()}`,
-					);
-					await this.dbServices.updateWorkflow(workflow.id, {
-						nextExecutionTime,
-						lastExecutionTime: Date.now(),
-					});
-				} catch (error) {
-					console.error(
-						`Failed to parse schedule for recurring workflow ${workflow.id}:`,
-						error,
-					);
-					await this.dbServices.updateWorkflow(workflow.id, {
-						lastExecutionTime: Date.now(),
-					});
-				}
-			} else {
-				await this.dbServices.updateWorkflow(workflow.id, {
-					lastExecutionTime: Date.now(),
-					isActive: false,
-				});
-				console.log(`Workflow ${workflow.id} completed.`);
-			}
-		} catch (error) {
-			console.error(`Error executing workflow ${workflow.id}:`, error);
-			await this.dbServices.updateWorkflow(workflow.id, {
-				lastExecutionTime: Date.now(),
-			});
-		}
-	}
-
 	async receiveChatRoomMessage({
 		memberId,
 		roomId,
@@ -549,19 +450,6 @@ export class OrganizationDurableObject extends DurableObject<Env> {
 				userId,
 			);
 		});
-	}
-
-	private async broadcastWorkflowUpdate(chatRoomId: string) {
-		const workflows = await this.dbServices.getChatRoomWorkflows(chatRoomId);
-
-		this.broadcastWebSocketMessageToRoom(
-			{
-				type: "chat-room-workflows-update",
-				roomId: chatRoomId,
-				workflows,
-			},
-			chatRoomId,
-		);
 	}
 
 	private async broadcastChatRoomMembersUpdate(chatRoomId: string) {
@@ -659,6 +547,6 @@ export class OrganizationDurableObject extends DurableObject<Env> {
 	// Workflow services
 
 	async deleteWorkflow(workflowId: string) {
-		return await this.dbServices.deleteWorkflow(workflowId);
+		return await this.workflows.deleteWorkflow(workflowId);
 	}
 }

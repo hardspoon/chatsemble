@@ -81,10 +81,7 @@ export function createChatRoomMemberService(db: DrizzleSqliteDODatabase) {
 				.select()
 				.from(chatRoomMember)
 				.where(
-					and(
-						eq(chatRoomMember.roomId, roomId),
-						eq(chatRoomMember.id, userId),
-					),
+					and(eq(chatRoomMember.roomId, roomId), eq(chatRoomMember.id, userId)),
 				)
 				.limit(1);
 			return !!member;
