@@ -17,7 +17,7 @@ interface ChatRoomsDependencies {
 		message: WsChatOutgoingMessage,
 		roomId: string,
 	) => void;
-	routeMessagesAndNotifyAgents: (message: ChatRoomMessage) => Promise<void>;
+	routeMessagesToRelevantAgents: (message: ChatRoomMessage) => Promise<void>;
 }
 
 export class ChatRooms {
@@ -137,7 +137,7 @@ export class ChatRooms {
 		);
 	};
 
-	receiveChatRoomMessage = async ({
+	processIncomingChatMessage = async ({
 		memberId,
 		roomId,
 		message,
@@ -208,7 +208,7 @@ export class ChatRooms {
 		);
 
 		if (notifyAgents && !existingMessageId) {
-			await this.deps.routeMessagesAndNotifyAgents(chatRoomMessage);
+			await this.deps.routeMessagesToRelevantAgents(chatRoomMessage);
 		}
 
 		return chatRoomMessage;
