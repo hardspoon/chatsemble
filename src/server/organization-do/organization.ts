@@ -46,12 +46,12 @@ export class OrganizationDurableObject extends DurableObject<Env> {
 			sessions: this.sessions,
 			sendWebSocketMessageToUser: this.sendWebSocketMessageToUser,
 			broadcastWebSocketMessageToRoom: this.broadcastWebSocketMessageToRoom,
-			routeMessagesAndNotifyAgents: this.routeMessagesAndNotifyAgents,
+			routeMessagesToRelevantAgents: this.routeMessagesToRelevantAgents,
 		});
 
 		this.agents = new Agents(env, {
 			dbServices: this.dbServices,
-			receiveChatRoomMessage: this.receiveChatRoomMessage,
+			processIncomingChatMessage: this.processIncomingChatMessage,
 			createWorkflow: this.createWorkflow,
 		});
 
@@ -59,7 +59,7 @@ export class OrganizationDurableObject extends DurableObject<Env> {
 			dbServices: this.dbServices,
 			storage: this.storage,
 			broadcastWebSocketMessageToRoom: this.broadcastWebSocketMessageToRoom,
-			processAndRespondWorkflow: this.processAndRespondWorkflow,
+			routeWorkflowToRelevantAgent: this.routeWorkflowToRelevantAgent,
 		});
 
 		for (const webSocket of ctx.getWebSockets()) {
@@ -155,7 +155,7 @@ export class OrganizationDurableObject extends DurableObject<Env> {
 							`Not authorized to send message to room ${roomId} from current session state.`,
 						);
 					}
-					await this.chatRooms.receiveChatRoomMessage({
+					await this.chatRooms.processIncomingChatMessage({
 						memberId: session.userId,
 						roomId,
 						message: parsedMsg.message,
@@ -276,20 +276,20 @@ export class OrganizationDurableObject extends DurableObject<Env> {
 	};
 
 	// Wrapper methods for circular dependencies
-	private receiveChatRoomMessage = async (
-		params: Parameters<ChatRooms["receiveChatRoomMessage"]>[0],
+	private processIncomingChatMessage = async (
+		params: Parameters<ChatRooms["processIncomingChatMessage"]>[0],
 	) => {
-		return this.chatRooms.receiveChatRoomMessage(params);
+		return this.chatRooms.processIncomingChatMessage(params);
 	};
 
-	private processAndRespondWorkflow = async (params: {
+	private routeWorkflowToRelevantAgent = async (params: {
 		workflow: WorkflowPartial;
 	}) => {
-		return this.agents.processAndRespondWorkflow(params);
+		return this.agents.routeWorkflowToRelevantAgent(params);
 	};
 
-	private routeMessagesAndNotifyAgents = async (message: ChatRoomMessage) => {
-		return this.agents.routeMessagesAndNotifyAgents(message);
+	private routeMessagesToRelevantAgents = async (message: ChatRoomMessage) => {
+		return this.agents.routeMessagesToRelevantAgents(message);
 	};
 
 	private createWorkflow = async (

@@ -13,7 +13,7 @@ export type UseWebSocketConnectionStatus =
 	| "reconnecting";
 
 export interface UseWebSocketProps {
-	organizationId: string | null | undefined;
+	organizationId: string | null;
 	onMessage: (message: WsChatOutgoingMessage) => void;
 	enabled?: boolean;
 }
