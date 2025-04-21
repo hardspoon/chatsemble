@@ -239,7 +239,7 @@ export class OrganizationDurableObject extends DurableObject<Env> {
 		);
 	}
 
-	private async handleUserInitRequest(session: Session) {
+	handleUserInitRequest = async (session: Session) => {
 		const chatRooms = await this.dbServices.getChatRoomsUserIsMemberOf(
 			session.userId,
 		);
@@ -251,64 +251,64 @@ export class OrganizationDurableObject extends DurableObject<Env> {
 			},
 			session.userId,
 		);
-	}
+	};
 
 	// Chat room services
 
-	async createChatRoom(
+	createChatRoom = async (
 		newChatRoom: Parameters<ChatRoomDbServices["createChatRoom"]>[0],
-	) {
+	) => {
 		return this.chatRooms.createChatRoom(newChatRoom);
-	}
+	};
 
 	// Chat room member services
 
-	async deleteChatRoomMember(
+	deleteChatRoomMember = async (
 		deleteChatRoomMemberParams: Parameters<
 			typeof this.dbServices.deleteChatRoomMember
 		>[0],
-	) {
+	) => {
 		return this.chatRooms.deleteChatRoomMember(deleteChatRoomMemberParams);
-	}
+	};
 
-	async addChatRoomMember(
+	addChatRoomMember = async (
 		addChatRoomMemberParams: Parameters<
 			typeof this.dbServices.addChatRoomMember
 		>[0],
-	) {
+	) => {
 		return this.chatRooms.addChatRoomMember(addChatRoomMemberParams);
-	}
+	};
 
 	// Agent services
 
-	async getAgents() {
+	getAgents = async () => {
 		return await this.dbServices.getAgents();
-	}
+	};
 
-	async createAgent(
+	createAgent = async (
 		newAgent: Parameters<typeof this.dbServices.createAgent>[0],
-	) {
+	) => {
 		return await this.dbServices.createAgent(newAgent);
-	}
+	};
 
-	async getAgentById(id: string) {
+	getAgentById = async (id: string) => {
 		return await this.dbServices.getAgentById(id);
-	}
+	};
 
-	async getAgentsByIds(ids: string[]) {
+	getAgentsByIds = async (ids: string[]) => {
 		return await this.dbServices.getAgentsByIds(ids);
-	}
+	};
 
-	async updateAgent(
+	updateAgent = async (
 		id: string,
 		agentUpdates: Parameters<typeof this.dbServices.updateAgent>[1],
-	) {
+	) => {
 		return await this.dbServices.updateAgent(id, agentUpdates);
-	}
+	};
 
 	// Workflow services
 
-	async deleteWorkflow(workflowId: string) {
+	deleteWorkflow = async (workflowId: string) => {
 		return await this.workflows.deleteWorkflow(workflowId);
-	}
+	};
 }

@@ -39,11 +39,11 @@ export class Agents {
 		this.organizationDO = organizationDO;
 	}
 
-	async processAndRespondWorkflow({
+	processAndRespondWorkflow = async ({
 		workflow,
 	}: {
 		workflow: WorkflowPartial;
-	}) {
+	}) => {
 		console.log("Processing workflow :", workflow);
 
 		const agentId = workflow.agentId;
@@ -79,11 +79,11 @@ export class Agents {
 			systemPrompt,
 			removeTools: ["scheduleWorkflow"],
 		});
-	}
+	};
 
-	async routeMessagesAndNotifyAgents(
+	routeMessagesAndNotifyAgents = async (
 		newMessage: ChatRoomMessage,
-	): Promise<void> {
+	): Promise<void> => {
 		try {
 			console.log(
 				`[routeMessageAndNotifyAgents] Routing message ${newMessage.id}`,
@@ -157,9 +157,9 @@ export class Agents {
 		} catch (error) {
 			console.error("Error routing message to agents:", error);
 		}
-	}
+	};
 
-	private async checkAgentsToRouteMessagesTo({
+	checkAgentsToRouteMessagesTo = async ({
 		contextMessages,
 		newMessages,
 		agents,
@@ -169,7 +169,7 @@ export class Agents {
 		newMessages: ChatRoomMessage[];
 		agents: ChatRoomMember[];
 		room: ChatRoom;
-	}): Promise<string[]> {
+	}) => {
 		console.log(
 			"[routeMessageToAgents] Deciding which agent(s) should respond.",
 		);
@@ -233,9 +233,9 @@ export class Agents {
 			console.error("Error in AI routing:", error);
 			return [];
 		}
-	}
+	};
 
-	private async processAndRespondIncomingMessages({
+	processAndRespondIncomingMessages = async ({
 		agentId,
 		chatRoomId,
 		threadId,
@@ -247,7 +247,7 @@ export class Agents {
 		threadId: number | null;
 		newMessages: ChatRoomMessage[];
 		contextMessages: ChatRoomMessage[];
-	}): Promise<void> {
+	}) => {
 		if (newMessages.length === 0) {
 			return;
 		}
@@ -281,9 +281,9 @@ export class Agents {
 			messages,
 			systemPrompt,
 		});
-	}
+	};
 
-	private async formulateResponse({
+	formulateResponse = async ({
 		agentId,
 		chatRoomId,
 		threadId: originalThreadId,
@@ -297,7 +297,7 @@ export class Agents {
 		messages: Message[];
 		systemPrompt: string;
 		removeTools?: string[];
-	}): Promise<void> {
+	}) => {
 		console.log("[formulateResponse] chatRoomId", chatRoomId);
 
 		let sendMessageThreadId: number | null = originalThreadId;
@@ -380,5 +380,5 @@ export class Agents {
 		} catch (error) {
 			console.error("[formulateResponse] error", error);
 		}
-	}
+	};
 }

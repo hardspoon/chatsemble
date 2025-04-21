@@ -10,11 +10,11 @@ export class ChatRooms {
 		this.organizationDO = organizationDO;
 	}
 
-	async handleChatRoomInitRequest(
+	handleChatRoomInitRequest = async (
 		webSocket: WebSocket,
 		session: Session,
 		roomId: string,
-	) {
+	) => {
 		const isMember = await this.organizationDO.dbServices.isUserMemberOfRoom({
 			roomId,
 			userId: session.userId,
@@ -63,14 +63,14 @@ export class ChatRooms {
 			},
 			session.userId,
 		);
-	}
+	};
 
-	async handleChatRoomThreadInitRequest(
+	handleChatRoomThreadInitRequest = async (
 		webSocket: WebSocket,
 		session: Session,
 		roomId: string,
 		threadId: number,
-	) {
+	) => {
 		const isMember = await this.organizationDO.dbServices.isUserMemberOfRoom({
 			roomId,
 			userId: session.userId,
@@ -118,9 +118,9 @@ export class ChatRooms {
 			},
 			session.userId,
 		);
-	}
+	};
 
-	async receiveChatRoomMessage({
+	receiveChatRoomMessage = async ({
 		memberId,
 		roomId,
 		message,
@@ -132,7 +132,7 @@ export class ChatRooms {
 		message: ChatRoomMessagePartial;
 		existingMessageId: number | null;
 		notifyAgents: boolean;
-	}): Promise<ChatRoomMessage> {
+	}) => {
 		let chatRoomMessage: ChatRoomMessage;
 
 		if (existingMessageId) {
@@ -199,9 +199,9 @@ export class ChatRooms {
 		}
 
 		return chatRoomMessage;
-	}
+	};
 
-	private async sendChatRoomsUpdateToUsers(userIds: string[]) {
+	sendChatRoomsUpdateToUsers = async (userIds: string[]) => {
 		const chatRoomsPromises = userIds.map((userId) =>
 			this.organizationDO.dbServices.getChatRoomsUserIsMemberOf(userId),
 		);
@@ -216,9 +216,9 @@ export class ChatRooms {
 				userId,
 			);
 		});
-	}
+	};
 
-	private async broadcastChatRoomMembersUpdate(chatRoomId: string) {
+	broadcastChatRoomMembersUpdate = async (chatRoomId: string) => {
 		const members = await this.organizationDO.dbServices.getChatRoomMembers({
 			roomId: chatRoomId,
 		});
@@ -231,13 +231,13 @@ export class ChatRooms {
 			},
 			chatRoomId,
 		);
-	}
+	};
 
 	// Chat room services
 
-	async createChatRoom(
+	createChatRoom = async (
 		newChatRoom: Parameters<ChatRoomDbServices["createChatRoom"]>[0],
-	) {
+	) => {
 		const createdChatRoom =
 			await this.organizationDO.dbServices.createChatRoom(newChatRoom);
 
@@ -248,15 +248,15 @@ export class ChatRooms {
 		this.sendChatRoomsUpdateToUsers(membersIds);
 
 		return createdChatRoom;
-	}
+	};
 
 	// Chat room member services
 
-	async deleteChatRoomMember(
+	deleteChatRoomMember = async (
 		deleteChatRoomMemberParams: Parameters<
 			ChatRoomDbServices["deleteChatRoomMember"]
 		>[0],
-	) {
+	) => {
 		const deletedChatRoomMember =
 			await this.organizationDO.dbServices.deleteChatRoomMember(
 				deleteChatRoomMemberParams,
@@ -267,13 +267,13 @@ export class ChatRooms {
 		this.broadcastChatRoomMembersUpdate(deleteChatRoomMemberParams.roomId);
 
 		return deletedChatRoomMember;
-	}
+	};
 
-	async addChatRoomMember(
+	addChatRoomMember = async (
 		addChatRoomMemberParams: Parameters<
 			ChatRoomDbServices["addChatRoomMember"]
 		>[0],
-	) {
+	) => {
 		const addedChatRoomMember =
 			await this.organizationDO.dbServices.addChatRoomMember(
 				addChatRoomMemberParams,
@@ -284,5 +284,5 @@ export class ChatRooms {
 		this.broadcastChatRoomMembersUpdate(addChatRoomMemberParams.roomId);
 
 		return addedChatRoomMember;
-	}
+	};
 }
