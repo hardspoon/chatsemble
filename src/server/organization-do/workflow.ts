@@ -10,7 +10,7 @@ interface WorkflowsDependencies {
 		message: WsChatOutgoingMessage,
 		roomId: string,
 	) => void;
-	processAndRespondWorkflow: (params: {
+	routeWorkflowToRelevantAgent: (params: {
 		workflow: WorkflowPartial;
 	}) => Promise<void>;
 }
@@ -79,7 +79,7 @@ export class Workflows {
 			`Executing workflow ${workflow.id} for chatroom ${workflow.chatRoomId} and agent ${workflow.agentId}`,
 		);
 		try {
-			await this.deps.processAndRespondWorkflow({ workflow });
+			await this.deps.routeWorkflowToRelevantAgent({ workflow });
 
 			if (workflow.isRecurring) {
 				try {

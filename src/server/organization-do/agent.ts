@@ -33,8 +33,8 @@ import type { ChatRoomDbServices } from "./db/services";
 
 interface AgentsDependencies {
 	dbServices: ChatRoomDbServices;
-	receiveChatRoomMessage: (
-		params: Parameters<ChatRooms["receiveChatRoomMessage"]>[0],
+	processIncomingChatMessage: (
+		params: Parameters<ChatRooms["processIncomingChatMessage"]>[0],
 	) => Promise<ChatRoomMessage>;
 	createWorkflow: (
 		params: Parameters<ChatRoomDbServices["createAgentWorkflow"]>[0],
@@ -50,7 +50,7 @@ export class Agents {
 		this.deps = deps;
 	}
 
-	processAndRespondWorkflow = async ({
+	routeWorkflowToRelevantAgent = async ({
 		workflow,
 	}: {
 		workflow: WorkflowPartial;
@@ -75,7 +75,7 @@ export class Agents {
 			chatRoomId: workflow.chatRoomId,
 		});
 
-		await this.formulateResponse({
+		await this.generateAndStreamAgentResponse({
 			agentId,
 			chatRoomId: workflow.chatRoomId,
 			threadId: null,
@@ -91,7 +91,7 @@ export class Agents {
 		});
 	};
 
-	routeMessagesAndNotifyAgents = async (
+	routeMessagesToRelevantAgents = async (
 		newMessage: ChatRoomMessage,
 	): Promise<void> => {
 		try {
@@ -136,7 +136,7 @@ export class Agents {
 				throw new Error("Room config not found");
 			}
 
-			const targetAgentIds = await this.checkAgentsToRouteMessagesTo({
+			const targetAgentIds = await this.determineRelevantAgentsForMessage({
 				contextMessages,
 				newMessages: [newMessage],
 				agents: agentMembers,
@@ -153,7 +153,7 @@ export class Agents {
 			for (const agentId of targetAgentIds) {
 				console.log(`[routeMessageAndNotifyAgents] Notifying agent ${agentId}`);
 
-				await this.processAndRespondIncomingMessages({
+				await this.initiateAgentResponseToMessages({
 					agentId,
 					chatRoomId: roomId,
 					threadId,
@@ -166,7 +166,7 @@ export class Agents {
 		}
 	};
 
-	private checkAgentsToRouteMessagesTo = async ({
+	private determineRelevantAgentsForMessage = async ({
 		contextMessages,
 		newMessages,
 		agents,
@@ -241,7 +241,7 @@ export class Agents {
 		}
 	};
 
-	private processAndRespondIncomingMessages = async ({
+	private initiateAgentResponseToMessages = async ({
 		agentId,
 		chatRoomId,
 		threadId,
@@ -279,7 +279,7 @@ export class Agents {
 			threadId: threadId, // Pass the current threadId
 		});
 
-		await this.formulateResponse({
+		await this.generateAndStreamAgentResponse({
 			agentId,
 			chatRoomId,
 			threadId,
@@ -288,7 +288,7 @@ export class Agents {
 		});
 	};
 
-	private formulateResponse = async ({
+	private generateAndStreamAgentResponse = async ({
 		agentId,
 		chatRoomId,
 		threadId: originalThreadId,
@@ -322,7 +322,7 @@ export class Agents {
 				createMessageThread: createMessageThreadTool({
 					roomId: chatRoomId,
 					onMessage: async ({ newMessagePartial }) => {
-						return await this.deps.receiveChatRoomMessage({
+						return await this.deps.processIncomingChatMessage({
 							roomId: chatRoomId,
 							memberId: agentId,
 							message: newMessagePartial,
@@ -373,7 +373,7 @@ export class Agents {
 				getThreadId: () => sendMessageThreadId,
 				omitSendingTool: ["createMessageThread"],
 				onMessageSend: async ({ newMessagePartial, existingMessageId }) => {
-					return await this.deps.receiveChatRoomMessage({
+					return await this.deps.processIncomingChatMessage({
 						roomId: chatRoomId,
 						memberId: agentId,
 						message: newMessagePartial,
