@@ -1,7 +1,7 @@
 import type { WorkflowPartial } from "@shared/types";
 import CronExpressionParser from "cron-parser";
-import type { OrganizationDurableObject } from "./organization";
 import type { ChatRoomDbServices } from "./db/services";
+import type { OrganizationDurableObject } from "./organization";
 
 export class Workflows {
 	private organizationDO: OrganizationDurableObject;
