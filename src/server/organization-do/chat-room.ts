@@ -1,13 +1,30 @@
 import type { Session } from "@server/types/session";
-import type { ChatRoomMessage, ChatRoomMessagePartial } from "@shared/types";
+import type {
+	ChatRoomMessage,
+	ChatRoomMessagePartial,
+	WsChatOutgoingMessage,
+} from "@shared/types";
 import type { ChatRoomDbServices } from "./db/services";
-import type { OrganizationDurableObject } from "./organization";
+
+interface ChatRoomsDependencies {
+	dbServices: ChatRoomDbServices;
+	sessions: Map<WebSocket, Session>;
+	sendWebSocketMessageToUser: (
+		message: WsChatOutgoingMessage,
+		userId: string,
+	) => void;
+	broadcastWebSocketMessageToRoom: (
+		message: WsChatOutgoingMessage,
+		roomId: string,
+	) => void;
+	routeMessagesAndNotifyAgents: (message: ChatRoomMessage) => Promise<void>;
+}
 
 export class ChatRooms {
-	private organizationDO: OrganizationDurableObject;
+	private deps: ChatRoomsDependencies;
 
-	constructor(organizationDO: OrganizationDurableObject) {
-		this.organizationDO = organizationDO;
+	constructor(deps: ChatRoomsDependencies) {
+		this.deps = deps;
 	}
 
 	handleChatRoomInitRequest = async (
@@ -15,7 +32,7 @@ export class ChatRooms {
 		session: Session,
 		roomId: string,
 	) => {
-		const isMember = await this.organizationDO.dbServices.isUserMemberOfRoom({
+		const isMember = await this.deps.dbServices.isUserMemberOfRoom({
 			roomId,
 			userId: session.userId,
 		});
@@ -27,19 +44,19 @@ export class ChatRooms {
 			if (session.activeRoomId !== null) {
 				const newSession = { ...session, activeRoomId: null };
 				webSocket.serializeAttachment(newSession);
-				this.organizationDO.sessions.set(webSocket, newSession);
+				this.deps.sessions.set(webSocket, newSession);
 			}
 			return;
 		}
 
 		const [room, members, messages, workflows] = await Promise.all([
-			this.organizationDO.dbServices.getChatRoomById(roomId),
-			this.organizationDO.dbServices.getChatRoomMembers({ roomId }),
-			this.organizationDO.dbServices.getChatRoomMessages({
+			this.deps.dbServices.getChatRoomById(roomId),
+			this.deps.dbServices.getChatRoomMembers({ roomId }),
+			this.deps.dbServices.getChatRoomMessages({
 				roomId,
 				threadId: null,
 			}),
-			this.organizationDO.dbServices.getChatRoomWorkflows(roomId),
+			this.deps.dbServices.getChatRoomWorkflows(roomId),
 		]);
 
 		if (!room) {
@@ -50,9 +67,9 @@ export class ChatRooms {
 		const newSession = { ...session, activeRoomId: roomId };
 
 		webSocket.serializeAttachment(newSession);
-		this.organizationDO.sessions.set(webSocket, newSession);
+		this.deps.sessions.set(webSocket, newSession);
 
-		this.organizationDO.sendWebSocketMessageToUser(
+		this.deps.sendWebSocketMessageToUser(
 			{
 				type: "chat-room-init-response",
 				roomId,
@@ -71,7 +88,7 @@ export class ChatRooms {
 		roomId: string,
 		threadId: number,
 	) => {
-		const isMember = await this.organizationDO.dbServices.isUserMemberOfRoom({
+		const isMember = await this.deps.dbServices.isUserMemberOfRoom({
 			roomId,
 			userId: session.userId,
 		});
@@ -83,7 +100,7 @@ export class ChatRooms {
 			if (session.activeRoomId !== null) {
 				const newSession = { ...session, activeRoomId: null };
 				webSocket.serializeAttachment(newSession);
-				this.organizationDO.sessions.set(webSocket, newSession);
+				this.deps.sessions.set(webSocket, newSession);
 			}
 			return; // Stop processing
 		}
@@ -92,12 +109,12 @@ export class ChatRooms {
 			const newSession = { ...session, activeRoomId: roomId };
 
 			webSocket.serializeAttachment(newSession);
-			this.organizationDO.sessions.set(webSocket, newSession);
+			this.deps.sessions.set(webSocket, newSession);
 		}
 
 		const [threadMessage, messages] = await Promise.all([
-			this.organizationDO.dbServices.getChatRoomMessageById(threadId),
-			this.organizationDO.dbServices.getChatRoomMessages({
+			this.deps.dbServices.getChatRoomMessageById(threadId),
+			this.deps.dbServices.getChatRoomMessages({
 				roomId,
 				threadId,
 			}),
@@ -108,7 +125,7 @@ export class ChatRooms {
 			throw new Error("Thread message not found");
 		}
 
-		this.organizationDO.sendWebSocketMessageToUser(
+		this.deps.sendWebSocketMessageToUser(
 			{
 				type: "chat-room-thread-init-response",
 				roomId,
@@ -136,41 +153,39 @@ export class ChatRooms {
 		let chatRoomMessage: ChatRoomMessage;
 
 		if (existingMessageId) {
-			chatRoomMessage =
-				await this.organizationDO.dbServices.updateChatRoomMessage(
-					existingMessageId,
-					{
-						content: message.content,
-						mentions: message.mentions,
-						toolUses: message.toolUses,
-					},
-				);
-		} else {
-			chatRoomMessage =
-				await this.organizationDO.dbServices.insertChatRoomMessage({
-					memberId,
+			chatRoomMessage = await this.deps.dbServices.updateChatRoomMessage(
+				existingMessageId,
+				{
 					content: message.content,
 					mentions: message.mentions,
 					toolUses: message.toolUses,
-					threadId: message.threadId,
-					roomId,
-					metadata: {
-						optimisticData: {
-							createdAt: message.createdAt,
-							id: message.id,
-						},
+				},
+			);
+		} else {
+			chatRoomMessage = await this.deps.dbServices.insertChatRoomMessage({
+				memberId,
+				content: message.content,
+				mentions: message.mentions,
+				toolUses: message.toolUses,
+				threadId: message.threadId,
+				roomId,
+				metadata: {
+					optimisticData: {
+						createdAt: message.createdAt,
+						id: message.id,
 					},
-					threadMetadata: null,
-				});
+				},
+				threadMetadata: null,
+			});
 
 			if (message.threadId) {
 				const updatedThreadMessage =
-					await this.organizationDO.dbServices.updateChatRoomMessageThreadMetadata(
+					await this.deps.dbServices.updateChatRoomMessageThreadMetadata(
 						message.threadId,
 						chatRoomMessage,
 					);
 
-				this.organizationDO.broadcastWebSocketMessageToRoom(
+				this.deps.broadcastWebSocketMessageToRoom(
 					{
 						type: "chat-room-message-broadcast",
 						roomId,
@@ -182,7 +197,7 @@ export class ChatRooms {
 			}
 		}
 
-		this.organizationDO.broadcastWebSocketMessageToRoom(
+		this.deps.broadcastWebSocketMessageToRoom(
 			{
 				type: "chat-room-message-broadcast",
 				roomId,
@@ -193,22 +208,20 @@ export class ChatRooms {
 		);
 
 		if (notifyAgents && !existingMessageId) {
-			await this.organizationDO.agents.routeMessagesAndNotifyAgents(
-				chatRoomMessage,
-			);
+			await this.deps.routeMessagesAndNotifyAgents(chatRoomMessage);
 		}
 
 		return chatRoomMessage;
 	};
 
-	sendChatRoomsUpdateToUsers = async (userIds: string[]) => {
+	private sendChatRoomsUpdateToUsers = async (userIds: string[]) => {
 		const chatRoomsPromises = userIds.map((userId) =>
-			this.organizationDO.dbServices.getChatRoomsUserIsMemberOf(userId),
+			this.deps.dbServices.getChatRoomsUserIsMemberOf(userId),
 		);
 		const chatRoomsResults = await Promise.all(chatRoomsPromises);
 
 		userIds.forEach((userId, index) => {
-			this.organizationDO.sendWebSocketMessageToUser(
+			this.deps.sendWebSocketMessageToUser(
 				{
 					type: "chat-rooms-update",
 					chatRooms: chatRoomsResults[index],
@@ -218,12 +231,12 @@ export class ChatRooms {
 		});
 	};
 
-	broadcastChatRoomMembersUpdate = async (chatRoomId: string) => {
-		const members = await this.organizationDO.dbServices.getChatRoomMembers({
+	private broadcastChatRoomMembersUpdate = async (chatRoomId: string) => {
+		const members = await this.deps.dbServices.getChatRoomMembers({
 			roomId: chatRoomId,
 		});
 
-		this.organizationDO.broadcastWebSocketMessageToRoom(
+		this.deps.broadcastWebSocketMessageToRoom(
 			{
 				type: "chat-room-members-update",
 				roomId: chatRoomId,
@@ -239,7 +252,7 @@ export class ChatRooms {
 		newChatRoom: Parameters<ChatRoomDbServices["createChatRoom"]>[0],
 	) => {
 		const createdChatRoom =
-			await this.organizationDO.dbServices.createChatRoom(newChatRoom);
+			await this.deps.dbServices.createChatRoom(newChatRoom);
 
 		const membersIds = newChatRoom.members
 			.filter((member) => member.type === "user")
@@ -258,7 +271,7 @@ export class ChatRooms {
 		>[0],
 	) => {
 		const deletedChatRoomMember =
-			await this.organizationDO.dbServices.deleteChatRoomMember(
+			await this.deps.dbServices.deleteChatRoomMember(
 				deleteChatRoomMemberParams,
 			);
 
@@ -274,10 +287,9 @@ export class ChatRooms {
 			ChatRoomDbServices["addChatRoomMember"]
 		>[0],
 	) => {
-		const addedChatRoomMember =
-			await this.organizationDO.dbServices.addChatRoomMember(
-				addChatRoomMemberParams,
-			);
+		const addedChatRoomMember = await this.deps.dbServices.addChatRoomMember(
+			addChatRoomMemberParams,
+		);
 
 		this.sendChatRoomsUpdateToUsers([addChatRoomMemberParams.id]);
 

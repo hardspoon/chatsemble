@@ -1,20 +1,31 @@
 import type { WorkflowPartial } from "@shared/types";
+import type { WsChatOutgoingMessage } from "@shared/types";
 import CronExpressionParser from "cron-parser";
 import type { ChatRoomDbServices } from "./db/services";
-import type { OrganizationDurableObject } from "./organization";
+
+interface WorkflowsDependencies {
+	dbServices: ChatRoomDbServices;
+	storage: DurableObjectStorage;
+	broadcastWebSocketMessageToRoom: (
+		message: WsChatOutgoingMessage,
+		roomId: string,
+	) => void;
+	processAndRespondWorkflow: (params: {
+		workflow: WorkflowPartial;
+	}) => Promise<void>;
+}
 
 export class Workflows {
-	private organizationDO: OrganizationDurableObject;
+	private deps: WorkflowsDependencies;
 
-	constructor(organizationDO: OrganizationDurableObject) {
-		this.organizationDO = organizationDO;
+	constructor(deps: WorkflowsDependencies) {
+		this.deps = deps;
 	}
 
 	scheduleNextWorkflowAlarm = async () => {
 		const now = Date.now();
-		const nextTime =
-			await this.organizationDO.dbServices.findNextWorkflowTime(now);
-		const currentAlarm = await this.organizationDO.storage.getAlarm();
+		const nextTime = await this.deps.dbServices.findNextWorkflowTime(now);
+		const currentAlarm = await this.deps.storage.getAlarm();
 		console.log("[scheduleNextWorkflowAlarm] nextTime", nextTime);
 		console.log("[scheduleNextWorkflowAlarm] currentAlarm", currentAlarm);
 
@@ -23,7 +34,7 @@ export class Workflows {
 				console.log(
 					`[Setting next alarm for ${new Date(nextTime).toISOString()}`,
 				);
-				this.organizationDO.storage.setAlarm(nextTime);
+				this.deps.storage.setAlarm(nextTime);
 			} else {
 				console.log(
 					`Alarm already set correctly for ${new Date(nextTime).toISOString()}`,
@@ -32,7 +43,7 @@ export class Workflows {
 		} else {
 			if (currentAlarm) {
 				console.log("No active tasks, deleting alarm.");
-				this.organizationDO.storage.deleteAlarm();
+				this.deps.storage.deleteAlarm();
 			} else {
 				console.log("No active tasks, no alarm to delete.");
 			}
@@ -42,8 +53,7 @@ export class Workflows {
 	handleWorkflowAlarm = async () => {
 		console.log(`Alarm triggered at ${new Date().toISOString()}`);
 		const now = Date.now();
-		const dueWorkflows =
-			await this.organizationDO.dbServices.getDueWorkflows(now);
+		const dueWorkflows = await this.deps.dbServices.getDueWorkflows(now);
 
 		console.log(`Found ${dueWorkflows.length} due workflows.`);
 
@@ -64,12 +74,12 @@ export class Workflows {
 		);
 	};
 
-	executeWorkflow = async (workflow: WorkflowPartial) => {
+	private executeWorkflow = async (workflow: WorkflowPartial) => {
 		console.log(
 			`Executing workflow ${workflow.id} for chatroom ${workflow.chatRoomId} and agent ${workflow.agentId}`,
 		);
 		try {
-			await this.organizationDO.agents.processAndRespondWorkflow({ workflow });
+			await this.deps.processAndRespondWorkflow({ workflow });
 
 			if (workflow.isRecurring) {
 				try {
@@ -84,7 +94,7 @@ export class Workflows {
 					console.log(
 						`Rescheduling task ${workflow.id} for ${new Date(nextExecutionTime).toISOString()}`,
 					);
-					await this.organizationDO.dbServices.updateWorkflow(workflow.id, {
+					await this.deps.dbServices.updateWorkflow(workflow.id, {
 						nextExecutionTime,
 						lastExecutionTime: Date.now(),
 					});
@@ -93,12 +103,12 @@ export class Workflows {
 						`Failed to parse schedule for recurring workflow ${workflow.id}:`,
 						error,
 					);
-					await this.organizationDO.dbServices.updateWorkflow(workflow.id, {
+					await this.deps.dbServices.updateWorkflow(workflow.id, {
 						lastExecutionTime: Date.now(),
 					});
 				}
 			} else {
-				await this.organizationDO.dbServices.updateWorkflow(workflow.id, {
+				await this.deps.dbServices.updateWorkflow(workflow.id, {
 					lastExecutionTime: Date.now(),
 					isActive: false,
 				});
@@ -106,18 +116,16 @@ export class Workflows {
 			}
 		} catch (error) {
 			console.error(`Error executing workflow ${workflow.id}:`, error);
-			await this.organizationDO.dbServices.updateWorkflow(workflow.id, {
+			await this.deps.dbServices.updateWorkflow(workflow.id, {
 				lastExecutionTime: Date.now(),
 			});
 		}
 	};
 
-	broadcastWorkflowUpdate = async (chatRoomId: string) => {
+	private broadcastWorkflowUpdate = async (chatRoomId: string) => {
 		const workflows =
-			await this.organizationDO.dbServices.getChatRoomWorkflows(chatRoomId);
-
-		// Use the organizationDO reference to call its broadcast method
-		this.organizationDO.broadcastWebSocketMessageToRoom(
+			await this.deps.dbServices.getChatRoomWorkflows(chatRoomId);
+		this.deps.broadcastWebSocketMessageToRoom(
 			{
 				type: "chat-room-workflows-update",
 				roomId: chatRoomId,
@@ -130,15 +138,15 @@ export class Workflows {
 	createWorkflow = async (
 		params: Parameters<ChatRoomDbServices["createAgentWorkflow"]>[0],
 	) => {
-		const workflow =
-			await this.organizationDO.dbServices.createAgentWorkflow(params);
+		const workflow = await this.deps.dbServices.createAgentWorkflow(params);
 		await this.broadcastWorkflowUpdate(workflow.chatRoomId);
+		await this.scheduleNextWorkflowAlarm();
 		return workflow;
 	};
 
 	deleteWorkflow = async (workflowId: string) => {
 		const deletedWorkflow =
-			await this.organizationDO.dbServices.deleteWorkflow(workflowId);
+			await this.deps.dbServices.deleteWorkflow(workflowId);
 		await this.broadcastWorkflowUpdate(deletedWorkflow.chatRoomId);
 		return deletedWorkflow;
 	};

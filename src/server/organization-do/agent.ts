@@ -28,15 +28,26 @@ import {
 	streamText,
 } from "ai";
 import { z } from "zod";
-import type { OrganizationDurableObject } from "./organization";
+import type { ChatRooms } from "./chat-room";
+import type { ChatRoomDbServices } from "./db/services";
+
+interface AgentsDependencies {
+	dbServices: ChatRoomDbServices;
+	receiveChatRoomMessage: (
+		params: Parameters<ChatRooms["receiveChatRoomMessage"]>[0],
+	) => Promise<ChatRoomMessage>;
+	createWorkflow: (
+		params: Parameters<ChatRoomDbServices["createAgentWorkflow"]>[0],
+	) => Promise<WorkflowPartial>;
+}
 
 export class Agents {
 	private env: Env;
-	private organizationDO: OrganizationDurableObject; // Reference for callbacks
+	private deps: AgentsDependencies;
 
-	constructor(env: Env, organizationDO: OrganizationDurableObject) {
+	constructor(env: Env, deps: AgentsDependencies) {
 		this.env = env;
-		this.organizationDO = organizationDO;
+		this.deps = deps;
 	}
 
 	processAndRespondWorkflow = async ({
@@ -48,8 +59,7 @@ export class Agents {
 
 		const agentId = workflow.agentId;
 
-		const agentConfig =
-			await this.organizationDO.dbServices.getAgentById(agentId);
+		const agentConfig = await this.deps.dbServices.getAgentById(agentId);
 
 		if (!agentConfig) {
 			console.error(`Agent config not found for agent ${agentId}`);
@@ -94,35 +104,32 @@ export class Agents {
 
 			let contextMessages: ChatRoomMessage[] = [];
 
-			contextMessages =
-				await this.organizationDO.dbServices.getChatRoomMessages({
-					threadId,
-					roomId,
-					beforeId: newMessage.id,
-					limit: contextSize,
-				});
+			contextMessages = await this.deps.dbServices.getChatRoomMessages({
+				threadId,
+				roomId,
+				beforeId: newMessage.id,
+				limit: contextSize,
+			});
 
 			if (threadId) {
 				const threadMessage =
-					await this.organizationDO.dbServices.getChatRoomMessageById(threadId);
+					await this.deps.dbServices.getChatRoomMessageById(threadId);
 				if (threadMessage) {
 					contextMessages = [threadMessage, ...contextMessages];
 				}
 			}
 
-			const agentMembers =
-				await this.organizationDO.dbServices.getChatRoomMembers({
-					roomId,
-					type: "agent",
-				});
+			const agentMembers = await this.deps.dbServices.getChatRoomMembers({
+				roomId,
+				type: "agent",
+			});
 
 			if (agentMembers.length === 0) {
 				console.log("[routeMessageAndNotifyAgents] No agents in the room.");
 				return;
 			}
 
-			const roomConfig =
-				await this.organizationDO.dbServices.getChatRoomById(roomId);
+			const roomConfig = await this.deps.dbServices.getChatRoomById(roomId);
 
 			if (!roomConfig) {
 				console.error("Room config not found");
@@ -159,7 +166,7 @@ export class Agents {
 		}
 	};
 
-	checkAgentsToRouteMessagesTo = async ({
+	private checkAgentsToRouteMessagesTo = async ({
 		contextMessages,
 		newMessages,
 		agents,
@@ -203,8 +210,7 @@ export class Agents {
 		try {
 			const agentIds = agents.map((a) => a.id);
 
-			const agentList =
-				await this.organizationDO.dbServices.getAgentsByIds(agentIds);
+			const agentList = await this.deps.dbServices.getAgentsByIds(agentIds);
 
 			const aiMessages = contextAndNewchatRoomMessagesToAIMessages({
 				contextMessages,
@@ -235,7 +241,7 @@ export class Agents {
 		}
 	};
 
-	processAndRespondIncomingMessages = async ({
+	private processAndRespondIncomingMessages = async ({
 		agentId,
 		chatRoomId,
 		threadId,
@@ -252,8 +258,7 @@ export class Agents {
 			return;
 		}
 
-		const agentConfig =
-			await this.organizationDO.dbServices.getAgentById(agentId);
+		const agentConfig = await this.deps.dbServices.getAgentById(agentId);
 
 		if (!agentConfig) {
 			console.error("Agent config not found");
@@ -283,7 +288,7 @@ export class Agents {
 		});
 	};
 
-	formulateResponse = async ({
+	private formulateResponse = async ({
 		agentId,
 		chatRoomId,
 		threadId: originalThreadId,
@@ -309,7 +314,7 @@ export class Agents {
 				deepResearch: deepResearchTool(dataStream),
 				webCrawl: webCrawlerTool(dataStream),
 				scheduleWorkflow: scheduleWorkflowTool({
-					organizationInstance: this.organizationDO,
+					createWorkflow: this.deps.createWorkflow,
 					chatRoomId,
 					agentId,
 				}),
@@ -317,7 +322,7 @@ export class Agents {
 				createMessageThread: createMessageThreadTool({
 					roomId: chatRoomId,
 					onMessage: async ({ newMessagePartial }) => {
-						return await this.organizationDO.chatRooms.receiveChatRoomMessage({
+						return await this.deps.receiveChatRoomMessage({
 							roomId: chatRoomId,
 							memberId: agentId,
 							message: newMessagePartial,
@@ -368,7 +373,7 @@ export class Agents {
 				getThreadId: () => sendMessageThreadId,
 				omitSendingTool: ["createMessageThread"],
 				onMessageSend: async ({ newMessagePartial, existingMessageId }) => {
-					return await this.organizationDO.chatRooms.receiveChatRoomMessage({
+					return await this.deps.receiveChatRoomMessage({
 						roomId: chatRoomId,
 						memberId: agentId,
 						message: newMessagePartial,
