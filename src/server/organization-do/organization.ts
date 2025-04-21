@@ -60,7 +60,10 @@ export class OrganizationDurableObject extends DurableObject<Env> {
 		this.dbServices = createChatRoomDbServices(this.db);
 
 		for (const webSocket of ctx.getWebSockets()) {
-			const meta = webSocket.deserializeAttachment() || {};
+			const meta = webSocket.deserializeAttachment() || {
+				userId: "unknown",
+				activeRoomId: null,
+			};
 			this.sessions.set(webSocket, meta);
 		}
 	}
@@ -145,6 +148,7 @@ export class OrganizationDurableObject extends DurableObject<Env> {
 
 		const session: Session = {
 			userId,
+			activeRoomId: null,
 		};
 		server.serializeAttachment(session);
 		this.sessions.set(server, session);
@@ -155,6 +159,8 @@ export class OrganizationDurableObject extends DurableObject<Env> {
 	async webSocketMessage(webSocket: WebSocket, message: string) {
 		const session = this.sessions.get(webSocket);
 		if (!session) {
+			console.error("Session not found");
+			webSocket.close(1011, "Session not found");
 			return;
 		}
 
@@ -172,11 +178,12 @@ export class OrganizationDurableObject extends DurableObject<Env> {
 					break;
 				}
 				case "chat-room-init-request": {
-					this.handleChatRoomInitRequest(session, parsedMsg.roomId);
+					this.handleChatRoomInitRequest(webSocket, session, parsedMsg.roomId);
 					break;
 				}
 				case "chat-room-thread-init-request": {
 					this.handleChatRoomThreadInitRequest(
+						webSocket,
 						session,
 						parsedMsg.roomId,
 						parsedMsg.threadId,
@@ -184,19 +191,68 @@ export class OrganizationDurableObject extends DurableObject<Env> {
 					break;
 				}
 				case "chat-room-message-send": {
+					const roomId = parsedMsg.roomId;
+					if (session.activeRoomId !== roomId) {
+						console.warn(
+							`[Auth] Denied: User ${session.userId} tried to send message to room ${roomId}, but session is active in ${session.activeRoomId}.`,
+						);
+						throw new Error(
+							`Not authorized to send message to room ${roomId} from current session state.`,
+						);
+					}
 					await this.receiveChatRoomMessage({
 						memberId: session.userId,
-						roomId: parsedMsg.roomId,
+						roomId,
 						message: parsedMsg.message,
 						existingMessageId: null,
 						notifyAgents: true,
 					});
 					break;
 				}
+				default:
+					console.warn(
+						`Received unhandled message type: ${
+							// biome-ignore lint/suspicious/noExplicitAny: <explanation>
+							(parsedMsg as any)?.type
+						}`,
+					);
 			}
 		} catch (err) {
+			console.error(
+				`Error processing WebSocket message for user ${session.userId}:`,
+				err,
+			);
 			if (err instanceof Error) {
-				webSocket.send(JSON.stringify({ error: err.message }));
+				try {
+					webSocket.send(
+						JSON.stringify({ error: `Processing failed: ${err.message}` }),
+					);
+				} catch (sendErr) {
+					console.error(
+						`Failed to send error message back to user ${session.userId}:`,
+						sendErr,
+					);
+					this.sessions.delete(webSocket);
+					webSocket.close(
+						1011,
+						"Error processing message and failed to notify client",
+					);
+				}
+			} else {
+				try {
+					webSocket.send(
+						JSON.stringify({
+							error: "An unknown error occurred during processing.",
+						}),
+					);
+				} catch (sendErr) {
+					console.error(
+						`Failed to send generic error message back to user ${session.userId}:`,
+						sendErr,
+					);
+					this.sessions.delete(webSocket);
+					webSocket.close(1011, "Unknown error and failed to notify client");
+				}
 			}
 		}
 	}
@@ -222,18 +278,34 @@ export class OrganizationDurableObject extends DurableObject<Env> {
 		}
 	}
 
-	private broadcastWebSocketMessage(
+	private broadcastWebSocketMessageToRoom(
 		message: WsChatOutgoingMessage,
-		excludeUserId?: string,
+		targetRoomId: string,
 	) {
+		console.log(
+			`Broadcasting message type ${message.type} to active sessions in room ${targetRoomId}`,
+		);
+		let recipients = 0;
 		for (const [ws, session] of this.sessions.entries()) {
-			if (!excludeUserId || session.userId !== excludeUserId) {
-				ws.send(JSON.stringify(message));
+			if (session.activeRoomId === targetRoomId) {
+				try {
+					ws.send(JSON.stringify(message));
+					recipients++;
+				} catch (e) {
+					console.error(
+						`Failed to send message to WebSocket for user ${session.userId} in room ${targetRoomId}:`,
+						e,
+					);
+					this.sessions.delete(ws);
+				}
 			}
 		}
+		console.log(
+			`Message broadcasted to ${recipients} recipients in room ${targetRoomId}.`,
+		);
 	}
 
-	async handleUserInitRequest(session: Session) {
+	private async handleUserInitRequest(session: Session) {
 		const chatRooms = await this.dbServices.getChatRoomsUserIsMemberOf(
 			session.userId,
 		);
@@ -247,7 +319,28 @@ export class OrganizationDurableObject extends DurableObject<Env> {
 		);
 	}
 
-	async handleChatRoomInitRequest(session: Session, roomId: string) {
+	private async handleChatRoomInitRequest(
+		webSocket: WebSocket,
+		session: Session,
+		roomId: string,
+	) {
+		const isMember = await this.dbServices.isUserMemberOfRoom({
+			roomId,
+			userId: session.userId,
+		});
+
+		if (!isMember) {
+			console.warn(
+				`User ${session.userId} attempted to access room ${roomId} but is not a member.`,
+			);
+			if (session.activeRoomId !== null) {
+				const newSession = { ...session, activeRoomId: null };
+				webSocket.serializeAttachment(newSession);
+				this.sessions.set(webSocket, newSession);
+			}
+			return;
+		}
+
 		const [room, members, messages, workflows] = await Promise.all([
 			this.dbServices.getChatRoomById(roomId),
 			this.dbServices.getChatRoomMembers({ roomId }),
@@ -263,6 +356,11 @@ export class OrganizationDurableObject extends DurableObject<Env> {
 			throw new Error("Room not found");
 		}
 
+		const newSession = { ...session, activeRoomId: roomId };
+
+		webSocket.serializeAttachment(newSession);
+		this.sessions.set(webSocket, newSession);
+
 		this.sendWebSocketMessageToUser(
 			{
 				type: "chat-room-init-response",
@@ -276,11 +374,36 @@ export class OrganizationDurableObject extends DurableObject<Env> {
 		);
 	}
 
-	async handleChatRoomThreadInitRequest(
+	private async handleChatRoomThreadInitRequest(
+		webSocket: WebSocket,
 		session: Session,
 		roomId: string,
 		threadId: number,
 	) {
+		const isMember = await this.dbServices.isUserMemberOfRoom({
+			roomId,
+			userId: session.userId,
+		});
+
+		if (!isMember) {
+			console.warn(
+				`User ${session.userId} attempted to access room ${roomId} but is not a member.`,
+			);
+			if (session.activeRoomId !== null) {
+				const newSession = { ...session, activeRoomId: null };
+				webSocket.serializeAttachment(newSession);
+				this.sessions.set(webSocket, newSession);
+			}
+			return; // Stop processing
+		}
+
+		if (session.activeRoomId !== roomId) {
+			const newSession = { ...session, activeRoomId: roomId };
+
+			webSocket.serializeAttachment(newSession);
+			this.sessions.set(webSocket, newSession);
+		}
+
 		const [threadMessage, messages] = await Promise.all([
 			this.dbServices.getChatRoomMessageById(threadId),
 			this.dbServices.getChatRoomMessages({
@@ -306,7 +429,7 @@ export class OrganizationDurableObject extends DurableObject<Env> {
 		);
 	}
 
-	async executeWorkflow(workflow: WorkflowPartial) {
+	private async executeWorkflow(workflow: WorkflowPartial) {
 		console.log(
 			`Executing workflow ${workflow.id} for chatroom ${workflow.chatRoomId} and agent ${workflow.agentId}`,
 		);
@@ -354,7 +477,7 @@ export class OrganizationDurableObject extends DurableObject<Env> {
 		}
 	}
 
-	async processAndRespondWorkflow({
+	private async processAndRespondWorkflow({
 		workflow,
 	}: {
 		workflow: WorkflowPartial;
@@ -395,7 +518,7 @@ export class OrganizationDurableObject extends DurableObject<Env> {
 		});
 	}
 
-	async receiveChatRoomMessage({
+	private async receiveChatRoomMessage({
 		memberId,
 		roomId,
 		message,
@@ -443,22 +566,27 @@ export class OrganizationDurableObject extends DurableObject<Env> {
 						chatRoomMessage,
 					);
 
-				this.broadcastWebSocketMessage({
-					type: "chat-room-message-broadcast",
+				this.broadcastWebSocketMessageToRoom(
+					{
+						type: "chat-room-message-broadcast",
+						roomId,
+						threadId: updatedThreadMessage.threadId,
+						message: updatedThreadMessage,
+					},
 					roomId,
-					threadId: updatedThreadMessage.threadId,
-					message: updatedThreadMessage,
-				});
+				);
 			}
 		}
 
-		this.broadcastWebSocketMessage({
-			// TODO: Broadcast only to members of chatroom
-			type: "chat-room-message-broadcast",
+		this.broadcastWebSocketMessageToRoom(
+			{
+				type: "chat-room-message-broadcast",
+				roomId,
+				threadId: chatRoomMessage.threadId,
+				message: chatRoomMessage,
+			},
 			roomId,
-			threadId: chatRoomMessage.threadId,
-			message: chatRoomMessage,
-		});
+		);
 
 		if (notifyAgents && !existingMessageId) {
 			await this.routeMessagesAndNotifyAgents(chatRoomMessage);
@@ -615,7 +743,7 @@ export class OrganizationDurableObject extends DurableObject<Env> {
 		}
 	}
 
-	async processAndRespondIncomingMessages({
+	private async processAndRespondIncomingMessages({
 		agentId,
 		chatRoomId,
 		threadId,
@@ -766,7 +894,7 @@ export class OrganizationDurableObject extends DurableObject<Env> {
 		}
 	}
 
-	async sendChatRoomsUpdateToUsers(userIds: string[]) {
+	private async sendChatRoomsUpdateToUsers(userIds: string[]) {
 		const chatRoomsPromises = userIds.map((userId) =>
 			this.dbServices.getChatRoomsUserIsMemberOf(userId),
 		);
@@ -783,26 +911,32 @@ export class OrganizationDurableObject extends DurableObject<Env> {
 		});
 	}
 
-	async broadcastWorkflowUpdate(chatRoomId: string) {
+	private async broadcastWorkflowUpdate(chatRoomId: string) {
 		const workflows = await this.dbServices.getChatRoomWorkflows(chatRoomId);
 
-		this.broadcastWebSocketMessage({
-			type: "chat-room-workflows-update",
-			roomId: chatRoomId,
-			workflows,
-		});
+		this.broadcastWebSocketMessageToRoom(
+			{
+				type: "chat-room-workflows-update",
+				roomId: chatRoomId,
+				workflows,
+			},
+			chatRoomId,
+		);
 	}
 
-	async broadcastChatRoomMembersUpdate(chatRoomId: string) {
+	private async broadcastChatRoomMembersUpdate(chatRoomId: string) {
 		const members = await this.dbServices.getChatRoomMembers({
 			roomId: chatRoomId,
 		});
 
-		this.broadcastWebSocketMessage({
-			type: "chat-room-members-update",
-			roomId: chatRoomId,
-			members,
-		});
+		this.broadcastWebSocketMessageToRoom(
+			{
+				type: "chat-room-members-update",
+				roomId: chatRoomId,
+				members,
+			},
+			chatRoomId,
+		);
 	}
 
 	// Chat room services
