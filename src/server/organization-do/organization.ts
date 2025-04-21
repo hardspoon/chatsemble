@@ -1,51 +1,32 @@
 import { DurableObject } from "cloudflare:workers";
 
-import { createOpenAI } from "@ai-sdk/openai";
-import { getDefaultAgentSystemPrompt } from "@server/ai/prompts/agent/default-prompt";
-import {
-	getWorkflowAgentSystemPrompt,
-	getWorkflowAgentUserPrompt,
-} from "@server/ai/prompts/agent/workflow-prompt";
-import { routeMessageToAgentSystemPrompt } from "@server/ai/prompts/router-prompt";
-import { agentToolSetKeys } from "@server/ai/tools";
-import { createMessageThreadTool } from "@server/ai/tools/create-thread-tool";
-import { deepResearchTool } from "@server/ai/tools/deep-search-tool";
-import { scheduleWorkflowTool } from "@server/ai/tools/schedule-workflow-tool";
-import { webCrawlerTool } from "@server/ai/tools/web-crawler-tool";
-import { webSearchTool } from "@server/ai/tools/web-search-tool";
-import { processDataStream } from "@server/ai/utils/data-stream";
-import { contextAndNewchatRoomMessagesToAIMessages } from "@server/ai/utils/message";
 import type { Session } from "@server/types/session";
 import type {
-	ChatRoom,
-	ChatRoomMember,
 	ChatRoomMessage,
-	ChatRoomMessagePartial,
 	WorkflowPartial,
 	WsChatIncomingMessage,
 	WsChatOutgoingMessage,
 } from "@shared/types";
-import {
-	type DataStreamWriter,
-	type Message,
-	createDataStreamResponse,
-	generateObject,
-	smoothStream,
-	streamText,
-} from "ai";
-import CronExpressionParser from "cron-parser";
 import { drizzle } from "drizzle-orm/durable-sqlite";
 import type { DrizzleSqliteDODatabase } from "drizzle-orm/durable-sqlite";
 import { migrate } from "drizzle-orm/durable-sqlite/migrator";
-import { z } from "zod";
+import { Agents } from "./agent";
+import { ChatRooms } from "./chat-room";
 import migrations from "./db/migrations/migrations";
-import { createChatRoomDbServices } from "./db/services";
+import {
+	type ChatRoomDbServices,
+	createChatRoomDbServices,
+} from "./db/services";
+import { Workflows } from "./workflow";
 
 export class OrganizationDurableObject extends DurableObject<Env> {
 	storage: DurableObjectStorage;
 	db: DrizzleSqliteDODatabase;
 	sessions: Map<WebSocket, Session>;
-	dbServices: ReturnType<typeof createChatRoomDbServices>;
+	dbServices: ChatRoomDbServices;
+	agents: Agents;
+	workflows: Workflows;
+	chatRooms: ChatRooms;
 
 	constructor(ctx: DurableObjectState, env: Env) {
 		super(ctx, env);
@@ -59,8 +40,33 @@ export class OrganizationDurableObject extends DurableObject<Env> {
 
 		this.dbServices = createChatRoomDbServices(this.db);
 
+		// Initialize modules
+		this.chatRooms = new ChatRooms({
+			dbServices: this.dbServices,
+			sessions: this.sessions,
+			sendWebSocketMessageToUser: this.sendWebSocketMessageToUser,
+			broadcastWebSocketMessageToRoom: this.broadcastWebSocketMessageToRoom,
+			routeMessagesAndNotifyAgents: this.routeMessagesAndNotifyAgents,
+		});
+
+		this.agents = new Agents(env, {
+			dbServices: this.dbServices,
+			receiveChatRoomMessage: this.receiveChatRoomMessage,
+			createWorkflow: this.createWorkflow,
+		});
+
+		this.workflows = new Workflows({
+			dbServices: this.dbServices,
+			storage: this.storage,
+			broadcastWebSocketMessageToRoom: this.broadcastWebSocketMessageToRoom,
+			processAndRespondWorkflow: this.processAndRespondWorkflow,
+		});
+
 		for (const webSocket of ctx.getWebSockets()) {
-			const meta = webSocket.deserializeAttachment() || {};
+			const meta = webSocket.deserializeAttachment() || {
+				userId: "unknown",
+				activeRoomId: null,
+			};
 			this.sessions.set(webSocket, meta);
 		}
 	}
@@ -74,60 +80,8 @@ export class OrganizationDurableObject extends DurableObject<Env> {
 	}
 
 	async alarm() {
-		await this.handleWorkflowAlarm();
-		await this.scheduleNextWorkflowAlarm();
-	}
-
-	async scheduleNextWorkflowAlarm() {
-		const now = Date.now();
-		const nextTime = await this.dbServices.findNextWorkflowTime(now);
-		const currentAlarm = await this.ctx.storage.getAlarm();
-		console.log("[scheduleNextWorkflowAlarm] nextTime", nextTime);
-		console.log("[scheduleNextWorkflowAlarm] currentAlarm", currentAlarm);
-
-		if (nextTime) {
-			if (currentAlarm !== nextTime) {
-				console.log(
-					`[Setting next alarm for ${new Date(nextTime).toISOString()}`,
-				);
-				this.ctx.storage.setAlarm(nextTime);
-			} else {
-				console.log(
-					`Alarm already set correctly for ${new Date(nextTime).toISOString()}`,
-				);
-			}
-		} else {
-			if (currentAlarm) {
-				console.log("No active tasks, deleting alarm.");
-				this.ctx.storage.deleteAlarm();
-			} else {
-				console.log("No active tasks, no alarm to delete.");
-			}
-		}
-	}
-
-	async handleWorkflowAlarm() {
-		console.log(`Alarm triggered at ${new Date().toISOString()}`);
-		const now = Date.now();
-		const dueWorkflows = await this.dbServices.getDueWorkflows(now);
-
-		console.log(`Found ${dueWorkflows.length} due workflows.`);
-
-		await Promise.all(
-			dueWorkflows.map(async (workflow) => {
-				console.log(`Processing workflow ${workflow.id}`);
-				await this.executeWorkflow(workflow);
-			}),
-		);
-
-		const chatRoomIds = dueWorkflows.map((workflow) => workflow.chatRoomId);
-		const uniqueChatRoomIds = [...new Set(chatRoomIds)];
-
-		await Promise.all(
-			uniqueChatRoomIds.map(async (chatRoomId) => {
-				await this.broadcastWorkflowUpdate(chatRoomId);
-			}),
-		);
+		await this.workflows.handleWorkflowAlarm();
+		await this.workflows.scheduleNextWorkflowAlarm();
 	}
 
 	async fetch(request: Request) {
@@ -145,6 +99,7 @@ export class OrganizationDurableObject extends DurableObject<Env> {
 
 		const session: Session = {
 			userId,
+			activeRoomId: null,
 		};
 		server.serializeAttachment(session);
 		this.sessions.set(server, session);
@@ -155,6 +110,8 @@ export class OrganizationDurableObject extends DurableObject<Env> {
 	async webSocketMessage(webSocket: WebSocket, message: string) {
 		const session = this.sessions.get(webSocket);
 		if (!session) {
+			console.error("Session not found");
+			webSocket.close(1011, "Session not found");
 			return;
 		}
 
@@ -172,11 +129,16 @@ export class OrganizationDurableObject extends DurableObject<Env> {
 					break;
 				}
 				case "chat-room-init-request": {
-					this.handleChatRoomInitRequest(session, parsedMsg.roomId);
+					this.chatRooms.handleChatRoomInitRequest(
+						webSocket,
+						session,
+						parsedMsg.roomId,
+					);
 					break;
 				}
 				case "chat-room-thread-init-request": {
-					this.handleChatRoomThreadInitRequest(
+					this.chatRooms.handleChatRoomThreadInitRequest(
+						webSocket,
 						session,
 						parsedMsg.roomId,
 						parsedMsg.threadId,
@@ -184,19 +146,68 @@ export class OrganizationDurableObject extends DurableObject<Env> {
 					break;
 				}
 				case "chat-room-message-send": {
-					await this.receiveChatRoomMessage({
+					const roomId = parsedMsg.roomId;
+					if (session.activeRoomId !== roomId) {
+						console.warn(
+							`[Auth] Denied: User ${session.userId} tried to send message to room ${roomId}, but session is active in ${session.activeRoomId}.`,
+						);
+						throw new Error(
+							`Not authorized to send message to room ${roomId} from current session state.`,
+						);
+					}
+					await this.chatRooms.receiveChatRoomMessage({
 						memberId: session.userId,
-						roomId: parsedMsg.roomId,
+						roomId,
 						message: parsedMsg.message,
 						existingMessageId: null,
 						notifyAgents: true,
 					});
 					break;
 				}
+				default:
+					console.warn(
+						`Received unhandled message type: ${
+							// biome-ignore lint/suspicious/noExplicitAny: <explanation>
+							(parsedMsg as any)?.type
+						}`,
+					);
 			}
 		} catch (err) {
+			console.error(
+				`Error processing WebSocket message for user ${session.userId}:`,
+				err,
+			);
 			if (err instanceof Error) {
-				webSocket.send(JSON.stringify({ error: err.message }));
+				try {
+					webSocket.send(
+						JSON.stringify({ error: `Processing failed: ${err.message}` }),
+					);
+				} catch (sendErr) {
+					console.error(
+						`Failed to send error message back to user ${session.userId}:`,
+						sendErr,
+					);
+					this.sessions.delete(webSocket);
+					webSocket.close(
+						1011,
+						"Error processing message and failed to notify client",
+					);
+				}
+			} else {
+				try {
+					webSocket.send(
+						JSON.stringify({
+							error: "An unknown error occurred during processing.",
+						}),
+					);
+				} catch (sendErr) {
+					console.error(
+						`Failed to send generic error message back to user ${session.userId}:`,
+						sendErr,
+					);
+					this.sessions.delete(webSocket);
+					webSocket.close(1011, "Unknown error and failed to notify client");
+				}
 			}
 		}
 	}
@@ -211,29 +222,46 @@ export class OrganizationDurableObject extends DurableObject<Env> {
 		webSocket.close();
 	}
 
-	private sendWebSocketMessageToUser(
+	// Shared methods as arrow functions for DI
+	sendWebSocketMessageToUser = (
 		message: WsChatOutgoingMessage,
 		sentToUserId: string,
-	) {
+	) => {
 		for (const [ws, session] of this.sessions.entries()) {
 			if (session.userId === sentToUserId) {
 				ws.send(JSON.stringify(message));
 			}
 		}
-	}
+	};
 
-	private broadcastWebSocketMessage(
+	broadcastWebSocketMessageToRoom = (
 		message: WsChatOutgoingMessage,
-		excludeUserId?: string,
-	) {
+		targetRoomId: string,
+	) => {
+		console.log(
+			`Broadcasting message type ${message.type} to active sessions in room ${targetRoomId}`,
+		);
+		let recipients = 0;
 		for (const [ws, session] of this.sessions.entries()) {
-			if (!excludeUserId || session.userId !== excludeUserId) {
-				ws.send(JSON.stringify(message));
+			if (session.activeRoomId === targetRoomId) {
+				try {
+					ws.send(JSON.stringify(message));
+					recipients++;
+				} catch (e) {
+					console.error(
+						`Failed to send message to WebSocket for user ${session.userId} in room ${targetRoomId}:`,
+						e,
+					);
+					this.sessions.delete(ws);
+				}
 			}
 		}
-	}
+		console.log(
+			`Message broadcasted to ${recipients} recipients in room ${targetRoomId}.`,
+		);
+	};
 
-	async handleUserInitRequest(session: Session) {
+	handleUserInitRequest = async (session: Session) => {
 		const chatRooms = await this.dbServices.getChatRoomsUserIsMemberOf(
 			session.userId,
 		);
@@ -245,646 +273,81 @@ export class OrganizationDurableObject extends DurableObject<Env> {
 			},
 			session.userId,
 		);
-	}
+	};
 
-	async handleChatRoomInitRequest(session: Session, roomId: string) {
-		const [room, members, messages, workflows] = await Promise.all([
-			this.dbServices.getChatRoomById(roomId),
-			this.dbServices.getChatRoomMembers({ roomId }),
-			this.dbServices.getChatRoomMessages({
-				roomId,
-				threadId: null,
-			}),
-			this.dbServices.getChatRoomWorkflows(roomId),
-		]);
+	// Wrapper methods for circular dependencies
+	private receiveChatRoomMessage = async (
+		params: Parameters<ChatRooms["receiveChatRoomMessage"]>[0],
+	) => {
+		return this.chatRooms.receiveChatRoomMessage(params);
+	};
 
-		if (!room) {
-			console.error("Room not found");
-			throw new Error("Room not found");
-		}
-
-		this.sendWebSocketMessageToUser(
-			{
-				type: "chat-room-init-response",
-				roomId,
-				messages,
-				members,
-				room,
-				workflows,
-			},
-			session.userId,
-		);
-	}
-
-	async handleChatRoomThreadInitRequest(
-		session: Session,
-		roomId: string,
-		threadId: number,
-	) {
-		const [threadMessage, messages] = await Promise.all([
-			this.dbServices.getChatRoomMessageById(threadId),
-			this.dbServices.getChatRoomMessages({
-				roomId,
-				threadId,
-			}),
-		]);
-
-		if (!threadMessage) {
-			console.error("Thread message not found");
-			throw new Error("Thread message not found");
-		}
-
-		this.sendWebSocketMessageToUser(
-			{
-				type: "chat-room-thread-init-response",
-				roomId,
-				threadId,
-				threadMessage,
-				messages,
-			},
-			session.userId,
-		);
-	}
-
-	async executeWorkflow(workflow: WorkflowPartial) {
-		console.log(
-			`Executing workflow ${workflow.id} for chatroom ${workflow.chatRoomId} and agent ${workflow.agentId}`,
-		);
-		try {
-			await this.processAndRespondWorkflow({ workflow });
-
-			if (workflow.isRecurring) {
-				try {
-					const interval = CronExpressionParser.parse(
-						workflow.scheduleExpression,
-						{
-							tz: "UTC",
-							currentDate: new Date(workflow.nextExecutionTime),
-						},
-					);
-					const nextExecutionTime = interval.next().getTime();
-					console.log(
-						`Rescheduling task ${workflow.id} for ${new Date(nextExecutionTime).toISOString()}`,
-					);
-					await this.dbServices.updateWorkflow(workflow.id, {
-						nextExecutionTime,
-						lastExecutionTime: Date.now(),
-					});
-				} catch (error) {
-					console.error(
-						`Failed to parse schedule for recurring workflow ${workflow.id}:`,
-						error,
-					);
-					await this.dbServices.updateWorkflow(workflow.id, {
-						lastExecutionTime: Date.now(),
-					});
-				}
-			} else {
-				await this.dbServices.updateWorkflow(workflow.id, {
-					lastExecutionTime: Date.now(),
-					isActive: false,
-				});
-				console.log(`Workflow ${workflow.id} completed.`);
-			}
-		} catch (error) {
-			console.error(`Error executing workflow ${workflow.id}:`, error);
-			await this.dbServices.updateWorkflow(workflow.id, {
-				lastExecutionTime: Date.now(),
-			});
-		}
-	}
-
-	async processAndRespondWorkflow({
-		workflow,
-	}: {
+	private processAndRespondWorkflow = async (params: {
 		workflow: WorkflowPartial;
-	}) {
-		console.log("Processing workflow :", workflow);
-
-		const agentId = workflow.agentId;
-
-		const agentConfig = await this.dbServices.getAgentById(agentId);
-
-		if (!agentConfig) {
-			console.error(`Agent config not found for agent ${agentId}`);
-			throw new Error(`Agent config not found for agent ${agentId}`);
-		}
-
-		const workflowPrompt = getWorkflowAgentUserPrompt({ workflow });
-
-		console.log(`Workflow prompt: ${workflowPrompt}`);
-
-		const systemPrompt = getWorkflowAgentSystemPrompt({
-			agentConfig,
-			chatRoomId: workflow.chatRoomId,
-		});
-
-		await this.formulateResponse({
-			agentId,
-			chatRoomId: workflow.chatRoomId,
-			threadId: null,
-			messages: [
-				{
-					id: "1",
-					content: workflowPrompt,
-					role: "user",
-				},
-			],
-			systemPrompt,
-			removeTools: ["scheduleWorkflow"],
-		});
-	}
-
-	async receiveChatRoomMessage({
-		memberId,
-		roomId,
-		message,
-		existingMessageId,
-		notifyAgents,
-	}: {
-		memberId: string;
-		roomId: string;
-		message: ChatRoomMessagePartial;
-		existingMessageId: number | null;
-		notifyAgents: boolean;
-	}): Promise<ChatRoomMessage> {
-		let chatRoomMessage: ChatRoomMessage;
-
-		if (existingMessageId) {
-			chatRoomMessage = await this.dbServices.updateChatRoomMessage(
-				existingMessageId,
-				{
-					content: message.content,
-					mentions: message.mentions,
-					toolUses: message.toolUses,
-				},
-			);
-		} else {
-			chatRoomMessage = await this.dbServices.insertChatRoomMessage({
-				memberId,
-				content: message.content,
-				mentions: message.mentions,
-				toolUses: message.toolUses,
-				threadId: message.threadId,
-				roomId,
-				metadata: {
-					optimisticData: {
-						createdAt: message.createdAt,
-						id: message.id,
-					},
-				},
-				threadMetadata: null,
-			});
-
-			if (message.threadId) {
-				const updatedThreadMessage =
-					await this.dbServices.updateChatRoomMessageThreadMetadata(
-						message.threadId,
-						chatRoomMessage,
-					);
-
-				this.broadcastWebSocketMessage({
-					type: "chat-room-message-broadcast",
-					roomId,
-					threadId: updatedThreadMessage.threadId,
-					message: updatedThreadMessage,
-				});
-			}
-		}
-
-		this.broadcastWebSocketMessage({
-			// TODO: Broadcast only to members of chatroom
-			type: "chat-room-message-broadcast",
-			roomId,
-			threadId: chatRoomMessage.threadId,
-			message: chatRoomMessage,
-		});
-
-		if (notifyAgents && !existingMessageId) {
-			await this.routeMessagesAndNotifyAgents(chatRoomMessage);
-		}
-
-		return chatRoomMessage;
-	}
-
-	private async routeMessagesAndNotifyAgents(newMessage: ChatRoomMessage) {
-		try {
-			console.log(
-				`[routeMessageAndNotifyAgents] Routing message ${newMessage.id}`,
-			);
-			const roomId = newMessage.roomId;
-			const threadId = newMessage.threadId;
-			const contextSize = 10;
-
-			let contextMessages: ChatRoomMessage[] = [];
-
-			contextMessages = await this.dbServices.getChatRoomMessages({
-				threadId,
-				roomId,
-				beforeId: newMessage.id,
-				limit: contextSize,
-			});
-
-			if (threadId) {
-				const threadMessage =
-					await this.dbServices.getChatRoomMessageById(threadId);
-				if (threadMessage) {
-					contextMessages = [threadMessage, ...contextMessages];
-				}
-			}
-
-			const agentMembers = await this.dbServices.getChatRoomMembers({
-				roomId,
-				type: "agent",
-			});
-
-			if (agentMembers.length === 0) {
-				console.log("[routeMessageAndNotifyAgents] No agents in the room.");
-				return;
-			}
-
-			const roomConfig = await this.dbServices.getChatRoomById(roomId);
-
-			if (!roomConfig) {
-				console.error("Room config not found");
-				throw new Error("Room config not found");
-			}
-
-			const targetAgentIds = await this.checkAgentsToRouteMessagesTo({
-				contextMessages,
-				newMessages: [newMessage],
-				agents: agentMembers,
-				room: roomConfig,
-			});
-
-			if (targetAgentIds.length === 0) {
-				console.log(
-					"[routeMessageAndNotifyAgents] Router decided no agent should respond.",
-				);
-				return;
-			}
-
-			for (const agentId of targetAgentIds) {
-				console.log(`[routeMessageAndNotifyAgents] Notifying agent ${agentId}`);
-
-				await this.processAndRespondIncomingMessages({
-					agentId,
-					chatRoomId: roomId,
-					threadId,
-					newMessages: [newMessage],
-					contextMessages,
-				});
-			}
-		} catch (error) {
-			console.error("Error routing message to agents:", error);
-		}
-	}
-
-	private async checkAgentsToRouteMessagesTo({
-		contextMessages,
-		newMessages,
-		agents,
-		room,
-	}: {
-		contextMessages: ChatRoomMessage[];
-		newMessages: ChatRoomMessage[];
-		agents: ChatRoomMember[];
-		room: ChatRoom;
-	}): Promise<string[]> {
-		console.log(
-			"[routeMessageToAgents] Deciding which agent(s) should respond.",
-		);
-		if (agents.length === 0) {
-			return [];
-		}
-
-		const mentionedAgentIds = new Set<string>();
-		for (const msg of newMessages) {
-			for (const mention of msg.mentions) {
-				if (agents.some((agent) => agent.id === mention.id)) {
-					mentionedAgentIds.add(mention.id);
-				}
-			}
-		}
-
-		if (mentionedAgentIds.size > 0) {
-			const mentionedIdsArray = Array.from(mentionedAgentIds);
-			console.log(
-				"[routeMessageToAgents] Routing based on mentions:",
-				mentionedIdsArray,
-			);
-			return mentionedIdsArray;
-		}
-
-		const openAIClient = createOpenAI({
-			baseURL: this.env.AI_GATEWAY_OPENAI_URL,
-			apiKey: this.env.OPENAI_API_KEY,
-		});
-
-		try {
-			const agentIds = agents.map((a) => a.id);
-
-			const agentList = await this.dbServices.getAgentsByIds(agentIds);
-
-			const aiMessages = contextAndNewchatRoomMessagesToAIMessages({
-				contextMessages,
-				newMessages,
-			});
-
-			const { object: targetAgents } = await generateObject({
-				model: openAIClient("gpt-4o-mini"),
-				system: routeMessageToAgentSystemPrompt({ agents: agentList, room }),
-				schema: z.object({
-					agentIds: z
-						.array(z.string())
-						.describe(
-							`List of agent IDs that should respond to the messages. Include ID only if agent is relevant. Max ${agents.length} agents. Possible IDs: ${agents.map((a) => a.id).join(", ")}.`,
-						),
-				}),
-				messages: aiMessages,
-			});
-
-			const validAgentIds = (targetAgents.agentIds || []).filter((id) =>
-				agents.some((a) => a.id === id),
-			);
-			console.log("[routeMessageToAgents] AI decided:", validAgentIds);
-			return validAgentIds;
-		} catch (error) {
-			console.error("Error in AI routing:", error);
-			return [];
-		}
-	}
-
-	async processAndRespondIncomingMessages({
-		agentId,
-		chatRoomId,
-		threadId,
-		newMessages,
-		contextMessages,
-	}: {
-		agentId: string;
-		chatRoomId: string;
-		threadId: number | null;
-		newMessages: ChatRoomMessage[];
-		contextMessages: ChatRoomMessage[];
-	}) {
-		if (newMessages.length === 0) {
-			return;
-		}
-
-		const agentConfig = await this.dbServices.getAgentById(agentId);
-
-		if (!agentConfig) {
-			console.error("Agent config not found");
-			throw new Error("Agent config not found");
-		}
-
-		const messages = contextAndNewchatRoomMessagesToAIMessages({
-			contextMessages,
-			newMessages,
-			agentIdForAssistant: agentId,
-		});
-
-		console.log("[processAndRespondIncomingMessages] messages", messages);
-
-		const systemPrompt = getDefaultAgentSystemPrompt({
-			agentConfig,
-			chatRoomId: chatRoomId,
-			threadId: threadId, // Pass the current threadId
-		});
-
-		await this.formulateResponse({
-			agentId,
-			chatRoomId,
-			threadId,
-			messages,
-			systemPrompt,
-		});
-	}
-
-	private async formulateResponse({
-		agentId,
-		chatRoomId,
-		threadId: originalThreadId,
-		messages,
-		systemPrompt,
-		removeTools,
-	}: {
-		agentId: string;
-		chatRoomId: string;
-		threadId: number | null;
-		messages: Message[];
-		systemPrompt: string;
-		removeTools?: string[];
-	}) {
-		console.log("[formulateResponse] chatRoomId", chatRoomId);
-
-		let sendMessageThreadId: number | null = originalThreadId;
-		console.log("[formulateResponse] sendMessageThreadId", sendMessageThreadId);
-
-		const agentToolSet = (dataStream: DataStreamWriter) => {
-			return {
-				webSearch: webSearchTool(dataStream),
-				deepResearch: deepResearchTool(dataStream),
-				webCrawl: webCrawlerTool(dataStream),
-				scheduleWorkflow: scheduleWorkflowTool({
-					organizationInstance: this,
-					chatRoomId,
-					agentId,
-				}),
-
-				createMessageThread: createMessageThreadTool({
-					roomId: chatRoomId,
-					onMessage: async ({ newMessagePartial }) => {
-						return await this.receiveChatRoomMessage({
-							roomId: chatRoomId,
-							memberId: agentId,
-							message: newMessagePartial,
-							existingMessageId: null,
-							notifyAgents: false,
-						});
-					},
-					onNewThread: (newThreadId) => {
-						console.log("[formulateResponse] onNewThread", newThreadId);
-						sendMessageThreadId = newThreadId;
-					},
-				}),
-			};
-		};
-
-		const activeTools = agentToolSetKeys.filter(
-			(tool) => !removeTools?.includes(tool),
-		);
-
-		/* const geminiClient = createGoogleGenerativeAI({
-			apiKey: this.env.GEMINI_API_KEY,
-			baseURL: `${this.env.AI_GATEWAY_GEMINI_URL}/v1beta`,
-		}); */
-
-		const openAIClient = createOpenAI({
-			baseURL: this.env.AI_GATEWAY_OPENAI_URL,
-			apiKey: this.env.OPENAI_API_KEY,
-		});
-
-		try {
-			const dataStreamResponse = createDataStreamResponse({
-				execute: async (dataStream) => {
-					streamText({
-						model: openAIClient("gpt-4.1"),
-						system: systemPrompt,
-						tools: agentToolSet(dataStream),
-						messages,
-						maxSteps: 10,
-						experimental_transform: smoothStream({
-							chunking: "line",
-						}),
-						onError: (error) => {
-							console.error("[formulateResponse] onError", error);
-						},
-						experimental_activeTools: activeTools,
-					}).mergeIntoDataStream(dataStream);
-				},
-			});
-
-			await processDataStream({
-				response: dataStreamResponse,
-				roomId: chatRoomId,
-				getThreadId: () => sendMessageThreadId,
-				omitSendingTool: ["createMessageThread"],
-				onMessageSend: async ({ newMessagePartial, existingMessageId }) => {
-					return await this.receiveChatRoomMessage({
-						roomId: chatRoomId,
-						memberId: agentId,
-						message: newMessagePartial,
-						existingMessageId,
-						notifyAgents: false,
-					});
-				},
-			});
-		} catch (error) {
-			console.error("[formulateResponse] error", error);
-		}
-	}
-
-	async sendChatRoomsUpdateToUsers(userIds: string[]) {
-		const chatRoomsPromises = userIds.map((userId) =>
-			this.dbServices.getChatRoomsUserIsMemberOf(userId),
-		);
-		const chatRoomsResults = await Promise.all(chatRoomsPromises);
-
-		userIds.forEach((userId, index) => {
-			this.sendWebSocketMessageToUser(
-				{
-					type: "chat-rooms-update",
-					chatRooms: chatRoomsResults[index],
-				},
-				userId,
-			);
-		});
-	}
-
-	async broadcastWorkflowUpdate(chatRoomId: string) {
-		const workflows = await this.dbServices.getChatRoomWorkflows(chatRoomId);
-
-		this.broadcastWebSocketMessage({
-			type: "chat-room-workflows-update",
-			roomId: chatRoomId,
-			workflows,
-		});
-	}
-
-	async broadcastChatRoomMembersUpdate(chatRoomId: string) {
-		const members = await this.dbServices.getChatRoomMembers({
-			roomId: chatRoomId,
-		});
-
-		this.broadcastWebSocketMessage({
-			type: "chat-room-members-update",
-			roomId: chatRoomId,
-			members,
-		});
-	}
-
-	// Chat room services
-
-	async createChatRoom(
-		newChatRoom: Parameters<typeof this.dbServices.createChatRoom>[0],
-	) {
-		const createdChatRoom = await this.dbServices.createChatRoom(newChatRoom);
-
-		const membersIds = newChatRoom.members
-			.filter((member) => member.type === "user")
-			.map((member) => member.id);
-
-		this.sendChatRoomsUpdateToUsers(membersIds);
-
-		return createdChatRoom;
-	}
-
-	// Chat room member services
-
-	async deleteChatRoomMember(
+	}) => {
+		return this.agents.processAndRespondWorkflow(params);
+	};
+
+	private routeMessagesAndNotifyAgents = async (message: ChatRoomMessage) => {
+		return this.agents.routeMessagesAndNotifyAgents(message);
+	};
+
+	private createWorkflow = async (
+		params: Parameters<ChatRoomDbServices["createAgentWorkflow"]>[0],
+	) => {
+		return this.workflows.createWorkflow(params);
+	};
+
+	// RPC services
+
+	createChatRoom = async (
+		newChatRoom: Parameters<ChatRoomDbServices["createChatRoom"]>[0],
+	) => {
+		return this.chatRooms.createChatRoom(newChatRoom);
+	};
+
+	deleteChatRoomMember = async (
 		deleteChatRoomMemberParams: Parameters<
 			typeof this.dbServices.deleteChatRoomMember
 		>[0],
-	) {
-		const deletedChatRoomMember = await this.dbServices.deleteChatRoomMember(
-			deleteChatRoomMemberParams,
-		);
+	) => {
+		return this.chatRooms.deleteChatRoomMember(deleteChatRoomMemberParams);
+	};
 
-		this.sendChatRoomsUpdateToUsers([deleteChatRoomMemberParams.memberId]);
-
-		this.broadcastChatRoomMembersUpdate(deleteChatRoomMemberParams.roomId);
-
-		return deletedChatRoomMember;
-	}
-
-	async addChatRoomMember(
+	addChatRoomMember = async (
 		addChatRoomMemberParams: Parameters<
 			typeof this.dbServices.addChatRoomMember
 		>[0],
-	) {
-		const addedChatRoomMember = await this.dbServices.addChatRoomMember(
-			addChatRoomMemberParams,
-		);
+	) => {
+		return this.chatRooms.addChatRoomMember(addChatRoomMemberParams);
+	};
 
-		this.sendChatRoomsUpdateToUsers([addChatRoomMemberParams.id]);
-
-		this.broadcastChatRoomMembersUpdate(addChatRoomMemberParams.roomId);
-
-		return addedChatRoomMember;
-	}
-
-	// Agent services
-
-	async getAgents() {
+	getAgents = async () => {
 		return await this.dbServices.getAgents();
-	}
+	};
 
-	async createAgent(
+	createAgent = async (
 		newAgent: Parameters<typeof this.dbServices.createAgent>[0],
-	) {
+	) => {
 		return await this.dbServices.createAgent(newAgent);
-	}
+	};
 
-	async getAgentById(id: string) {
+	getAgentById = async (id: string) => {
 		return await this.dbServices.getAgentById(id);
-	}
+	};
 
-	async getAgentsByIds(ids: string[]) {
+	getAgentsByIds = async (ids: string[]) => {
 		return await this.dbServices.getAgentsByIds(ids);
-	}
+	};
 
-	async updateAgent(
+	updateAgent = async (
 		id: string,
 		agentUpdates: Parameters<typeof this.dbServices.updateAgent>[1],
-	) {
+	) => {
 		return await this.dbServices.updateAgent(id, agentUpdates);
-	}
+	};
 
-	// Workflow services
-
-	async deleteWorkflow(workflowId: string) {
-		return await this.dbServices.deleteWorkflow(workflowId);
-	}
+	deleteWorkflow = async (workflowId: string) => {
+		return await this.workflows.deleteWorkflow(workflowId);
+	};
 }

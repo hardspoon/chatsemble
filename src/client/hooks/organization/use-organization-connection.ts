@@ -7,8 +7,8 @@ import { useThreadChatRoomState } from "./use-thread-chat-room-state";
 
 export interface UseOrganizationConnectionProps {
 	organizationId: string;
-	roomId?: string;
-	threadId?: number;
+	roomId: string | null;
+	threadId: number | null;
 	user: User;
 }
 

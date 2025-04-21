@@ -31,6 +31,7 @@ import { authClient } from "@client/lib/auth-client";
 import { cn } from "@client/lib/utils";
 
 import { Link, createFileRoute } from "@tanstack/react-router";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/auth/signup")({
 	component: SignupForm,
@@ -73,8 +74,13 @@ function SignupForm() {
 		},
 		onSuccess: (data) => {
 			console.log("signup success", data);
+			toast.success("Account created successfully");
 			setUserEmail(form.getValues().email);
 			setIsSignupSuccess(true);
+		},
+		onError: (error) => {
+			toast.error("Failed to sign up");
+			console.error("[SignupForm] onError", error);
 		},
 	});
 
@@ -191,7 +197,9 @@ function SignupForm() {
 
 							{error && (
 								<Alert variant="destructive">
-									<AlertDescription>{error.message}</AlertDescription>
+									<AlertDescription>
+										There was an error creating your account. Please try again.
+									</AlertDescription>
 								</Alert>
 							)}
 
