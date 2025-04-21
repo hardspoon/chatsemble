@@ -156,8 +156,18 @@ export function createWorkflowService(db: DrizzleSqliteDODatabase) {
 			await db.update(workflows).set(data).where(eq(workflows.id, id));
 		},
 
-		async deleteWorkflow(id: string): Promise<void> {
-			await db.delete(workflows).where(eq(workflows.id, id));
+		async deleteWorkflow(id: string): Promise<WorkflowPartial> {
+			const deletedWorkflow = await db
+				.delete(workflows)
+				.where(eq(workflows.id, id))
+				.returning()
+				.get();
+
+			if (!deletedWorkflow) {
+				throw new Error("Workflow not found");
+			}
+
+			return deletedWorkflow;
 		},
 	};
 }

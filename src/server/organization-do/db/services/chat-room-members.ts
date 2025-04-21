@@ -63,5 +63,28 @@ export function createChatRoomMemberService(db: DrizzleSqliteDODatabase) {
 				.returning()
 				.get();
 		},
+
+		/**
+		 * Check if a user is a member of a chat room
+		 * @param roomId - The id of the chat room
+		 * @param userId - The id of the user
+		 * @returns true if the user is a member, false otherwise
+		 */
+		async isUserMemberOfRoom({
+			roomId,
+			userId,
+		}: {
+			roomId: string;
+			userId: string;
+		}): Promise<boolean> {
+			const member = await db
+				.select()
+				.from(chatRoomMember)
+				.where(
+					and(eq(chatRoomMember.roomId, roomId), eq(chatRoomMember.id, userId)),
+				)
+				.limit(1);
+			return !!member;
+		},
 	};
 }
