@@ -1,15 +1,17 @@
-import type { OrganizationDurableObject } from "@server/organization-do/organization";
-import { workflowStepSchema } from "@shared/types";
+import type { ChatRoomDbServices } from "@server/organization-do/db/services";
+import { type WorkflowPartial, workflowStepSchema } from "@shared/types";
 import { tool } from "ai";
 import { CronExpressionParser } from "cron-parser";
 import { z } from "zod";
 
 export const scheduleWorkflowTool = ({
-	organizationInstance,
+	createWorkflow,
 	chatRoomId,
 	agentId,
 }: {
-	organizationInstance: OrganizationDurableObject;
+	createWorkflow: (
+		params: Parameters<ChatRoomDbServices["createAgentWorkflow"]>[0],
+	) => Promise<WorkflowPartial>;
 	chatRoomId: string;
 	agentId: string;
 }) =>
@@ -58,7 +60,7 @@ export const scheduleWorkflowTool = ({
 					}
 				}
 
-				const workflow = await organizationInstance.workflows.createWorkflow({
+				const workflow = await createWorkflow({
 					agentId,
 					goal,
 					steps: {
@@ -71,8 +73,6 @@ export const scheduleWorkflowTool = ({
 					nextExecutionTime,
 					chatRoomId,
 				});
-				console.log("[scheduleWorkflowTool] Workflow scheduled", workflow);
-				await organizationInstance.workflows.scheduleNextWorkflowAlarm();
 
 				return {
 					success: true,

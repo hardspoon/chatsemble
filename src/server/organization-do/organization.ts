@@ -2,6 +2,8 @@ import { DurableObject } from "cloudflare:workers";
 
 import type { Session } from "@server/types/session";
 import type {
+	ChatRoomMessage,
+	WorkflowPartial,
 	WsChatIncomingMessage,
 	WsChatOutgoingMessage,
 } from "@shared/types";
@@ -37,9 +39,28 @@ export class OrganizationDurableObject extends DurableObject<Env> {
 		});
 
 		this.dbServices = createChatRoomDbServices(this.db);
-		this.agents = new Agents(env, this);
-		this.workflows = new Workflows(this);
-		this.chatRooms = new ChatRooms(this);
+
+		// Initialize modules
+		this.chatRooms = new ChatRooms({
+			dbServices: this.dbServices,
+			sessions: this.sessions,
+			sendWebSocketMessageToUser: this.sendWebSocketMessageToUser,
+			broadcastWebSocketMessageToRoom: this.broadcastWebSocketMessageToRoom,
+			routeMessagesAndNotifyAgents: this.routeMessagesAndNotifyAgents,
+		});
+
+		this.agents = new Agents(env, {
+			dbServices: this.dbServices,
+			receiveChatRoomMessage: this.receiveChatRoomMessage,
+			createWorkflow: this.createWorkflow,
+		});
+
+		this.workflows = new Workflows({
+			dbServices: this.dbServices,
+			storage: this.storage,
+			broadcastWebSocketMessageToRoom: this.broadcastWebSocketMessageToRoom,
+			processAndRespondWorkflow: this.processAndRespondWorkflow,
+		});
 
 		for (const webSocket of ctx.getWebSockets()) {
 			const meta = webSocket.deserializeAttachment() || {
@@ -201,21 +222,22 @@ export class OrganizationDurableObject extends DurableObject<Env> {
 		webSocket.close();
 	}
 
-	sendWebSocketMessageToUser(
+	// Shared methods as arrow functions for DI
+	sendWebSocketMessageToUser = (
 		message: WsChatOutgoingMessage,
 		sentToUserId: string,
-	) {
+	) => {
 		for (const [ws, session] of this.sessions.entries()) {
 			if (session.userId === sentToUserId) {
 				ws.send(JSON.stringify(message));
 			}
 		}
-	}
+	};
 
-	broadcastWebSocketMessageToRoom(
+	broadcastWebSocketMessageToRoom = (
 		message: WsChatOutgoingMessage,
 		targetRoomId: string,
-	) {
+	) => {
 		console.log(
 			`Broadcasting message type ${message.type} to active sessions in room ${targetRoomId}`,
 		);
@@ -237,7 +259,7 @@ export class OrganizationDurableObject extends DurableObject<Env> {
 		console.log(
 			`Message broadcasted to ${recipients} recipients in room ${targetRoomId}.`,
 		);
-	}
+	};
 
 	handleUserInitRequest = async (session: Session) => {
 		const chatRooms = await this.dbServices.getChatRoomsUserIsMemberOf(
@@ -253,15 +275,36 @@ export class OrganizationDurableObject extends DurableObject<Env> {
 		);
 	};
 
-	// Chat room services
+	// Wrapper methods for circular dependencies
+	private receiveChatRoomMessage = async (
+		params: Parameters<ChatRooms["receiveChatRoomMessage"]>[0],
+	) => {
+		return this.chatRooms.receiveChatRoomMessage(params);
+	};
+
+	private processAndRespondWorkflow = async (params: {
+		workflow: WorkflowPartial;
+	}) => {
+		return this.agents.processAndRespondWorkflow(params);
+	};
+
+	private routeMessagesAndNotifyAgents = async (message: ChatRoomMessage) => {
+		return this.agents.routeMessagesAndNotifyAgents(message);
+	};
+
+	private createWorkflow = async (
+		params: Parameters<ChatRoomDbServices["createAgentWorkflow"]>[0],
+	) => {
+		return this.workflows.createWorkflow(params);
+	};
+
+	// RPC services
 
 	createChatRoom = async (
 		newChatRoom: Parameters<ChatRoomDbServices["createChatRoom"]>[0],
 	) => {
 		return this.chatRooms.createChatRoom(newChatRoom);
 	};
-
-	// Chat room member services
 
 	deleteChatRoomMember = async (
 		deleteChatRoomMemberParams: Parameters<
@@ -278,8 +321,6 @@ export class OrganizationDurableObject extends DurableObject<Env> {
 	) => {
 		return this.chatRooms.addChatRoomMember(addChatRoomMemberParams);
 	};
-
-	// Agent services
 
 	getAgents = async () => {
 		return await this.dbServices.getAgents();
@@ -305,8 +346,6 @@ export class OrganizationDurableObject extends DurableObject<Env> {
 	) => {
 		return await this.dbServices.updateAgent(id, agentUpdates);
 	};
-
-	// Workflow services
 
 	deleteWorkflow = async (workflowId: string) => {
 		return await this.workflows.deleteWorkflow(workflowId);
