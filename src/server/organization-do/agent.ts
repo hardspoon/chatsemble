@@ -317,7 +317,7 @@ export class Agents {
 				createMessageThread: createMessageThreadTool({
 					roomId: chatRoomId,
 					onMessage: async ({ newMessagePartial }) => {
-						return await this.organizationDO.receiveChatRoomMessage({
+						return await this.organizationDO.chatRooms.receiveChatRoomMessage({
 							roomId: chatRoomId,
 							memberId: agentId,
 							message: newMessagePartial,
@@ -368,7 +368,7 @@ export class Agents {
 				getThreadId: () => sendMessageThreadId,
 				omitSendingTool: ["createMessageThread"],
 				onMessageSend: async ({ newMessagePartial, existingMessageId }) => {
-					return await this.organizationDO.receiveChatRoomMessage({
+					return await this.organizationDO.chatRooms.receiveChatRoomMessage({
 						roomId: chatRoomId,
 						memberId: agentId,
 						message: newMessagePartial,
