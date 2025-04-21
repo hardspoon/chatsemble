@@ -7,6 +7,7 @@ import {
 import { routeMessageToAgentSystemPrompt } from "@server/ai/prompts/router-prompt";
 import { agentToolSetKeys } from "@server/ai/tools";
 import { createMessageThreadTool } from "@server/ai/tools/create-thread-tool";
+import { deepResearchTool } from "@server/ai/tools/deep-search-tool";
 import { scheduleWorkflowTool } from "@server/ai/tools/schedule-workflow-tool";
 import { webCrawlerTool } from "@server/ai/tools/web-crawler-tool";
 import { webSearchTool } from "@server/ai/tools/web-search-tool";
@@ -28,21 +29,13 @@ import {
 } from "ai";
 import { z } from "zod";
 import type { OrganizationDurableObject } from "./organization";
-import type { ChatRoomDbServices } from "./db/services";
-import { deepResearchTool } from "@server/ai/tools/deep-search-tool";
 
 export class Agents {
 	private env: Env;
-	private dbServices: ChatRoomDbServices;
 	private organizationDO: OrganizationDurableObject; // Reference for callbacks
 
-	constructor(
-		env: Env,
-		dbServices: ChatRoomDbServices,
-		organizationDO: OrganizationDurableObject,
-	) {
+	constructor(env: Env, organizationDO: OrganizationDurableObject) {
 		this.env = env;
-		this.dbServices = dbServices;
 		this.organizationDO = organizationDO;
 	}
 
@@ -55,7 +48,8 @@ export class Agents {
 
 		const agentId = workflow.agentId;
 
-		const agentConfig = await this.dbServices.getAgentById(agentId);
+		const agentConfig =
+			await this.organizationDO.dbServices.getAgentById(agentId);
 
 		if (!agentConfig) {
 			console.error(`Agent config not found for agent ${agentId}`);
@@ -100,32 +94,35 @@ export class Agents {
 
 			let contextMessages: ChatRoomMessage[] = [];
 
-			contextMessages = await this.dbServices.getChatRoomMessages({
-				threadId,
-				roomId,
-				beforeId: newMessage.id,
-				limit: contextSize,
-			});
+			contextMessages =
+				await this.organizationDO.dbServices.getChatRoomMessages({
+					threadId,
+					roomId,
+					beforeId: newMessage.id,
+					limit: contextSize,
+				});
 
 			if (threadId) {
 				const threadMessage =
-					await this.dbServices.getChatRoomMessageById(threadId);
+					await this.organizationDO.dbServices.getChatRoomMessageById(threadId);
 				if (threadMessage) {
 					contextMessages = [threadMessage, ...contextMessages];
 				}
 			}
 
-			const agentMembers = await this.dbServices.getChatRoomMembers({
-				roomId,
-				type: "agent",
-			});
+			const agentMembers =
+				await this.organizationDO.dbServices.getChatRoomMembers({
+					roomId,
+					type: "agent",
+				});
 
 			if (agentMembers.length === 0) {
 				console.log("[routeMessageAndNotifyAgents] No agents in the room.");
 				return;
 			}
 
-			const roomConfig = await this.dbServices.getChatRoomById(roomId);
+			const roomConfig =
+				await this.organizationDO.dbServices.getChatRoomById(roomId);
 
 			if (!roomConfig) {
 				console.error("Room config not found");
@@ -206,7 +203,8 @@ export class Agents {
 		try {
 			const agentIds = agents.map((a) => a.id);
 
-			const agentList = await this.dbServices.getAgentsByIds(agentIds);
+			const agentList =
+				await this.organizationDO.dbServices.getAgentsByIds(agentIds);
 
 			const aiMessages = contextAndNewchatRoomMessagesToAIMessages({
 				contextMessages,
@@ -254,7 +252,8 @@ export class Agents {
 			return;
 		}
 
-		const agentConfig = await this.dbServices.getAgentById(agentId);
+		const agentConfig =
+			await this.organizationDO.dbServices.getAgentById(agentId);
 
 		if (!agentConfig) {
 			console.error("Agent config not found");
