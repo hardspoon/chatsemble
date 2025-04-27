@@ -39,50 +39,52 @@ export default function Home() {
   const {data: session} = useSession();
 
   return (
-    <SidebarProvider>
-      <div className="flex h-screen bg-background">
-        <Sidebar collapsible="icon">
-          <SidebarHeader className="font-bold text-md">
-            DocuMind
-          </SidebarHeader>
-          <SidebarContent>
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton>
-                  <Book className="mr-2 h-4 w-4" />
-                  Documentation
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton>
-                  <FileText className="mr-2 h-4 w-4" />
-                  Tasks
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton>
-                  <Lightbulb className="mr-2 h-4 w-4" />
-                  Suggestions
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton>
-                  <Settings className="mr-2 h-4 w-4" />
-                  Settings
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
-          </SidebarContent>
-        </Sidebar>
-        <MainContent
-          session={session}
-          open={open}
-          setOpen={setOpen}
-          gitRepoUrl={gitRepoUrl}
-          setGitRepoUrl={setGitRepoUrl}
-        />
-      </div>
-    </SidebarProvider>
+    
+      <SidebarProvider>
+        <div className="flex h-screen bg-background">
+          <Sidebar collapsible="icon">
+            <SidebarHeader className="font-bold text-md">
+              DocuMind
+            </SidebarHeader>
+            <SidebarContent>
+              <SidebarMenu>
+                <SidebarMenuItem>
+                  <SidebarMenuButton>
+                    <Book className="mr-2 h-4 w-4" />
+                    Documentation
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton>
+                    <FileText className="mr-2 h-4 w-4" />
+                    Tasks
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton>
+                    <Lightbulb className="mr-2 h-4 w-4" />
+                    Suggestions
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton>
+                    <Settings className="mr-2 h-4 w-4" />
+                    Settings
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              </SidebarMenu>
+            </SidebarContent>
+          </Sidebar>
+          <MainContent
+            session={session}
+            open={open}
+            setOpen={setOpen}
+            gitRepoUrl={gitRepoUrl}
+            setGitRepoUrl={setGitRepoUrl}
+          />
+        </div>
+      </SidebarProvider>
+    
   );
 }
 
