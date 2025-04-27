@@ -30,8 +30,15 @@ import {
 import {Input} from '@/components/ui/input';
 import {Label} from '@/components/ui/label';
 import {signIn, signOut, useSession} from 'next-auth/react';
+import {authOptions} from '@/lib/auth';
 
-export default function Home() {
+interface Props {
+  searchParams?: {
+    [key: string]: string | string[] | undefined
+  }
+}
+
+export default function Home({searchParams}: Props) {
   const [open, setOpen] = React.useState(false);
   const [gitRepoUrl, setGitRepoUrl] = useState('');
   const {data: session, status} = useSession();
@@ -156,4 +163,3 @@ function MainContent({session, open, setOpen, gitRepoUrl, setGitRepoUrl, status}
     </div>
   );
 }
-
