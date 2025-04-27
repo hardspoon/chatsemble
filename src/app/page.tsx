@@ -36,7 +36,7 @@ import {signIn, signOut, useSession} from 'next-auth/react';
 export default function Home() {
   const [open, setOpen] = React.useState(false);
   const [gitRepoUrl, setGitRepoUrl] = useState('');
-  const {data: session} = useSession();
+  const {data: session, status} = useSession();
 
   return (
     
@@ -81,6 +81,7 @@ export default function Home() {
             setOpen={setOpen}
             gitRepoUrl={gitRepoUrl}
             setGitRepoUrl={setGitRepoUrl}
+            status={status}
           />
         </div>
       </SidebarProvider>
@@ -88,12 +89,14 @@ export default function Home() {
   );
 }
 
-function MainContent({session, open, setOpen, gitRepoUrl, setGitRepoUrl}) {
+function MainContent({session, open, setOpen, gitRepoUrl, setGitRepoUrl, status}) {
   return (
     <div className="flex-1 p-4">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Dashboard</h1>
-        {!session ? (
+        {status === 'loading' ? (
+          <div>Loading...</div>
+        ) : !session ? (
           <Button onClick={() => signIn('github')}>Sign In</Button>
         ) : (
           <>
