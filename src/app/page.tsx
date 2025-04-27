@@ -1,13 +1,11 @@
 'use client';
 
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 import {
   SidebarProvider,
   Sidebar,
-  SidebarTrigger,
   SidebarContent,
   SidebarHeader,
-  SidebarSeparator,
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
@@ -39,7 +37,6 @@ export default function Home() {
   const {data: session, status} = useSession();
 
   return (
-    
       <SidebarProvider>
         <div className="flex h-screen bg-background">
           <Sidebar collapsible="icon">
@@ -75,17 +72,16 @@ export default function Home() {
               </SidebarMenu>
             </SidebarContent>
           </Sidebar>
-          <MainContent
-            session={session}
-            open={open}
-            setOpen={setOpen}
-            gitRepoUrl={gitRepoUrl}
-            setGitRepoUrl={setGitRepoUrl}
-            status={status}
-          />
+            <MainContent
+              session={session}
+              open={open}
+              setOpen={setOpen}
+              gitRepoUrl={gitRepoUrl}
+              setGitRepoUrl={setGitRepoUrl}
+              status={status}
+            />
         </div>
       </SidebarProvider>
-    
   );
 }
 
@@ -160,3 +156,4 @@ function MainContent({session, open, setOpen, gitRepoUrl, setGitRepoUrl, status}
     </div>
   );
 }
+
