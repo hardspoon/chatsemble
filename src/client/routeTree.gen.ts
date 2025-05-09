@@ -13,6 +13,8 @@
 import { Route as rootRoute } from './routes/__root'
 import { Route as appRouteImport } from './routes/(app)/route'
 import { Route as IndexImport } from './routes/index'
+import { Route as HomeLoginButtonImport } from './routes/home/LoginButton'
+import { Route as HomeHomeImport } from './routes/home/Home'
 import { Route as AuthSignupImport } from './routes/auth/signup'
 import { Route as AuthSigninImport } from './routes/auth/signin'
 import { Route as appChatImport } from './routes/(app)/chat'
@@ -28,6 +30,18 @@ const appRouteRoute = appRouteImport.update({
 const IndexRoute = IndexImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const HomeLoginButtonRoute = HomeLoginButtonImport.update({
+  id: '/home/LoginButton',
+  path: '/home/LoginButton',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const HomeHomeRoute = HomeHomeImport.update({
+  id: '/home/Home',
+  path: '/home/Home',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -101,6 +115,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthSignupImport
       parentRoute: typeof rootRoute
     }
+    '/home/Home': {
+      id: '/home/Home'
+      path: '/home/Home'
+      fullPath: '/home/Home'
+      preLoaderRoute: typeof HomeHomeImport
+      parentRoute: typeof rootRoute
+    }
+    '/home/LoginButton': {
+      id: '/home/LoginButton'
+      path: '/home/LoginButton'
+      fullPath: '/home/LoginButton'
+      preLoaderRoute: typeof HomeLoginButtonImport
+      parentRoute: typeof rootRoute
+    }
   }
 }
 
@@ -126,6 +154,8 @@ export interface FileRoutesByFullPath {
   '/chat': typeof appChatRoute
   '/auth/signin': typeof AuthSigninRoute
   '/auth/signup': typeof AuthSignupRoute
+  '/home/Home': typeof HomeHomeRoute
+  '/home/LoginButton': typeof HomeLoginButtonRoute
 }
 
 export interface FileRoutesByTo {
@@ -134,6 +164,8 @@ export interface FileRoutesByTo {
   '/chat': typeof appChatRoute
   '/auth/signin': typeof AuthSigninRoute
   '/auth/signup': typeof AuthSignupRoute
+  '/home/Home': typeof HomeHomeRoute
+  '/home/LoginButton': typeof HomeLoginButtonRoute
 }
 
 export interface FileRoutesById {
@@ -144,13 +176,29 @@ export interface FileRoutesById {
   '/(app)/chat': typeof appChatRoute
   '/auth/signin': typeof AuthSigninRoute
   '/auth/signup': typeof AuthSignupRoute
+  '/home/Home': typeof HomeHomeRoute
+  '/home/LoginButton': typeof HomeLoginButtonRoute
 }
 
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/agents' | '/chat' | '/auth/signin' | '/auth/signup'
+  fullPaths:
+    | '/'
+    | '/agents'
+    | '/chat'
+    | '/auth/signin'
+    | '/auth/signup'
+    | '/home/Home'
+    | '/home/LoginButton'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/agents' | '/chat' | '/auth/signin' | '/auth/signup'
+  to:
+    | '/'
+    | '/agents'
+    | '/chat'
+    | '/auth/signin'
+    | '/auth/signup'
+    | '/home/Home'
+    | '/home/LoginButton'
   id:
     | '__root__'
     | '/'
@@ -159,6 +207,8 @@ export interface FileRouteTypes {
     | '/(app)/chat'
     | '/auth/signin'
     | '/auth/signup'
+    | '/home/Home'
+    | '/home/LoginButton'
   fileRoutesById: FileRoutesById
 }
 
@@ -167,6 +217,8 @@ export interface RootRouteChildren {
   appRouteRoute: typeof appRouteRouteWithChildren
   AuthSigninRoute: typeof AuthSigninRoute
   AuthSignupRoute: typeof AuthSignupRoute
+  HomeHomeRoute: typeof HomeHomeRoute
+  HomeLoginButtonRoute: typeof HomeLoginButtonRoute
 }
 
 const rootRouteChildren: RootRouteChildren = {
@@ -174,6 +226,8 @@ const rootRouteChildren: RootRouteChildren = {
   appRouteRoute: appRouteRouteWithChildren,
   AuthSigninRoute: AuthSigninRoute,
   AuthSignupRoute: AuthSignupRoute,
+  HomeHomeRoute: HomeHomeRoute,
+  HomeLoginButtonRoute: HomeLoginButtonRoute,
 }
 
 export const routeTree = rootRoute
@@ -189,7 +243,9 @@ export const routeTree = rootRoute
         "/",
         "/(app)",
         "/auth/signin",
-        "/auth/signup"
+        "/auth/signup",
+        "/home/Home",
+        "/home/LoginButton"
       ]
     },
     "/": {
@@ -215,6 +271,12 @@ export const routeTree = rootRoute
     },
     "/auth/signup": {
       "filePath": "auth/signup.tsx"
+    },
+    "/home/Home": {
+      "filePath": "home/Home.tsx"
+    },
+    "/home/LoginButton": {
+      "filePath": "home/LoginButton.tsx"
     }
   }
 }
