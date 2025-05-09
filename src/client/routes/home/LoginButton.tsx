@@ -5,7 +5,7 @@ export const LoginButton = () => {
   const handleLogin = async () => {
     try {
       const provider = new GoogleAuthProvider();
-      const result = await signInWithPopup(auth, provider);
+      await signInWithPopup(auth, provider);
       // const idToken = await result.user.getIdToken(); // Removed: idToken was declared but never read
       // TODO: Send token to backend for verification
     } catch (error) {
@@ -20,5 +20,5 @@ export const LoginButton = () => {
     >
       Sign in with Google
     </button>
-  );
+  );\
 };
