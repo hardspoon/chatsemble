@@ -1,5 +1,5 @@
 {
-	"name": "chatsemble",
+	"name": "chatfuse",
 	"private": true,
 	"version": "0.0.0",
 	"type": "module",
@@ -70,8 +70,7 @@
 		"nanoid": "^5.1.5",
 		"next-themes": "^0.4.6",
 		"react": "^19.0.0",
-		"react-dom": "^19.0.0",
-		"react-hook-form": "^7.55.0",
+		"react-dom": "^19.0.0",		"react-hook-form": "^7.55.0",
 		"react-markdown": "^10.1.0",
 		"react-resizable-panels": "^2.1.7",
 		"rehype-raw": "^7.0.0",
@@ -89,8 +88,7 @@
 		"@biomejs/biome": "1.9.4",
 		"@cloudflare/vite-plugin": "^1.0.7",
 		"@tanstack/react-router-devtools": "^1.114.29",
-		"@tanstack/router-plugin": "^1.114.30",
-		"@types/better-sqlite3": "^7.6.12",
+		"@tanstack/router-plugin": "^1.114.30",		"@types/better-sqlite3": "^7.6.12",
 		"@types/node": "^22.13.14",
 		"@types/react": "^19.0.10",
 		"@types/react-dom": "^19.0.4",
@@ -100,7 +98,9 @@
 		"tsx": "^4.19.3",
 		"typescript": "~5.7.2",
 		"vite": "^6.2.0",
-		"vite-raw-plugin": "^1.0.2",
-		"wrangler": "^4.11.1"
-	}
+		"vite-raw-plugin": "^1.0.2",		"wrangler": "^4.11.1"
+	},
+    "engines": {
+        "pnpm": ">=8.0.0"
+    }
 }

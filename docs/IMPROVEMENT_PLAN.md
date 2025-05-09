@@ -121,7 +121,7 @@ Enable agents to proactively offer suggestions, insights, or initiate tasks base
 *   **Workflow Engine (`src/server/organization-do/workflow.ts`):**
     *   Allow workflows to have more abstract goals, with agents dynamically planning steps.
     *   Incorporate feedback loops for agents to adjust plans based on execution results.
-*   **Real-time Message Handling (`src/server/organization-do/organization.ts`):**
+*   **Real-time Message Handling (`src/server/organization-do/organization.ts`):
     *   Might need to intelligently stream relevant parts of conversations to agents that have "proactive" capabilities enabled for a given chat room.
 *   **Context Management:** This feature heavily relies on strong context understanding (see "Persistent Memory & Knowledge Bases").
 
