@@ -264,7 +264,7 @@ curl -X POST http://localhost:8000/goals -d @goal.yaml
 
 1.	Goals
 	1.	Ensure documentation remains accurate, complete, and in sync with evolving code.
-	2.	Provide developers with on-demand, context-aware doc snippets directly inside their IDE.
+	2.	Provide AI coding agent with on-demand, context-aware doc snippets directly inside their IDE.
 	3.	Automate detection and remediation of gaps, inconsistencies, and outdated references.
 	4.	Maintain a transparent, traceable to-do list of documentation tasks driven by high-level project goals.
 	5.	Preserve a local-first, privacy-respecting architecture with optional scale-out to managed services.
