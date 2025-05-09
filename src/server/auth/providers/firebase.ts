@@ -44,7 +44,7 @@ export class FirebaseAuthProvider implements AuthenticationProvider {
     }
   }
 
-  async initiateSignIn(request: Request): Promise<RedirectResponse | SignInResponse | null> {
+  async initiateSignIn(request: Request<unknown, CfProperties<unknown>>): Promise<RedirectResponse | SignInResponse> {
     console.log(`[${this.providerName}] Initiating sign-in...`, request);
     // TODO: Implement Firebase sign-in initiation logic
     // This could involve redirecting to a Firebase sign-in page or returning specific instructions.
@@ -52,16 +52,10 @@ export class FirebaseAuthProvider implements AuthenticationProvider {
     // For email/password, this might be handled client-side, or you might return a form/challenge.
     // Example for redirect:
     // return { type: 'redirect', url: 'https://firebase.auth.link/...' };
-    return { type: 'signIn', details: { message: 'Proceed with Firebase sign-in on the client.' } }; // Placeholder
+    return { type: 'signIn', data: { message: 'Proceed with Firebase sign-in on the client.' } }; // Placeholder
   }
 
-  async handleCallback(request: Request): Promise<UserSession | null> {
-    console.log(`[${this.providerName}] Handling callback...`, request);
-    // TODO: Implement Firebase callback handling logic
-    // This is relevant if Firebase redirects back to your app after authentication (e.g., OAuth).
-    // You would process the callback, verify tokens/codes, and create a UserSession.
-    // Example: const code = new URL(request.url).searchParams.get('code');
-    // if (code) { /* exchange code for token with Firebase */ }
-    return null; // Placeholder
+  async handleCallback(request: Request<unknown, CfProperties<unknown>>): Promise<UserSession> {
+    throw new Error('Firebase callback handler not implemented');
   }
 }
