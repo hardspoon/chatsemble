@@ -26,6 +26,3 @@ dist-ssr
 .wrangler
 .dev.vars
 .env
-
-# Firebase service account
-/documind-m4dei-firebase-adminsdk-fbsvc-*.json
