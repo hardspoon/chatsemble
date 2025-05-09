@@ -9,12 +9,6 @@ import { organization } from "better-auth/plugins";
 import { eq } from "drizzle-orm";
 import type { AuthenticationProvider, UserSession, RedirectResponse, SignInResponse } from './types';
 
-// TODO: This is a placeholder for the actual User type from your application
-interface User {
-  id: string;
-  // other user properties
-}
-
 export class AuthStrategyManager {
   private providers: Map<string, AuthenticationProvider> = new Map();
 
